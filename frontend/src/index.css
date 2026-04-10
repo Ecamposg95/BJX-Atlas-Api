@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --color-ok: #10B981;
+  --color-low: #F97316;
+  --color-critical: #EF4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F9FAFB;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
