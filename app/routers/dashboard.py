@@ -192,6 +192,12 @@ def _compute_summary(
     )
 
 
+def invalidate_cache() -> None:
+    """Clear the in-memory dashboard cache. Used by tests and config/price updates."""
+    _dashboard_cache["data"] = None
+    _dashboard_cache["calculated_at"] = None
+
+
 def get_cached_summary(db: Session) -> DashboardSummary:
     now = datetime.now(timezone.utc)
     if _dashboard_cache["data"] and _dashboard_cache["calculated_at"]:

@@ -34,3 +34,61 @@ def client(db):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# User helper fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def admin_user(db):
+    from app.models.users import User, Role
+    from app.security import hash_password
+    user = User(
+        email="admin@test.com",
+        hashed_password=hash_password("Admin1234"),
+        role=Role.admin,
+        active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def admin_token(client, admin_user):
+    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    return r.json()["access_token"]
+
+
+@pytest.fixture
+def operador_token(client, db):
+    from app.models.users import User, Role
+    from app.security import hash_password
+    user = User(
+        email="op@test.com",
+        hashed_password=hash_password("Operador1234"),
+        role=Role.operador,
+        active=True,
+    )
+    db.add(user)
+    db.commit()
+    r = client.post("/auth/login", json={"email": "op@test.com", "password": "Operador1234"})
+    return r.json()["access_token"]
+
+
+@pytest.fixture
+def viewer_token(client, db):
+    from app.models.users import User, Role
+    from app.security import hash_password
+    user = User(
+        email="viewer@test.com",
+        hashed_password=hash_password("Viewer1234"),
+        role=Role.viewer,
+        active=True,
+    )
+    db.add(user)
+    db.commit()
+    r = client.post("/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
+    return r.json()["access_token"]
