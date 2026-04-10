@@ -3,8 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.database import check_db_connection
-from app.routers import auth
-from app.routers import engine
+from app.routers import auth, engine, catalog, suppliers, quotes, dashboard, config
 
 app = FastAPI(
     title="BJX Atlas API",
@@ -24,9 +23,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])
+app.include_router(auth.router, tags=["Autenticación"])
 app.include_router(engine.router, tags=["Motor de Cálculo"])
-# catalog, suppliers, quotes, dashboard, config — se agregan al completar Sprint 3/4
+app.include_router(catalog.router, tags=["Catálogo"])
+app.include_router(suppliers.router, tags=["Proveedores"])
+app.include_router(quotes.router, tags=["Cotizaciones"])
+app.include_router(dashboard.router, tags=["Dashboard"])
+app.include_router(config.router, tags=["Configuración"])
 
 
 @app.get("/health", tags=["Sistema"])

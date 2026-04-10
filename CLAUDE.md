@@ -26,20 +26,32 @@ Ver `context/atlas_erp_pos_stack.md` para snippets de código listos para usar.
 ## Commands
 
 ```bash
+# Crear y activar virtualenv (Python 3.12)
+/usr/bin/python3.12 -m venv venv && source venv/bin/activate
+
 # Instalar dependencias
 pip install -r requirements.txt
 
+# Configurar entorno local
+cp .env.example .env   # editar DATABASE_URL y SECRET_KEY
+
+# Migrar base de datos
+DATABASE_URL=sqlite:///./bjx_dev.db alembic upgrade head
+
+# Cargar datos semilla desde Excel
+DATABASE_URL=sqlite:///./bjx_dev.db python seeds/load_data.py
+
 # Correr servidor de desarrollo
-uvicorn app.main:app --reload
+DATABASE_URL=sqlite:///./bjx_dev.db uvicorn app.main:app --reload
 
 # Correr todos los tests
 pytest
 
-# Correr un test específico
-pytest tests/test_pricing_engine.py::test_margin_calculation -v
+# Correr un módulo de tests específico
+pytest tests/test_pricing_engine.py -v
 
-# Inicializar DB local
-python scripts/init_db.py
+# Generar nueva migración (después de cambiar modelos)
+alembic revision --autogenerate -m "descripcion"
 ```
 
 ## Architecture
