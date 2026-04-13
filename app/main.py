@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -9,6 +11,7 @@ app = FastAPI(
     title="BJX Atlas API",
     description="Plataforma de Cotización, Costos y Márgenes — BJX Motors × Brame",
     version="1.0.0",
+    root_path=os.getenv("ROOT_PATH", ""),
 )
 
 app.add_middleware(

@@ -14,6 +14,7 @@ Usage:
 
 import os
 import sys
+import time
 import subprocess
 
 # Ensure app imports work from scripts/
@@ -22,29 +23,33 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def run_migrations():
     """Run alembic upgrade head."""
-    print("[BOOT] Running Alembic migrations...")
+    print("[BOOT] Running Alembic migrations...", flush=True)
+    t0 = time.time()
     result = subprocess.run(
         ["alembic", "upgrade", "head"],
         capture_output=True,
         text=True,
     )
-    print(result.stdout)
+    elapsed = time.time() - t0
+    if result.stdout.strip():
+        print(result.stdout, flush=True)
     if result.returncode != 0:
-        print(f"[ERROR] Alembic migration failed:\n{result.stderr}")
+        print(f"[ERROR] Alembic failed ({elapsed:.1f}s):\n{result.stderr}", flush=True)
         sys.exit(1)
-    print("[BOOT] Migrations completed.")
+    print(f"[BOOT] Migrations done ({elapsed:.1f}s)", flush=True)
 
 
 def seed_defaults():
     """Seed config params and admin user (idempotent)."""
-    print("[BOOT] Seeding defaults...")
+    print("[BOOT] Seeding defaults...", flush=True)
+    t0 = time.time()
 
     from app.database import SessionLocal, engine, Base
     from app.models.config import ConfigParam
     from app.models.users import User, Role
     from app.security import hash_password
 
-    # Ensure tables exist (safety net if alembic didn't run)
+    # Ensure tables exist (safety net)
     Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
@@ -67,9 +72,9 @@ def seed_defaults():
                 inserted += 1
         if inserted:
             db.commit()
-            print(f"[BOOT] Inserted {inserted} config params.")
+            print(f"[BOOT]   {inserted} config params inserted", flush=True)
         else:
-            print("[BOOT] Config params already exist, skipped.")
+            print("[BOOT]   Config params OK (already exist)", flush=True)
 
         # --- Admin user ---
         admin_email = os.getenv("ADMIN_EMAIL", "admin@bjx.com")
@@ -85,21 +90,32 @@ def seed_defaults():
             )
             db.add(admin)
             db.commit()
-            print(f"[BOOT] Admin user created: {admin_email}")
+            print(f"[BOOT]   Admin created: {admin_email}", flush=True)
         else:
-            print(f"[BOOT] Admin user already exists: {admin_email}")
+            print(f"[BOOT]   Admin OK: {admin_email}", flush=True)
 
     except Exception as exc:
         db.rollback()
-        print(f"[ERROR] Seeding failed: {exc}")
+        print(f"[ERROR] Seeding failed: {exc}", flush=True)
         raise
     finally:
         db.close()
 
-    print("[BOOT] Seeding completed.")
+    elapsed = time.time() - t0
+    print(f"[BOOT] Seeding done ({elapsed:.1f}s)", flush=True)
 
 
 if __name__ == "__main__":
+    total = time.time()
+    db_url = os.getenv("DATABASE_URL", "NOT SET")
+    # Show redacted URL for debugging (hide password)
+    if "@" in db_url:
+        safe = db_url.split("@")[-1]
+        print(f"[BOOT] DATABASE_URL = ...@{safe}", flush=True)
+    else:
+        print(f"[BOOT] DATABASE_URL = {db_url}", flush=True)
+
     run_migrations()
     seed_defaults()
-    print("[BOOT] Railway init done. Ready to serve.")
+
+    print(f"[BOOT] Init complete ({time.time() - total:.1f}s). Starting server...", flush=True)
