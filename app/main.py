@@ -37,6 +37,11 @@ app.include_router(config.router, tags=["Configuración"])
 
 @app.get("/health", tags=["Sistema"])
 def health_check():
+    return {"status": "ok", "version": "1.0.0"}
+
+
+@app.get("/health/db", tags=["Sistema"])
+def health_check_db():
     db_ok = check_db_connection()
     return {
         "status": "ok" if db_ok else "degraded",
