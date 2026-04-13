@@ -8,6 +8,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 API backend en FastAPI que implementa un motor de cálculo de precios y márgenes para servicios automotrices, reemplazando una calculadora Excel manual.
 
+## Branching Strategy
+
+| Rama | Propósito |
+|------|-----------|
+| `main` | **Producción** — Railway deploya automáticamente desde aquí. NO trabajar directamente en main. |
+| `develop` | **Desarrollo** — Todo el trabajo nuevo va aquí. Es la rama por defecto para desarrollo. |
+
+**Flujo**: `develop` → merge a → `main` → Railway auto-deploy
+
+- Siempre trabajar en `develop` (o feature branches que mergeen a `develop`).
+- Solo mergear `develop` → `main` cuando esté listo para producción.
+- Nunca pushear directamente a `main`.
+
 ## Context Files
 
 Antes de escribir cualquier código, leer:
