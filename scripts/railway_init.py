@@ -21,6 +21,29 @@ import subprocess
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+def cleanup_orphaned_enums():
+    """Drop ENUM types left behind by failed migrations (tables dropped, types not)."""
+    from app.database import engine
+    from sqlalchemy import text
+
+    print("[BOOT] Checking for orphaned ENUM types...", flush=True)
+    with engine.connect() as conn:
+        # Only drop if the tables that USE these types don't exist
+        result = conn.execute(text(
+            "SELECT COUNT(*) FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = 'users'"
+        ))
+        users_exists = result.scalar() > 0
+
+        if not users_exists:
+            conn.execute(text("DROP TYPE IF EXISTS role"))
+            conn.execute(text("DROP TYPE IF EXISTS quotestatus"))
+            conn.commit()
+            print("[BOOT]   Dropped orphaned ENUM types (role, quotestatus)", flush=True)
+        else:
+            print("[BOOT]   Tables exist, ENUMs OK", flush=True)
+
+
 def run_migrations():
     """Run alembic upgrade head."""
     print("[BOOT] Running Alembic migrations...", flush=True)
@@ -44,13 +67,10 @@ def seed_defaults():
     print("[BOOT] Seeding defaults...", flush=True)
     t0 = time.time()
 
-    from app.database import SessionLocal, engine, Base
+    from app.database import SessionLocal
     from app.models.config import ConfigParam
     from app.models.users import User, Role
     from app.security import hash_password
-
-    # Ensure tables exist (safety net)
-    Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
     try:
@@ -115,6 +135,7 @@ if __name__ == "__main__":
     else:
         print(f"[BOOT] DATABASE_URL = {db_url}", flush=True)
 
+    cleanup_orphaned_enums()
     run_migrations()
     seed_defaults()
 
