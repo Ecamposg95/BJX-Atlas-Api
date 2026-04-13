@@ -1,14 +1,17 @@
 import os
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.database import check_db_connection
 from app.routers import auth, engine, catalog, suppliers, quotes, dashboard, config
+
+logger = logging.getLogger("bjx-atlas")
 
 app = FastAPI(
     title="BJX Atlas API",
@@ -61,12 +64,29 @@ def health_check_db():
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 if FRONTEND_DIR.is_dir():
-    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+    logger.info(f"[FRONTEND] Serving from {FRONTEND_DIR}")
+    print(f"[FRONTEND] Serving from {FRONTEND_DIR}", flush=True)
+
+    # Mount /assets for hashed static files (JS, CSS)
+    assets_dir = FRONTEND_DIR / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         """Serve frontend SPA — try static file first, fallback to index.html."""
         file_path = FRONTEND_DIR / full_path
-        if file_path.is_file():
+        if full_path and file_path.is_file():
             return FileResponse(file_path)
         return FileResponse(FRONTEND_DIR / "index.html")
+else:
+    logger.warning(f"[FRONTEND] Not found at {FRONTEND_DIR} — API-only mode")
+    print(f"[FRONTEND] Not found at {FRONTEND_DIR} — API-only mode", flush=True)
+
+    @app.get("/")
+    def root_no_frontend():
+        return JSONResponse({
+            "message": "BJX Atlas API is running. Frontend not built.",
+            "docs": "/api/docs",
+            "health": "/api/health",
+        })
