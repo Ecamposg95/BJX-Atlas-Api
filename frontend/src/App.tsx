@@ -8,6 +8,7 @@ import { QuotesPage } from './pages/Quotes'
 import { CatalogPage } from './pages/Catalog'
 import { SuppliersPage } from './pages/Suppliers'
 import { ConfigPage } from './pages/Config'
+import { AdminPage } from './pages/Admin'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/suppliers" element={<SuppliersPage />} />
             <Route path="/config" element={<ConfigPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

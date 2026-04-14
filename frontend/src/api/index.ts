@@ -1,6 +1,6 @@
 import api from './client'
 import type {
-  LoginPayload, TokenResponse, UserMe, ConfigParam,
+  LoginPayload, TokenResponse, UserMe, UserRead, ConfigParam,
   VehicleModel, Service, CatalogCost,
   Supplier, SupplierPrice,
   EngineResponse, SimulateRequest, SimulateResponse,
@@ -20,6 +20,16 @@ export const logout = () =>
 export const register = (data: { email: string; password: string; role: string }) =>
   api.post<UserMe>('/auth/register', data).then((r) => r.data)
 
+// ── Users (admin) ────────────────────────────────────────────────────────────
+export const getUsers = () =>
+  api.get<UserRead[]>('/users').then((r) => r.data)
+
+export const updateUser = (id: string, data: { role?: string; active?: boolean }) =>
+  api.put<UserRead>(`/users/${id}`, data).then((r) => r.data)
+
+export const deactivateUser = (id: string) =>
+  api.delete(`/users/${id}`)
+
 // ── Config ───────────────────────────────────────────────────────────────────
 export const getConfig = () =>
   api.get<ConfigParam[]>('/config').then((r) => r.data)
@@ -28,6 +38,25 @@ export const updateConfig = (key: string, value: string) =>
   api.put<ConfigParam>(`/config/${key}`, { value }).then((r) => r.data)
 
 // ── Catalog ──────────────────────────────────────────────────────────────────
+// Returns ALL models (no garbage filter) — for admin CRUD use
+export const getAllModels = () =>
+  api.get<{ items: VehicleModel[] }>('/catalog/models').then((r) => r.data.items)
+
+export const createModel = (data: { name: string; brand?: string }) =>
+  api.post<VehicleModel>('/catalog/models', data).then((r) => r.data)
+
+export const updateModel = (id: string, data: { name?: string; brand?: string; active?: boolean }) =>
+  api.put<VehicleModel>(`/catalog/models/${id}`, data).then((r) => r.data)
+
+export const deleteModel = (id: string) =>
+  api.delete(`/catalog/models/${id}`)
+
+export const createService = (data: { name: string; category: string }) =>
+  api.post<Service>('/catalog/services', data).then((r) => r.data)
+
+export const updateService = (id: string, data: { name?: string; category?: string; active?: boolean }) =>
+  api.put<Service>(`/catalog/services/${id}`, data).then((r) => r.data)
+
 export const getModels = (params?: { brand?: string; active?: boolean }) =>
   api.get<{ items: VehicleModel[] }>('/catalog/models', { params }).then((r) => {
     // Filter out Excel header rows that were mistakenly seeded as models
@@ -55,6 +84,29 @@ export const getSuppliers = () =>
 
 export const getSupplierPrices = (supplierId: string) =>
   api.get<SupplierPrice[]>(`/suppliers/${supplierId}/prices`).then((r) => r.data)
+
+export const createSupplier = (data: {
+  name: string
+  lead_time_days: number
+  warranty_days: number
+  contact_name?: string
+  contact_email?: string
+  return_policy?: string
+}) =>
+  api.post<Supplier>('/suppliers', data).then((r) => r.data)
+
+export const updateSupplier = (id: string, data: {
+  name?: string
+  lead_time_days?: number
+  warranty_days?: number
+  contact_name?: string
+  contact_email?: string
+  active?: boolean
+}) =>
+  api.put<Supplier>(`/suppliers/${id}`, data).then((r) => r.data)
+
+export const deleteSupplier = (id: string) =>
+  api.delete(`/suppliers/${id}`)
 
 export const compareSuppliers = (params: {
   model_id: string
