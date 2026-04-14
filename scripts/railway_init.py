@@ -21,27 +21,66 @@ import subprocess
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def cleanup_orphaned_enums():
-    """Drop ENUM types left behind by failed migrations (tables dropped, types not)."""
+def ensure_db_consistency():
+    """Ensure DB state is consistent before running Alembic migrations.
+
+    Handles three scenarios:
+    1. Fresh DB (no tables, no types)  → nothing to do, Alembic runs normally.
+    2. Orphaned ENUMs (types exist, tables don't) → drop types so Alembic can recreate.
+    3. Inconsistent version (tables exist, alembic_version empty/missing) → stamp head
+       so Alembic skips re-creating what already exists.
+    """
     from app.database import engine
     from sqlalchemy import text
 
-    print("[BOOT] Checking for orphaned ENUM types...", flush=True)
+    print("[BOOT] Checking DB consistency...", flush=True)
     with engine.connect() as conn:
-        # Only drop if the tables that USE these types don't exist
+        # Check if key tables exist
         result = conn.execute(text(
             "SELECT COUNT(*) FROM information_schema.tables "
             "WHERE table_schema = 'public' AND table_name = 'users'"
         ))
-        users_exists = result.scalar() > 0
+        tables_exist = result.scalar() > 0
 
-        if not users_exists:
+        # Check alembic_version state
+        version_stamped = False
+        try:
+            result = conn.execute(text(
+                "SELECT COUNT(*) FROM information_schema.tables "
+                "WHERE table_schema = 'public' AND table_name = 'alembic_version'"
+            ))
+            version_table_exists = result.scalar() > 0
+            if version_table_exists:
+                result = conn.execute(text("SELECT COUNT(*) FROM alembic_version"))
+                version_stamped = result.scalar() > 0
+        except Exception:
+            pass
+
+        if tables_exist and not version_stamped:
+            # Scenario 3: tables exist but Alembic thinks migration hasn't run.
+            # Stamp head to avoid re-running CREATE TABLE / CREATE TYPE statements.
+            print("[BOOT]   Tables exist but alembic_version is empty — stamping head...", flush=True)
+            conn.commit()  # close any open transaction before subprocess
+            result = subprocess.run(
+                ["alembic", "stamp", "head"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                print(f"[ERROR] alembic stamp failed:\n{result.stderr}", flush=True)
+                sys.exit(1)
+            print("[BOOT]   Stamped. Alembic will skip to new migrations only.", flush=True)
+
+        elif not tables_exist:
+            # Scenario 2: drop any orphaned ENUM types so the migration can recreate them.
             conn.execute(text("DROP TYPE IF EXISTS role"))
             conn.execute(text("DROP TYPE IF EXISTS quotestatus"))
             conn.commit()
-            print("[BOOT]   Dropped orphaned ENUM types (role, quotestatus)", flush=True)
+            print("[BOOT]   Dropped orphaned ENUM types (if any). Ready for migration.", flush=True)
+
         else:
-            print("[BOOT]   Tables exist, ENUMs OK", flush=True)
+            # Scenario 1: everything consistent.
+            print("[BOOT]   DB state consistent. Proceeding with migrations.", flush=True)
 
 
 def run_migrations():
@@ -135,7 +174,7 @@ if __name__ == "__main__":
     else:
         print(f"[BOOT] DATABASE_URL = {db_url}", flush=True)
 
-    cleanup_orphaned_enums()
+    ensure_db_consistency()
     run_migrations()
     seed_defaults()
 

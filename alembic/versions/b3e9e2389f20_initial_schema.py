@@ -232,4 +232,6 @@ def downgrade() -> None:
     op.drop_table('models')
     op.drop_index(op.f('ix_config_params_key'), table_name='config_params')
     op.drop_table('config_params')
+    op.execute("DROP TYPE IF EXISTS quotestatus")
+    op.execute("DROP TYPE IF EXISTS role")
     # ### end Alembic commands ###
