@@ -148,20 +148,22 @@ def _build_calculation_input(
     technician_cost_hr: float,
     target_margin: float,
 ) -> CalculationInput:
+    # bjx_labor_cost and bjx_parts_cost in the catalog are what Brame PAYS BJX
+    # (i.e., the agreed invoice price). BJX's real labor cost = duration × rate.
+    # Passing catalog_labor_cost=None lets the engine compute: duration × technician_cost_hr.
+    # Margin = brame_price - (duration×rate + parts_cost).
+    brame_labor = catalog.bjx_labor_cost or 0.0
+    brame_parts = catalog.bjx_parts_cost or 0.0
     return CalculationInput(
         model_id=model_id,
         service_id=service_id,
         technician_cost_hr=technician_cost_hr,
         target_margin=target_margin,
-        catalog_labor_cost=catalog.bjx_labor_cost,
-        catalog_parts_cost=catalog.bjx_parts_cost,
+        catalog_labor_cost=None,           # compute as duration × technician_cost_hr
+        catalog_parts_cost=brame_parts,    # BJX pays this to procure parts
         catalog_duration_hrs=catalog.duration_hrs,
-        # brame_ref_actual and brame_total_actual come from catalog parts cost
-        # or fallback to 0.0 when not available — the engine handles None logic
-        brame_ref_actual=catalog.bjx_parts_cost if catalog.bjx_parts_cost is not None else 0.0,
-        brame_total_actual=(
-            (catalog.bjx_labor_cost or 0.0) + (catalog.bjx_parts_cost or 0.0)
-        ),
+        brame_ref_actual=brame_parts,
+        brame_total_actual=brame_labor + brame_parts,  # what Brame pays BJX total
     )
 
 

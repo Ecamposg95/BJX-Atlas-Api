@@ -29,7 +29,13 @@ export const updateConfig = (key: string, value: string) =>
 
 // ── Catalog ──────────────────────────────────────────────────────────────────
 export const getModels = (params?: { brand?: string; active?: boolean }) =>
-  api.get<{ items: VehicleModel[] }>('/catalog/models', { params }).then((r) => r.data.items)
+  api.get<{ items: VehicleModel[] }>('/catalog/models', { params }).then((r) => {
+    // Filter out Excel header rows that were mistakenly seeded as models
+    const GARBAGE_PATTERN = /^\d+(\.\d+)?$|veh[íi]culos|conceptos|costo bjx|precio brame|modelo|servicio/i
+    return r.data.items.filter(
+      (m) => m.active && !GARBAGE_PATTERN.test(m.name.trim()) && m.service_count > 0
+    )
+  })
 
 export const getServices = (params?: { search?: string; category?: string }) =>
   api.get<{ items: Service[] }>('/catalog/services', { params }).then((r) => r.data.items)
@@ -69,7 +75,31 @@ export const calculate = (data: {
   scoring_weight_time?: number
   scoring_weight_tc?: number
 }) =>
-  api.post<EngineResponse>('/engine/calculate', data).then((r) => r.data)
+  api.post<EngineResponse>('/engine/calculate', data).then((r) => {
+    // Normalize suppliers: map total_price → price and final_score → score for display
+    const d = r.data
+    d.suppliers = d.suppliers.map((s) => ({
+      ...s,
+      price: s.total_price ?? s.price ?? 0,
+      score: s.final_score ?? s.score ?? 0,
+    }))
+    if (d.recommended_supplier) {
+      d.recommended_supplier = {
+        ...d.recommended_supplier,
+        price: d.recommended_supplier.total_price ?? d.recommended_supplier.price ?? 0,
+        score: d.recommended_supplier.final_score ?? d.recommended_supplier.score ?? 0,
+      }
+    }
+    return d
+  })
+
+export const batch = (data: {
+  model_id: string
+  service_ids: string[]
+  technician_cost_hr?: number
+  target_margin?: number
+}) =>
+  api.post('/engine/batch', data).then((r) => r.data)
 
 // ── Quotes ───────────────────────────────────────────────────────────────────
 export const getQuotes = (params?: { status?: QuoteStatus; model_id?: string }) =>
