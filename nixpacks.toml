@@ -1,14 +1,11 @@
 [phases.setup]
 aptPkgs = ["libpq-dev", "gcc", "libffi-dev"]
-nixPkgs  = ["python312"]
+nixPkgs  = ["python312", "nodejs_23"]
 
 [phases.build]
 cmds = [
   "cd frontend && npm install && npm run build",
 ]
-
-[variables]
-NODE_VERSION = "22.13.0"
 
 [start]
 cmd = "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
