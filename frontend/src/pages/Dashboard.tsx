@@ -38,11 +38,6 @@ const STATUS_COLORS: Record<'ok' | 'low' | 'critical', string> = {
   critical: '#EF4444',
 }
 
-const STATUS_BG: Record<'ok' | 'low' | 'critical', string> = {
-  ok: '',
-  low: '',
-  critical: '',
-}
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 const fmtPct = (val: number) => (val * 100).toFixed(1) + '%'

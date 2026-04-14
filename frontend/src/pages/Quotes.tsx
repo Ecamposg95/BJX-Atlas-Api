@@ -37,11 +37,6 @@ const STATUS_LABELS: Record<QuoteStatus, string> = {
   cancelled: 'Cancelada',
 }
 
-const LINE_ROW_BG: Record<'ok' | 'low' | 'critical', string> = {
-  ok: '',
-  low: '',
-  critical: '',
-}
 
 // ── Quote list item ───────────────────────────────────────────────────────────
 
