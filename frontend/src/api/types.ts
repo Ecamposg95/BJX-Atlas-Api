@@ -92,10 +92,14 @@ export interface CalculationResult {
 export interface ScoredSupplier {
   supplier_id: string
   supplier_name: string
-  price: number
+  ref_cost: number
+  labor_cost: number
+  total_price: number
+  price: number          // alias for total_price (used in display)
   lead_time_days: number
   warranty_days: number
-  score: number
+  final_score: number
+  score: number          // same as final_score
   rank: number
   recommended: boolean
 }

@@ -66,5 +66,10 @@ class ScoredSupplier(SupplierOption):
     normalized_time: float
     normalized_tc: float
     final_score: float
+    score: float = 0.0   # alias exposed to frontend (same value as final_score)
     rank: int
     recommended: bool
+
+    def model_post_init(self, __context: object) -> None:
+        # keep score in sync with final_score at construction time
+        object.__setattr__(self, "score", self.final_score)
