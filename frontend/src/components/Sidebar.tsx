@@ -43,7 +43,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        'flex flex-col transition-all duration-250',
+        'sidebar-panel flex flex-col',
         collapsed ? 'w-16' : 'w-56'
       )}
     >

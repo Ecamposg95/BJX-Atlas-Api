@@ -38,9 +38,9 @@ const STATUS_LABELS: Record<QuoteStatus, string> = {
 }
 
 const LINE_ROW_BG: Record<'ok' | 'low' | 'critical', string> = {
-  ok: 'bg-emerald-50',
-  low: 'bg-orange-50',
-  critical: 'bg-red-50',
+  ok: '',
+  low: '',
+  critical: '',
 }
 
 // ── Quote list item ───────────────────────────────────────────────────────────
@@ -64,17 +64,20 @@ function QuoteListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-blue-50 transition-colors ${
-        selected ? 'bg-blue-50 border-l-2 border-l-blue-500' : ''
-      }`}
+      className="w-full text-left px-4 py-3.5 transition-colors"
+      style={{
+        borderBottom: '1px solid var(--border-dim)',
+        borderLeft: selected ? '2px solid var(--primary)' : '2px solid transparent',
+        background: selected ? 'rgba(139,92,246,0.08)' : 'transparent',
+      }}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-gray-900 text-sm">{quote.quote_number}</span>
+        <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>{quote.quote_number}</span>
         <Badge variant={quote.status}>{STATUS_LABELS[quote.status]}</Badge>
       </div>
       <div className="flex items-center justify-between mt-1">
-        <span className="text-xs text-gray-500 truncate">{displayModel}</span>
-        <span className="text-xs text-gray-400 ml-2 shrink-0">{fmtDate(quote.created_at)}</span>
+        <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{displayModel}</span>
+        <span className="text-xs ml-2 shrink-0" style={{ color: 'var(--text-faint)' }}>{fmtDate(quote.created_at)}</span>
       </div>
     </button>
   )
@@ -110,38 +113,39 @@ function LinesTable({ lines }: { lines: QuoteLine[] }) {
     )
   }
 
+  const STATUS_COLORS_MAP = { ok: '#10B981', low: '#F97316', critical: '#EF4444' } as const
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-xl" style={{ border: '1px solid var(--border)' }}>
       <table className="min-w-full text-xs">
         <thead>
-          <tr className="bg-gray-50 text-gray-500 uppercase text-[11px] tracking-wide">
-            <th className="px-3 py-2 text-left font-medium">Servicio</th>
-            <th className="px-3 py-2 text-right font-medium">Duración (h)</th>
-            <th className="px-3 py-2 text-right font-medium">Mano de obra</th>
-            <th className="px-3 py-2 text-right font-medium">Refacciones</th>
-            <th className="px-3 py-2 text-right font-medium">Total BJX</th>
-            <th className="px-3 py-2 text-right font-medium">Precio Brame</th>
-            <th className="px-3 py-2 text-right font-medium">Margen $</th>
-            <th className="px-3 py-2 text-right font-medium">Margen %</th>
-            <th className="px-3 py-2 text-center font-medium">Estado</th>
+          <tr>
+            <th className="px-4 py-3 text-left">Servicio</th>
+            <th className="px-4 py-3 text-right">Hrs</th>
+            <th className="px-4 py-3 text-right">MO</th>
+            <th className="px-4 py-3 text-right">Refac.</th>
+            <th className="px-4 py-3 text-right">Total BJX</th>
+            <th className="px-4 py-3 text-right">Brame</th>
+            <th className="px-4 py-3 text-right">Margen $</th>
+            <th className="px-4 py-3 text-right">Margen %</th>
+            <th className="px-4 py-3 text-center">Estado</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody>
           {lines.map((line) => (
-            <tr key={line.id} className={LINE_ROW_BG[line.margin_status]}>
-              <td className="px-3 py-2 font-medium text-gray-800">
+            <tr key={line.id} style={{ borderLeft: `3px solid ${STATUS_COLORS_MAP[line.margin_status]}33` }}>
+              <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text)' }}>
                 {line.service_name ?? line.service_id.slice(0, 8)}
               </td>
-              <td className="px-3 py-2 text-right text-gray-700">{line.duration_hrs.toFixed(1)}</td>
-              <td className="px-3 py-2 text-right text-gray-700">${fmtCurrency(line.labor_cost)}</td>
-              <td className="px-3 py-2 text-right text-gray-700">${fmtCurrency(line.parts_cost)}</td>
-              <td className="px-3 py-2 text-right font-semibold text-gray-800">
+              <td className="px-4 py-3 text-right" style={{ color: 'var(--text-muted)' }}>{line.duration_hrs.toFixed(1)}</td>
+              <td className="px-4 py-3 text-right" style={{ color: 'var(--text-muted)' }}>${fmtCurrency(line.labor_cost)}</td>
+              <td className="px-4 py-3 text-right" style={{ color: 'var(--text-muted)' }}>${fmtCurrency(line.parts_cost)}</td>
+              <td className="px-4 py-3 text-right font-bold" style={{ color: 'var(--text)' }}>
                 ${fmtCurrency(line.total_bjx_cost)}
               </td>
-              <td className="px-3 py-2 text-right text-gray-700">${fmtCurrency(line.brame_price)}</td>
-              <td className="px-3 py-2 text-right text-gray-700">${fmtCurrency(line.margin_pesos)}</td>
-              <td className="px-3 py-2 text-right text-gray-700">{fmtPct(line.margin_pct)}</td>
-              <td className="px-3 py-2 text-center">
+              <td className="px-4 py-3 text-right" style={{ color: 'var(--text-muted)' }}>${fmtCurrency(line.brame_price)}</td>
+              <td className="px-4 py-3 text-right" style={{ color: 'var(--text-muted)' }}>${fmtCurrency(line.margin_pesos)}</td>
+              <td className="px-4 py-3 text-right font-bold" style={{ color: STATUS_COLORS_MAP[line.margin_status] }}>{fmtPct(line.margin_pct)}</td>
+              <td className="px-4 py-3 text-center">
                 <MarginBadge status={line.margin_status} />
               </td>
             </tr>
@@ -164,21 +168,20 @@ function SummaryBar({ lines }: { lines: QuoteLine[] }) {
       : 0
 
   return (
-    <div className="flex items-center gap-6 rounded-lg bg-gray-50 border border-gray-200 px-4 py-3">
-      <div className="text-center">
-        <p className="text-xs text-gray-500 uppercase tracking-wide">Total BJX</p>
-        <p className="text-sm font-bold text-gray-900">${fmtCurrency(totalBjx)}</p>
-      </div>
-      <div className="h-8 w-px bg-gray-200" />
-      <div className="text-center">
-        <p className="text-xs text-gray-500 uppercase tracking-wide">Precio Brame</p>
-        <p className="text-sm font-bold text-gray-900">${fmtCurrency(totalBrame)}</p>
-      </div>
-      <div className="h-8 w-px bg-gray-200" />
-      <div className="text-center">
-        <p className="text-xs text-gray-500 uppercase tracking-wide">Margen promedio</p>
-        <p className="text-sm font-bold text-gray-900">{fmtPct(weightedMarginPct)}</p>
-      </div>
+    <div className="flex items-center gap-6 rounded-xl px-5 py-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      {[
+        { label: 'Total BJX', value: `$${fmtCurrency(totalBjx)}` },
+        { label: 'Precio Brame', value: `$${fmtCurrency(totalBrame)}` },
+        { label: 'Margen promedio', value: fmtPct(weightedMarginPct) },
+      ].map((item, i) => (
+        <>
+          {i > 0 && <div key={`sep-${i}`} className="h-8 w-px" style={{ background: 'var(--border)' }} />}
+          <div key={item.label} className="text-center">
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>{item.label}</p>
+            <p className="mt-0.5 text-sm font-black" style={{ color: 'var(--text)' }}>{item.value}</p>
+          </div>
+        </>
+      ))}
     </div>
   )
 }
@@ -318,10 +321,10 @@ function QuoteDetail({ quoteId }: { quoteId: string }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 space-y-3">
+      <div className="px-6 py-5 space-y-4" style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-gray-900">{quote.quote_number}</h2>
+            <h2 className="text-lg font-black" style={{ color: 'var(--text)' }}>{quote.quote_number}</h2>
             <Badge variant={quote.status}>{STATUS_LABELS[quote.status]}</Badge>
           </div>
           <ActionButtons
@@ -333,34 +336,29 @@ function QuoteDetail({ quoteId }: { quoteId: string }) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
-          <div className="flex gap-2 text-gray-500">
-            <span className="font-medium text-gray-700">Creada por:</span>
-            <span>{quote.created_by}</span>
-          </div>
-          <div className="flex gap-2 text-gray-500">
-            <span className="font-medium text-gray-700">Fecha:</span>
-            <span>{fmtDate(quote.created_at)}</span>
-          </div>
-          <div className="flex gap-2 text-gray-500">
-            <span className="font-medium text-gray-700">Costo técnico/h:</span>
-            <span>${fmtCurrency(quote.technician_cost_hr)}</span>
-          </div>
-          <div className="flex gap-2 text-gray-500">
-            <span className="font-medium text-gray-700">Margen objetivo:</span>
-            <span>{fmtPct(quote.target_margin * 100)}</span>
-          </div>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+          {[
+            { label: 'Creada por', value: quote.created_by },
+            { label: 'Fecha', value: fmtDate(quote.created_at) },
+            { label: 'Costo técnico/h', value: `$${fmtCurrency(quote.technician_cost_hr)}` },
+            { label: 'Margen objetivo', value: fmtPct(quote.target_margin * 100) },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex gap-2">
+              <span className="font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>{label}:</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{value}</span>
+            </div>
+          ))}
         </div>
 
         {quote.notes && (
-          <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-3">
+          <p className="text-xs italic pl-3" style={{ color: 'var(--text-muted)', borderLeft: '2px solid var(--primary)' }}>
             {quote.notes}
           </p>
         )}
       </div>
 
       {/* Lines */}
-      <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-auto px-6 py-5 space-y-5">
         <LinesTable lines={quote.lines ?? []} />
 
         {(quote.lines ?? []).length > 0 && <SummaryBar lines={quote.lines ?? []} />}
@@ -392,9 +390,9 @@ export function QuotesPage() {
   return (
     <div className="flex h-full overflow-hidden">
       {/* ── Left pane ─────────────────────────────────── */}
-      <aside className="w-80 shrink-0 flex flex-col border-r border-gray-200 bg-white">
+      <aside className="w-72 shrink-0 flex flex-col" style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         {/* Tab filter */}
-        <div className="flex overflow-x-auto border-b border-gray-200 shrink-0">
+        <div className="flex overflow-x-auto shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -402,11 +400,11 @@ export function QuotesPage() {
                 setActiveTab(tab.value)
                 setSelectedId(null)
               }}
-              className={`px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-colors border-b-2 ${
-                activeTab === tab.value
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className="px-3 py-3 text-xs font-bold whitespace-nowrap transition-colors"
+              style={{
+                borderBottom: activeTab === tab.value ? '2px solid var(--primary)' : '2px solid transparent',
+                color: activeTab === tab.value ? 'var(--primary-light)' : 'var(--text-muted)',
+              }}
             >
               {tab.label}
             </button>
@@ -414,13 +412,14 @@ export function QuotesPage() {
         </div>
 
         {/* Search */}
-        <div className="px-3 py-2 border-b border-gray-100 shrink-0">
+        <div className="px-3 py-2.5 shrink-0" style={{ borderBottom: '1px solid var(--border-dim)' }}>
           <input
             type="text"
             placeholder="Buscar por folio…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm focus:outline-none"
+            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)' }}
           />
         </div>
 
@@ -463,26 +462,17 @@ export function QuotesPage() {
       </aside>
 
       {/* ── Right pane ────────────────────────────────── */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+      <main className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--bg)' }}>
         {selectedId ? (
           <QuoteDetail quoteId={selectedId} />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 text-gray-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <p className="text-sm">Selecciona una cotización para ver el detalle</p>
+          <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ color: 'var(--text-faint)' }}>
+            <div className="rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Selecciona una cotización para ver el detalle</p>
           </div>
         )}
       </main>

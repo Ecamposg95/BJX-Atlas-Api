@@ -39,9 +39,9 @@ const STATUS_COLORS: Record<'ok' | 'low' | 'critical', string> = {
 }
 
 const STATUS_BG: Record<'ok' | 'low' | 'critical', string> = {
-  ok: 'bg-emerald-50',
-  low: 'bg-orange-50',
-  critical: 'bg-red-50',
+  ok: '',
+  low: '',
+  critical: '',
 }
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -59,12 +59,18 @@ function CustomBarTooltip({ active, payload, label }: {
   const val = payload[0].value
   const status = payload[0].payload.margin_status
   return (
-    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-lg">
-      <p className="text-xs font-semibold text-gray-500 mb-1">{label}</p>
-      <p className="text-lg font-bold" style={{ color: STATUS_COLORS[status] }}>
-        {fmtPct(val)}
+    <div style={{
+      background: 'var(--surface-2)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      padding: '10px 16px',
+      boxShadow: 'var(--shadow)',
+    }}>
+      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 18, fontWeight: 700, color: STATUS_COLORS[status] }}>{fmtPct(val)}</p>
+      <p style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+        {status === 'ok' ? 'Rentable' : status === 'low' ? 'Margen bajo' : 'Crítico'}
       </p>
-      <p className="text-xs text-gray-400 capitalize">{status === 'ok' ? 'Rentable' : status === 'low' ? 'Margen bajo' : 'Crítico'}</p>
     </div>
   )
 }
@@ -87,27 +93,27 @@ function KpiCard({
 }) {
   const accentMap = {
     blue: {
-      icon: 'bg-blue-100 text-blue-600',
-      bar: 'bg-blue-500',
+      icon: 'bg-violet-500/20 text-violet-300',
+      bar: 'bg-violet-500',
     },
     emerald: {
-      icon: 'bg-emerald-100 text-emerald-600',
+      icon: 'bg-emerald-500/20 text-emerald-400',
       bar: 'bg-emerald-500',
     },
     orange: {
-      icon: 'bg-orange-100 text-orange-600',
+      icon: 'bg-orange-500/20 text-orange-400',
       bar: 'bg-orange-500',
     },
     red: {
-      icon: 'bg-red-100 text-red-600',
-      bar: 'bg-red-500',
+      icon: 'bg-rose-500/20 text-rose-400',
+      bar: 'bg-rose-500',
     },
   }
 
   const colors = accentMap[accent]
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="relative overflow-hidden rounded-2xl p-6 transition-all hover:border-violet-500/20" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       {/* Accent bar */}
       <div className={`absolute left-0 top-0 h-full w-1 ${colors.bar}`} />
       <div className="flex items-start justify-between">
@@ -132,7 +138,7 @@ function KpiCard({
 
 function KpiCardSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className="absolute left-0 top-0 h-full w-1 bg-gray-100" />
       <div className="flex items-start justify-between">
         <div className="space-y-2 flex-1">
@@ -150,27 +156,27 @@ function KpiCardSkeleton() {
 function AlertBanner({ criticalPct }: { criticalPct: number }) {
   if (criticalPct < 0.5) return null
   const isCritical = criticalPct >= 0.8
+  const color = isCritical ? '#EF4444' : '#F97316'
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-2xl border p-4 ${
-        isCritical
-          ? 'border-red-200 bg-red-50'
-          : 'border-orange-200 bg-orange-50'
-      }`}
+      className="flex items-start gap-4 rounded-2xl p-4"
+      style={{
+        background: `rgba(${isCritical ? '239,68,68' : '249,115,22'},0.08)`,
+        border: `1px solid rgba(${isCritical ? '239,68,68' : '249,115,22'},0.25)`,
+      }}
     >
       <div
-        className={`mt-0.5 shrink-0 rounded-full p-1.5 ${
-          isCritical ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
-        }`}
+        className="mt-0.5 shrink-0 rounded-full p-1.5"
+        style={{ background: `rgba(${isCritical ? '239,68,68' : '249,115,22'},0.15)`, color }}
       >
-        <AlertTriangle size={16} />
+        <AlertTriangle size={15} />
       </div>
       <div>
-        <p className={`text-sm font-semibold ${isCritical ? 'text-red-800' : 'text-orange-800'}`}>
+        <p className="text-sm font-bold" style={{ color }}>
           {isCritical ? 'Rentabilidad crítica detectada' : 'Atención requerida'}
         </p>
-        <p className={`mt-0.5 text-xs ${isCritical ? 'text-red-600' : 'text-orange-600'}`}>
+        <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
           El {fmtPct(criticalPct)} de los combos modelo-servicio tiene margen por debajo del umbral mínimo.
           Revisa el catálogo de costos o ajusta los parámetros de configuración.
         </p>
@@ -183,23 +189,23 @@ function AlertBanner({ criticalPct }: { criticalPct: number }) {
 function QuickActions() {
   const navigate = useNavigate()
   const actions = [
-    { label: 'Nueva cotización', icon: Calculator, to: '/calculator', color: 'text-blue-600 bg-blue-50 hover:bg-blue-100' },
-    { label: 'Ver cotizaciones', icon: FileText, to: '/quotes', color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' },
-    { label: 'Catálogo de costos', icon: Layers, to: '/catalog', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
-    { label: 'Simular escenario', icon: Zap, to: null as string | null, color: 'text-orange-600 bg-orange-50 hover:bg-orange-100', action: true },
+    { label: 'Nueva cotización', icon: Calculator, to: '/calculator', color: 'rgba(139,92,246,0.12)', text: 'var(--primary-light)' },
+    { label: 'Ver cotizaciones', icon: FileText, to: '/quotes', color: 'rgba(99,102,241,0.12)', text: '#a5b4fc' },
+    { label: 'Catálogo de costos', icon: Layers, to: '/catalog', color: 'rgba(52,211,153,0.10)', text: '#6ee7b7' },
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {actions.filter(a => !a.action).map((action) => (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {actions.map((action) => (
         <button
           key={action.label}
-          onClick={() => action.to && navigate(action.to)}
-          className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${action.color}`}
+          onClick={() => navigate(action.to)}
+          className="flex items-center gap-3 rounded-xl px-5 py-4 text-left transition-all hover:opacity-90"
+          style={{ background: action.color, border: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <action.icon size={18} strokeWidth={1.8} />
-          <span className="text-sm font-medium">{action.label}</span>
-          <ChevronRight size={14} className="ml-auto opacity-50" />
+          <action.icon size={18} strokeWidth={1.8} style={{ color: action.text, flexShrink: 0 }} />
+          <span className="text-sm font-semibold" style={{ color: action.text }}>{action.label}</span>
+          <ChevronRight size={13} className="ml-auto opacity-40" style={{ color: action.text }} />
         </button>
       ))}
     </div>
@@ -211,8 +217,8 @@ function DonutCenter({ totalCombos, criticalCount }: { totalCombos: number; crit
   const pct = totalCombos > 0 ? Math.round((criticalCount / totalCombos) * 100) : 0
   return (
     <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle">
-      <tspan x="50%" dy="-8" fontSize="22" fontWeight="700" fill="#111827">{pct}%</tspan>
-      <tspan x="50%" dy="20" fontSize="11" fill="#9CA3AF">críticos</tspan>
+      <tspan x="50%" dy="-8" fontSize="22" fontWeight="700" fill="#f1f5f9">{pct}%</tspan>
+      <tspan x="50%" dy="20" fontSize="11" fill="#64748b">críticos</tspan>
     </text>
   )
 }
@@ -242,75 +248,52 @@ function SimulateModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
         {/* Modal header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="rounded-lg bg-orange-100 p-1.5 text-orange-600">
+            <div className="rounded-lg p-1.5" style={{ background: 'rgba(249,115,22,0.15)', color: '#fb923c' }}>
               <Zap size={16} />
             </div>
-            <h2 className="text-base font-semibold text-gray-900">Simular Escenario</h2>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Simular Escenario</h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="rounded-lg p-1.5 transition-colors"
+            style={{ color: 'var(--text-muted)' }}
           >
             <span className="text-lg leading-none">&times;</span>
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
-          <p className="text-xs text-gray-400">
+        <div className="px-6 py-5 space-y-5">
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
             Ajusta los parámetros para ver cómo impactarían en los márgenes sin alterar la configuración actual.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Costo/hr técnico ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={techCostHr}
-                onChange={(e) => setTechCostHr(e.target.value)}
-                placeholder="Ej. 250.00"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Margen objetivo (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={targetMargin}
-                onChange={(e) => setTargetMargin(e.target.value)}
-                placeholder="Ej. 30"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                % aumento Brame
-              </label>
-              <input
-                type="number"
-                min="-100"
-                max="100"
-                step="0.1"
-                value={bramePctIncrease}
-                onChange={(e) => setBramePctIncrease(e.target.value)}
-                placeholder="Ej. 5"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            {[
+              { label: 'Costo/hr técnico ($)', value: techCostHr, onChange: setTechCostHr, placeholder: 'Ej. 250.00', step: '0.01', min: '0' },
+              { label: 'Margen objetivo (%)', value: targetMargin, onChange: setTargetMargin, placeholder: 'Ej. 30', step: '0.1', min: '0', max: '100' },
+              { label: '% aumento Brame', value: bramePctIncrease, onChange: setBramePctIncrease, placeholder: 'Ej. 5', step: '0.1', min: '-100', max: '100' },
+            ].map((field) => (
+              <div key={field.label}>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  {field.label}
+                </label>
+                <input
+                  type="number"
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full px-3.5 py-2.5 text-sm focus:outline-none"
+                  style={{ borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                />
+              </div>
+            ))}
 
             {mutation.isError && (
               <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2.5">
@@ -324,32 +307,23 @@ function SimulateModal({ onClose }: { onClose: () => void }) {
           </form>
 
           {delta && (
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>
                 Impacto del escenario
               </p>
               <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="rounded-lg bg-white border border-gray-100 p-3">
-                  <p className="text-xs text-gray-400">Margen Δ</p>
-                  <p className={`mt-1 text-lg font-bold ${delta.avg_margin_pct_delta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {delta.avg_margin_pct_delta >= 0 ? '+' : ''}
-                    {(delta.avg_margin_pct_delta * 100).toFixed(1)}pp
-                  </p>
-                </div>
-                <div className="rounded-lg bg-white border border-gray-100 p-3">
-                  <p className="text-xs text-gray-400">Críticos Δ</p>
-                  <p className={`mt-1 text-lg font-bold ${delta.critical_combos_delta <= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {delta.critical_combos_delta > 0 ? '+' : ''}
-                    {delta.critical_combos_delta}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-white border border-gray-100 p-3">
-                  <p className="text-xs text-gray-400">OK Δ</p>
-                  <p className={`mt-1 text-lg font-bold ${delta.ok_combos_delta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {delta.ok_combos_delta > 0 ? '+' : ''}
-                    {delta.ok_combos_delta}
-                  </p>
-                </div>
+                {[
+                  { label: 'Margen Δ', value: `${delta.avg_margin_pct_delta >= 0 ? '+' : ''}${(delta.avg_margin_pct_delta * 100).toFixed(1)}pp`, positive: delta.avg_margin_pct_delta >= 0 },
+                  { label: 'Críticos Δ', value: `${delta.critical_combos_delta > 0 ? '+' : ''}${delta.critical_combos_delta}`, positive: delta.critical_combos_delta <= 0 },
+                  { label: 'OK Δ', value: `${delta.ok_combos_delta > 0 ? '+' : ''}${delta.ok_combos_delta}`, positive: delta.ok_combos_delta >= 0 },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-lg p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>{item.label}</p>
+                    <p className="mt-1 text-lg font-bold" style={{ color: item.positive ? '#34d399' : '#fb7185' }}>
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -388,20 +362,21 @@ export function DashboardPage() {
     : []
 
   return (
-    <div className="min-h-full bg-gray-50/50">
-      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="min-h-full">
+      <div className="space-y-7 max-w-7xl mx-auto">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-0.5 text-sm text-gray-500">
-              Rentabilidad y márgenes — BJX Atlas
+            <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Dashboard</h1>
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
+              Rentabilidad y márgenes · BJX Atlas
             </p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-800 transition-colors"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', boxShadow: '0 4px 14px rgba(139,92,246,0.3)' }}
           >
             <Zap size={15} />
             Simular Escenario
@@ -458,13 +433,13 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
           {/* Bar Chart */}
-          <div className="col-span-1 lg:col-span-2 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
+          <div className="col-span-1 lg:col-span-2 rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-gray-800">Margen por modelo</h2>
-                <p className="mt-0.5 text-xs text-gray-400">Porcentaje de margen promedio</p>
+                <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Margen por modelo</h2>
+                <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>Porcentaje de margen promedio</p>
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-400">
+              <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
                 {(['ok', 'low', 'critical'] as const).map((s) => (
                   <span key={s} className="flex items-center gap-1.5">
                     <span className="inline-block h-2 w-2 rounded-full" style={{ background: STATUS_COLORS[s] }} />
@@ -484,7 +459,7 @@ export function DashboardPage() {
                 <BarChart data={models} margin={{ top: 4, right: 8, left: 0, bottom: 52 }}>
                   <XAxis
                     dataKey="model_name"
-                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
                     angle={-40}
                     textAnchor="end"
                     interval={0}
@@ -493,7 +468,7 @@ export function DashboardPage() {
                   />
                   <YAxis
                     tickFormatter={(v: number) => (v * 100).toFixed(0) + '%'}
-                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
                     width={42}
                     axisLine={false}
                     tickLine={false}
@@ -514,10 +489,10 @@ export function DashboardPage() {
           </div>
 
           {/* Donut Chart */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="mb-5">
-              <h2 className="text-sm font-semibold text-gray-800">Distribución</h2>
-              <p className="mt-0.5 text-xs text-gray-400">Combos por estado de margen</p>
+          <div className="rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div className="mb-6">
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Distribución</h2>
+              <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>Combos por estado de margen</p>
             </div>
             {isLoading ? (
               <Skeleton className="mx-auto h-48 w-48 rounded-full" />
@@ -555,12 +530,12 @@ export function DashboardPage() {
                 {/* Legend */}
                 <div className="mt-2 space-y-2">
                   {donutData.map((d) => (
-                    <div key={d.name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: `${d.color}12` }}>
+                    <div key={d.name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: `${d.color}10`, border: `1px solid ${d.color}25` }}>
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
-                        <span className="text-xs font-medium text-gray-600">{d.name}</span>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{d.name}</span>
                       </div>
-                      <span className="text-xs font-semibold" style={{ color: d.color }}>
+                      <span className="text-xs font-bold" style={{ color: d.color }}>
                         {d.value}
                       </span>
                     </div>
@@ -572,14 +547,14 @@ export function DashboardPage() {
         </div>
 
         {/* ── Rentabilidad por modelo table ───────────────────────────────── */}
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
             <div>
-              <h2 className="text-sm font-semibold text-gray-800">Rentabilidad por modelo</h2>
-              <p className="mt-0.5 text-xs text-gray-400">Haz clic en una fila para ver detalle</p>
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Rentabilidad por modelo</h2>
+              <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>Clic en una fila para ver detalle en catálogo</p>
             </div>
             {models.length > 0 && (
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
+              <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                 {models.length} modelos
               </span>
             )}
@@ -591,57 +566,55 @@ export function DashboardPage() {
               </div>
             ) : models.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <div className="mb-3 rounded-xl bg-gray-100 p-4">
-                  <Car size={28} className="text-gray-400" />
+                <div className="mb-3 rounded-xl p-4" style={{ background: 'var(--surface-2)' }}>
+                  <Car size={28} style={{ color: 'var(--text-faint)' }} />
                 </div>
-                <p className="text-sm font-medium text-gray-600">Sin datos de rentabilidad</p>
-                <p className="mt-1 text-xs text-gray-400">Completa el catálogo de costos para ver los márgenes</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>Sin datos de rentabilidad</p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--text-faint)' }}>Completa el catálogo de costos para ver los márgenes</p>
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-400">
-                    <th className="px-5 py-3">Modelo</th>
-                    <th className="px-5 py-3 text-right">Servicios</th>
-                    <th className="px-5 py-3 text-right hidden sm:table-cell">Costo BJX</th>
-                    <th className="px-5 py-3 text-right hidden sm:table-cell">Precio Brame</th>
-                    <th className="px-5 py-3 text-right hidden md:table-cell">Margen $</th>
-                    <th className="px-5 py-3 text-right">Margen %</th>
-                    <th className="px-5 py-3 text-center">Status</th>
+                  <tr>
+                    <th className="px-6 py-3 text-left">Modelo</th>
+                    <th className="px-6 py-3 text-right">Servicios</th>
+                    <th className="px-6 py-3 text-right hidden sm:table-cell">Costo BJX</th>
+                    <th className="px-6 py-3 text-right hidden sm:table-cell">Precio Brame</th>
+                    <th className="px-6 py-3 text-right hidden md:table-cell">Margen $</th>
+                    <th className="px-6 py-3 text-right">Margen %</th>
+                    <th className="px-6 py-3 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody>
                   {models.map((row) => (
                     <tr
                       key={row.model_id}
                       onClick={() => navigate(`/catalog?model_id=${row.model_id}`)}
-                      className={`cursor-pointer transition-colors hover:bg-gray-50 group ${STATUS_BG[row.margin_status]} hover:brightness-95`}
+                      className="cursor-pointer group"
+                      style={{ borderLeft: `3px solid ${STATUS_COLORS[row.margin_status]}22` }}
                     >
-                      <td className="px-5 py-3.5">
+                      <td className="px-6 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="h-7 w-1 rounded-full shrink-0"
-                            style={{ background: STATUS_COLORS[row.margin_status] }}
-                          />
-                          <span className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                          <div className="h-6 w-1 rounded-full shrink-0" style={{ background: STATUS_COLORS[row.margin_status] }} />
+                          <span className="font-semibold transition-colors" style={{ color: 'var(--text)' }}>
                             {row.model_name}
                           </span>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-right text-gray-500">{row.service_count}</td>
-                      <td className="px-5 py-3.5 text-right text-gray-500 hidden sm:table-cell">
+                      <td className="px-6 py-3.5 text-right" style={{ color: 'var(--text-muted)' }}>{row.service_count}</td>
+                      <td className="px-6 py-3.5 text-right hidden sm:table-cell" style={{ color: 'var(--text-muted)' }}>
                         {fmtCurrency(row.avg_bjx_cost)}
                       </td>
-                      <td className="px-5 py-3.5 text-right text-gray-500 hidden sm:table-cell">
+                      <td className="px-6 py-3.5 text-right hidden sm:table-cell" style={{ color: 'var(--text-muted)' }}>
                         {fmtCurrency(row.avg_brame_price)}
                       </td>
-                      <td className="px-5 py-3.5 text-right text-gray-500 hidden md:table-cell">
+                      <td className="px-6 py-3.5 text-right hidden md:table-cell" style={{ color: 'var(--text-muted)' }}>
                         {fmtCurrency(row.avg_margin_pesos)}
                       </td>
-                      <td className="px-5 py-3.5 text-right font-bold" style={{ color: STATUS_COLORS[row.margin_status] }}>
+                      <td className="px-6 py-3.5 text-right font-bold" style={{ color: STATUS_COLORS[row.margin_status] }}>
                         {fmtPct(row.avg_margin_pct)}
                       </td>
-                      <td className="px-5 py-3.5 text-center">
+                      <td className="px-6 py-3.5 text-center">
                         <MarginBadge status={row.margin_status} />
                       </td>
                     </tr>

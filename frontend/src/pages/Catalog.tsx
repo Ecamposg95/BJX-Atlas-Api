@@ -43,7 +43,8 @@ function EditableCell({
           if (e.key === 'Enter') commit()
           if (e.key === 'Escape') setEditing(false)
         }}
-        className="w-28 rounded border border-blue-400 px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-28 px-2 py-0.5 text-sm focus:outline-none"
+        style={{ background: 'var(--surface-2)', border: '1px solid var(--primary)', borderRadius: 6, color: 'var(--text)' }}
       />
     )
   }
@@ -159,7 +160,7 @@ function CostsTab() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
+      <div className="rounded-xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         {costsQuery.isLoading ? (
           <div className="p-5">
             <TableSkeleton rows={6} cols={7} />
@@ -186,7 +187,7 @@ function CostsTab() {
                 const savingParts = saving[`${cost.model_id}:${cost.service_id}:bjx_parts_cost`]
                 const isEstimated = cost.data_source === 'estimated'
                 return (
-                  <tr key={cost.id} className={`transition-colors ${isEstimated ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50'}`}>
+                  <tr key={cost.id} className="transition-colors" style={ isEstimated ? { background: 'rgba(251,191,36,0.06)' } : {} }>
                     <td className="px-5 py-3 font-medium text-gray-900">
                       {modelMap[cost.model_id] ?? cost.model_id}
                     </td>
@@ -196,14 +197,14 @@ function CostsTab() {
                     <td className="px-5 py-3 text-right text-gray-600">
                       {cost.duration_hrs.toFixed(1)}
                     </td>
-                    <td className={`px-5 py-3 text-right ${isEstimated ? 'bg-yellow-100' : ''}`}>
+                    <td className="px-5 py-3 text-right" style={ isEstimated ? { background: 'rgba(251,191,36,0.10)' } : {} }>
                       <EditableCell
                         value={cost.bjx_labor_cost}
                         saving={savingMO ?? false}
                         onSave={(val) => handleSave(cost, 'bjx_labor_cost', val)}
                       />
                     </td>
-                    <td className={`px-5 py-3 text-right ${isEstimated ? 'bg-yellow-100' : ''}`}>
+                    <td className="px-5 py-3 text-right" style={ isEstimated ? { background: 'rgba(251,191,36,0.10)' } : {} }>
                       <EditableCell
                         value={cost.bjx_parts_cost}
                         saving={savingParts ?? false}
@@ -212,8 +213,8 @@ function CostsTab() {
                     </td>
                     <td className="px-5 py-3 text-center">
                       {isEstimated ? (
-                        <span className="inline-flex items-center rounded-full bg-yellow-200 px-2.5 py-0.5 text-xs font-medium text-yellow-900">
-                          ⚠️ Estimado
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'rgba(251,191,36,0.15)', color: '#fde68a', border: '1px solid rgba(251,191,36,0.3)' }}>
+                          ⚠ Estimado
                         </span>
                       ) : (
                         <Badge variant="ok">Catálogo</Badge>
@@ -240,7 +241,7 @@ function MissingTab() {
   const missing = missingQuery.data ?? []
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
+    <div className="rounded-xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       {missingQuery.isLoading ? (
         <div className="p-5">
           <TableSkeleton rows={6} cols={2} />
@@ -288,17 +289,17 @@ export function CatalogPage() {
   const [activeTab, setActiveTab] = useState<Tab>('costs')
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-7">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Catálogo</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Catálogo</h1>
+        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
           Costos de mano de obra y refacciones por modelo y servicio
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1" style={{ borderBottom: '1px solid var(--border)' }}>
         {(
           [
             { key: 'costs', label: 'Costos' },
@@ -308,12 +309,11 @@ export function CatalogPage() {
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={[
-              'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
-              activeTab === key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700',
-            ].join(' ')}
+            className="px-4 py-2.5 text-sm font-bold transition-colors -mb-px"
+            style={{
+              borderBottom: activeTab === key ? '2px solid var(--primary)' : '2px solid transparent',
+              color: activeTab === key ? 'var(--primary-light)' : 'var(--text-muted)',
+            }}
           >
             {label}
           </button>

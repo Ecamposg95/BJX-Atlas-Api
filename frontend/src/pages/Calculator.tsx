@@ -26,8 +26,12 @@ const DEFAULT_TECH_COST = 156.25
 const DEFAULT_TARGET_MARGIN = 40
 
 const STATUS_COLORS = { ok: '#10B981', low: '#F97316', critical: '#EF4444' } as const
-const STATUS_TEXT = { ok: 'text-emerald-600', low: 'text-orange-500', critical: 'text-red-500' } as const
-const STATUS_BG = { ok: 'bg-emerald-50 border-emerald-200', low: 'bg-orange-50 border-orange-200', critical: 'bg-red-50 border-red-200' } as const
+const STATUS_TEXT = { ok: 'text-emerald-400', low: 'text-orange-400', critical: 'text-rose-400' } as const
+const STATUS_BG = {
+  ok:       'border-emerald-500/20',
+  low:      'border-orange-500/20',
+  critical: 'border-rose-500/20',
+} as const
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 const fmt$ = (v: number) => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2 })
@@ -62,7 +66,7 @@ function MarginGauge({ result, targetPct }: { result: CalculationResult; targetP
         <circle
           cx={cx} cy={cy} r={r}
           fill="none"
-          stroke="#F3F4F6"
+          stroke="#1e293b"
           strokeWidth={sw}
           strokeDasharray={`${arcLen} ${circumference}`}
           strokeLinecap="round"
