@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { getQuotes, getQuote, updateQuoteStatus, exportQuote } from '../api'
 import type { Quote, QuoteStatus, QuoteLine } from '../api/types'
 import { Badge, MarginBadge } from '../components/ui/Badge'
@@ -371,6 +372,7 @@ function QuoteDetail({ quoteId }: { quoteId: string }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function QuotesPage() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<QuoteStatus | 'all'>('all')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -429,8 +431,23 @@ export function QuotesPage() {
               <TableSkeleton rows={6} cols={2} />
             </div>
           ) : filteredQuotes.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-400">
-              {search ? 'Sin resultados para la búsqueda.' : 'No hay cotizaciones en esta categoría.'}
+            <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+              <svg className="mb-3 h-14 w-14 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              {search ? (
+                <p className="text-sm text-gray-400">Sin resultados para la búsqueda.</p>
+              ) : (
+                <>
+                  <p className="mb-3 text-sm text-gray-400">No hay cotizaciones aquí todavía.</p>
+                  <button
+                    onClick={() => navigate('/calculator')}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Crear primera cotización
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             filteredQuotes.map((quote) => (
