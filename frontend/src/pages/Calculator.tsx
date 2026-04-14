@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { getModels, getServices, getCosts, calculate, createQuote } from '../api'
 import type { EngineResponse } from '../api/types'
 import { Badge, MarginBadge } from '../components/ui/Badge'
@@ -45,9 +46,10 @@ export function CalculatorPage() {
   const [result, setResult] = useState<EngineResponse | null>(null)
 
   // Quote modal
+  const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
   const [notes, setNotes] = useState('')
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; quoteId: string } | null>(null)
 
   // Debounce refs
   const calcTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -116,8 +118,8 @@ export function CalculatorPage() {
     onSuccess: (data) => {
       setShowModal(false)
       setNotes('')
-      setToast(`Cotización ${data.quote_number} creada`)
-      setTimeout(() => setToast(null), 3000)
+      setToast({ message: `Cotización ${data.quote_number} creada`, quoteId: data.id })
+      setTimeout(() => setToast(null), 4000)
     },
   })
 
@@ -139,8 +141,14 @@ export function CalculatorPage() {
     <div className="relative space-y-4">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 z-50 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
-          {toast}
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
+          <span>{toast.message}</span>
+          <button
+            onClick={() => { setToast(null); navigate('/quotes') }}
+            className="underline underline-offset-2 opacity-90 hover:opacity-100"
+          >
+            Ver →
+          </button>
         </div>
       )}
 

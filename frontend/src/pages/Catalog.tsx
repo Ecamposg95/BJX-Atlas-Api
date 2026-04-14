@@ -186,7 +186,7 @@ function CostsTab() {
                 const savingParts = saving[`${cost.model_id}:${cost.service_id}:bjx_parts_cost`]
                 const isEstimated = cost.data_source === 'estimated'
                 return (
-                  <tr key={cost.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={cost.id} className={`transition-colors ${isEstimated ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50'}`}>
                     <td className="px-5 py-3 font-medium text-gray-900">
                       {modelMap[cost.model_id] ?? cost.model_id}
                     </td>
@@ -196,14 +196,14 @@ function CostsTab() {
                     <td className="px-5 py-3 text-right text-gray-600">
                       {cost.duration_hrs.toFixed(1)}
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className={`px-5 py-3 text-right ${isEstimated ? 'bg-yellow-100' : ''}`}>
                       <EditableCell
                         value={cost.bjx_labor_cost}
                         saving={savingMO ?? false}
                         onSave={(val) => handleSave(cost, 'bjx_labor_cost', val)}
                       />
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className={`px-5 py-3 text-right ${isEstimated ? 'bg-yellow-100' : ''}`}>
                       <EditableCell
                         value={cost.bjx_parts_cost}
                         saving={savingParts ?? false}
@@ -212,8 +212,8 @@ function CostsTab() {
                     </td>
                     <td className="px-5 py-3 text-center">
                       {isEstimated ? (
-                        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                          Estimado
+                        <span className="inline-flex items-center rounded-full bg-yellow-200 px-2.5 py-0.5 text-xs font-medium text-yellow-900">
+                          ⚠️ Estimado
                         </span>
                       ) : (
                         <Badge variant="ok">Catálogo</Badge>
