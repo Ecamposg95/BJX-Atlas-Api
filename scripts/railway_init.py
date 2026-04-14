@@ -101,6 +101,52 @@ def run_migrations():
     print(f"[BOOT] Migrations done ({elapsed:.1f}s)", flush=True)
 
 
+def seed_catalog():
+    """Seed vehicle models, services, catalog costs and BRAME prices from Excel (idempotent)."""
+    print("[BOOT] Seeding catalog from Excel...", flush=True)
+    t0 = time.time()
+
+    excel_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "context", "BJX_Calculadora_Brame_v1.xlsx",
+    )
+
+    if not os.path.exists(excel_path):
+        print(f"[BOOT]   Excel not found at {excel_path} — skipping catalog seed.", flush=True)
+        return
+
+    from app.database import SessionLocal
+    from app.models.catalog import VehicleModel, ServiceCatalog
+    from app.models.suppliers import SupplierPrice
+    from seeds.load_data import load_brame_excel
+
+    db = SessionLocal()
+    try:
+        # Check if data already loaded
+        n_models = db.query(VehicleModel).count()
+        n_catalog = db.query(ServiceCatalog).count()
+        if n_models >= 5 and n_catalog >= 50:
+            print(f"[BOOT]   Catalog already loaded ({n_models} models, {n_catalog} entries) — skipping.", flush=True)
+            return
+
+        stats = load_brame_excel(db, excel_path, dry_run=False)
+        db.commit()
+        elapsed = time.time() - t0
+        print(
+            f"[BOOT]   Catalog done ({elapsed:.1f}s): "
+            f"{stats['models']} models, {stats['services']} services, "
+            f"{stats['catalog_entries']} catalog entries, "
+            f"{stats['brame_prices_current']} BRAME prices",
+            flush=True,
+        )
+    except Exception as exc:
+        db.rollback()
+        print(f"[ERROR] Catalog seed failed: {exc}", flush=True)
+        # Non-fatal: server can still start without catalog data
+    finally:
+        db.close()
+
+
 def seed_defaults():
     """Seed config params and admin user (idempotent)."""
     print("[BOOT] Seeding defaults...", flush=True)
@@ -177,5 +223,6 @@ if __name__ == "__main__":
     ensure_db_consistency()
     run_migrations()
     seed_defaults()
+    seed_catalog()
 
     print(f"[BOOT] Init complete ({time.time() - total:.1f}s). Starting server...", flush=True)
