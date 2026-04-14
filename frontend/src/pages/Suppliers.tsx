@@ -120,7 +120,7 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+    <div className="rounded-xl p-6 space-y-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -139,22 +139,16 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
 
       {/* Stats grid */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-lg bg-gray-50 px-3 py-2">
-          <p className="text-xs text-gray-500">Lead Time</p>
-          <p className="mt-0.5 text-sm font-semibold text-gray-900">
-            {supplier.lead_time_days}d
-          </p>
-        </div>
-        <div className="rounded-lg bg-gray-50 px-3 py-2">
-          <p className="text-xs text-gray-500">Garantía</p>
-          <p className="mt-0.5 text-sm font-semibold text-gray-900">
-            {supplier.warranty_days}d
-          </p>
-        </div>
-        <div className="rounded-lg bg-gray-50 px-3 py-2">
-          <p className="text-xs text-gray-500">Precios</p>
-          <p className="mt-0.5 text-sm font-semibold text-gray-900">{supplier.price_count}</p>
-        </div>
+        {[
+          { label: 'Lead Time', value: `${supplier.lead_time_days}d` },
+          { label: 'Garantía', value: `${supplier.warranty_days}d` },
+          { label: 'Precios', value: String(supplier.price_count) },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-lg px-3 py-3" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>{stat.label}</p>
+            <p className="mt-1 text-base font-black" style={{ color: 'var(--text)' }}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Coverage */}
@@ -203,12 +197,12 @@ export function SuppliersPage() {
   const isLoading = suppliersQuery.isLoading
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-7">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proveedores</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Proveedores</h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
             Gestión de proveedores y precios de refacciones
           </p>
         </div>

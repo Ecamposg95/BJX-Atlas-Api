@@ -1,52 +1,47 @@
 @import "tailwindcss";
 
 /* ============================================================
-   BJX ATLAS — DESIGN SYSTEM  (dark-first, inspired by Atlas ERP)
+   BJX ATLAS — DESIGN SYSTEM  (dark-first · Montserrat)
    ============================================================ */
 
 /* --- 1. DESIGN TOKENS --------------------------------------- */
 :root {
-  /* Primary — Violet */
-  --primary:        #8b5cf6;   /* violet-500 */
-  --primary-dark:   #7c3aed;   /* violet-600 */
-  --primary-light:  #a78bfa;   /* violet-400 */
+  --primary:        #8b5cf6;
+  --primary-dark:   #7c3aed;
+  --primary-light:  #a78bfa;
 
-  /* Accent */
-  --success: #34d399;   /* emerald-400 */
-  --warning: #fbbf24;   /* amber-400   */
-  --danger:  #fb7185;   /* rose-400    */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger:  #fb7185;
 
-  /* Dark mode surfaces (default) */
-  --bg:        #020617;               /* slate-950  */
-  --surface:   #0f172a;               /* slate-900  */
-  --surface-2: #1e293b;               /* slate-800  */
-  --border:    rgba(51,65,85,0.7);    /* slate-700/70 */
+  --bg:        #020617;
+  --surface:   #0f172a;
+  --surface-2: #1e293b;
+  --border:    rgba(51,65,85,0.8);
+  --border-dim:rgba(30,41,59,0.8);
 
-  /* Typography */
-  --text:       #f8fafc;   /* slate-50  */
-  --text-muted: #94a3b8;   /* slate-400 */
-  --text-faint: #64748b;   /* slate-500 */
+  --text:       #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-faint: #475569;
 
-  /* Shadow */
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -1px rgba(0,0,0,0.2);
+  --shadow: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 20px 40px rgba(0,0,0,0.6);
 
-  /* Sidebar — always dark, never changes */
   --sb-bg:          #0a0514;
-  --sb-border:      rgba(139,92,246,0.10);
+  --sb-border:      rgba(139,92,246,0.12);
   --sb-text:        #94a3b8;
   --sb-hover-bg:    rgba(255,255,255,0.05);
-  --sb-active-bg:   rgba(139,92,246,0.15);
+  --sb-active-bg:   rgba(139,92,246,0.18);
   --sb-active-text: #a78bfa;
   --sb-active-icon: #8b5cf6;
 
-  /* Semaphore */
   --color-ok:       #10B981;
   --color-low:      #F97316;
   --color-critical: #EF4444;
 }
 
 /* --- 2. GLOBAL BASE ----------------------------------------- */
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 
 html { color-scheme: dark; }
 
@@ -54,21 +49,92 @@ body {
   margin: 0;
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Inter', 'Montserrat', system-ui, -apple-system, sans-serif;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
-  width: 100%;
-  min-height: 100svh;
-}
+#root { width: 100%; min-height: 100svh; }
 
-/* --- 3. SIDEBAR --------------------------------------------- */
-aside {
-  background-color: var(--sb-bg) !important;
-  border-right: 1px solid var(--sb-border) !important;
+/* --- 3. GLOBAL DARK OVERRIDES ------------------------------ */
+/* These ensure any Tailwind light-mode class renders dark */
+
+.bg-white    { background-color: var(--surface)   !important; }
+.bg-gray-50  { background-color: var(--surface-2) !important; }
+.bg-gray-100 { background-color: var(--surface-2) !important; }
+
+.border-gray-50,
+.border-gray-100,
+.border-gray-200  { border-color: var(--border) !important; }
+
+.text-gray-900,
+.text-gray-800    { color: var(--text) !important; }
+.text-gray-700    { color: #cbd5e1 !important; }
+.text-gray-600    { color: var(--text-muted) !important; }
+.text-gray-500,
+.text-gray-400    { color: var(--text-muted) !important; }
+.text-gray-300    { color: var(--text-faint) !important; }
+
+.divide-gray-50 > * + *,
+.divide-gray-100 > * + *  { border-color: var(--border-dim) !important; }
+
+/* Blue → Violet rebrand */
+.bg-blue-600    { background-color: #7c3aed !important; }
+.hover\:bg-blue-700:hover { background-color: #6d28d9 !important; }
+.bg-blue-50     { background-color: rgba(139,92,246,0.12) !important; }
+.bg-blue-100    { background-color: rgba(139,92,246,0.18) !important; }
+.hover\:bg-blue-100:hover { background-color: rgba(139,92,246,0.22) !important; }
+.hover\:bg-blue-50:hover  { background-color: rgba(139,92,246,0.10) !important; }
+.text-blue-600,
+.text-blue-700  { color: var(--primary-light) !important; }
+.text-blue-800  { color: var(--primary-light) !important; }
+.border-blue-500,
+.border-l-blue-500  { border-color: var(--primary) !important; }
+.border-b-2.border-blue-500 { border-bottom-color: var(--primary) !important; }
+.focus\:ring-blue-500:focus { --tw-ring-color: var(--primary) !important; }
+.bg-blue-600.text-white,
+.bg-blue-600    { color: #fff !important; }
+.hover\:bg-gray-50:hover  { background-color: rgba(255,255,255,0.03) !important; }
+.hover\:bg-gray-100:hover { background-color: var(--surface-2) !important; }
+
+/* Indigo → Violet */
+.bg-indigo-50  { background-color: rgba(139,92,246,0.10) !important; }
+.bg-indigo-100 { background-color: rgba(139,92,246,0.16) !important; }
+.text-indigo-600 { color: var(--primary-light) !important; }
+.hover\:bg-indigo-100:hover { background-color: rgba(139,92,246,0.20) !important; }
+
+/* Tabs active indicator */
+.border-b-2 { border-bottom-width: 2px; }
+
+/* Yellow estimated rows (Catalog) */
+.bg-yellow-50  { background-color: rgba(251,191,36,0.06) !important; }
+.bg-yellow-100 { background-color: rgba(251,191,36,0.12) !important; }
+.hover\:bg-yellow-100:hover { background-color: rgba(251,191,36,0.16) !important; }
+.bg-yellow-200 { background-color: rgba(251,191,36,0.15) !important; }
+.text-yellow-900 { color: #fde68a !important; }
+
+/* Alert banners */
+.bg-red-50    { background-color: rgba(239,68,68,0.08) !important; }
+.bg-orange-50 { background-color: rgba(249,115,22,0.08) !important; }
+.border-red-200    { border-color: rgba(239,68,68,0.25) !important; }
+.border-orange-200 { border-color: rgba(249,115,22,0.25) !important; }
+.bg-red-100    { background-color: rgba(239,68,68,0.15) !important; }
+.bg-orange-100 { background-color: rgba(249,115,22,0.15) !important; }
+.text-red-800  { color: #fca5a5 !important; }
+.text-orange-800 { color: #fdba74 !important; }
+.text-red-600  { color: #fca5a5 !important; }
+.text-orange-600 { color: #fdba74 !important; }
+
+/* Status row backgrounds (table rows) */
+.bg-emerald-50  { background-color: rgba(16,185,129,0.06) !important; }
+.bg-orange-50   { background-color: rgba(249,115,22,0.06) !important; }
+.bg-red-50      { background-color: rgba(239,68,68,0.06) !important; }
+
+/* --- 4. SIDEBAR (always dark purple-black) ------------------ */
+.sidebar-panel {
+  background-color: var(--sb-bg);
+  border-right: 1px solid var(--sb-border);
   transition: width 0.25s ease;
 }
 
@@ -77,10 +143,10 @@ aside {
   align-items: center;
   gap: 0.75rem;
   margin: 2px 8px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border-radius: 10px;
   color: var(--sb-text);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   transition: all 0.15s ease-out;
@@ -100,110 +166,58 @@ aside {
 }
 
 .nav-item.active svg,
-.nav-item:hover svg {
-  color: var(--sb-active-icon);
-}
+.nav-item:hover svg { color: var(--sb-active-icon); }
 
-/* --- 4. GLASS CARDS ----------------------------------------- */
-.glass-card {
+/* --- 5. MODULE CARDS --------------------------------------- */
+.module-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.module-card:hover {
+  border-color: rgba(139,92,246,0.3);
+  box-shadow: 0 0 0 1px rgba(139,92,246,0.15), var(--shadow);
 }
 
-/* --- 5. TABLES --------------------------------------------- */
+/* --- 6. TABLES --------------------------------------------- */
 table thead tr {
-  background-color: var(--surface-2) !important;
+  background-color: rgba(30,41,59,0.8) !important;
   border-bottom: 1px solid var(--border) !important;
 }
-
 table thead th {
   color: var(--text-muted) !important;
   font-weight: 700 !important;
   text-transform: uppercase;
   font-size: 0.68rem;
   letter-spacing: 0.07em;
-  padding: 10px 14px;
+  padding: 12px 16px;
 }
-
 table tbody tr {
-  border-bottom: 1px solid rgba(51,65,85,0.4) !important;
+  border-bottom: 1px solid var(--border-dim) !important;
   transition: background-color 0.12s ease;
 }
-
 table tbody tr:hover {
   background-color: rgba(139,92,246,0.04) !important;
 }
-
-table td {
-  color: var(--text);
-  padding: 10px 14px;
-  font-weight: 500;
-}
-
-/* --- 6. BUTTONS -------------------------------------------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  border: none;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.btn:active { transform: scale(0.97); }
-
-.btn-primary {
-  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(139,92,246,0.25);
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  box-shadow: 0 6px 20px rgba(139,92,246,0.35);
-}
-
-.btn-ghost {
-  background: var(--surface-2);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-}
-.btn-ghost:hover {
-  background: var(--border);
-  color: var(--text);
-}
+table td { padding: 11px 16px; }
 
 /* --- 7. FORM INPUTS ---------------------------------------- */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-select,
-textarea {
+select, textarea {
   background-color: var(--surface-2) !important;
   border-color: var(--border) !important;
   color: var(--text) !important;
+  border-radius: 10px;
 }
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-faint) !important;
-}
+input::placeholder, textarea::placeholder { color: var(--text-faint) !important; }
+select option { background-color: var(--surface-2); color: var(--text); }
 
 /* --- 8. SCROLLBAR ------------------------------------------ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(139,92,246,0.35);
+  background: rgba(139,92,246,0.3);
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(139,92,246,0.55);
-}
+::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.5); }
 ::-webkit-scrollbar-track { background: transparent; }
