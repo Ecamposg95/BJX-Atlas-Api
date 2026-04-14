@@ -18,7 +18,7 @@ class Quote(Base, UUIDMixin, AuditMixin):
     quote_number = Column(String(20), unique=True, nullable=False, index=True)
     model_id = Column(String(36), ForeignKey("models.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_by = Column(String(255), nullable=False)
-    status = Column(Enum(QuoteStatus), nullable=False, default=QuoteStatus.draft, index=True)
+    status = Column(Enum(QuoteStatus, create_type=False), nullable=False, default=QuoteStatus.draft, index=True)
     technician_cost_hr = Column(Float, nullable=False, default=156.25)
     target_margin = Column(Float, nullable=False, default=0.40)
     notes = Column(Text, nullable=True)

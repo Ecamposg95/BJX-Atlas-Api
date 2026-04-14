@@ -15,6 +15,6 @@ class User(Base, UUIDMixin, AuditMixin):
 
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
-    role = Column(Enum(Role), nullable=False, default=Role.viewer)
+    role = Column(Enum(Role, create_type=False), nullable=False, default=Role.viewer)
     active = Column(Boolean, default=True, nullable=False)
     refresh_token = Column(Text, nullable=True)
