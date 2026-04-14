@@ -18,7 +18,7 @@ def admin_user(db):
 
 @pytest.fixture
 def admin_headers(client, admin_user):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    r = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -26,7 +26,7 @@ def admin_headers(client, admin_user):
 def viewer_headers(client, db):
     user = User(email="viewer@test.com", hashed_password=hash_password("Viewer1234"), role=Role.viewer, active=True)
     db.add(user); db.commit()
-    r = client.post("/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
+    r = client.post("/api/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -81,7 +81,7 @@ class TestModels:
 
     def test_list_models_empty(self, client, admin_headers):
         """GET /catalog/models sin datos → 200, items vacío."""
-        r = client.get("/catalog/models", headers=admin_headers)
+        r = client.get("/api/catalog/models", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["items"] == []
@@ -89,7 +89,7 @@ class TestModels:
 
     def test_list_models_with_data(self, client, admin_headers, sample_model):
         """GET /catalog/models con un modelo existente → items=[sample_model]."""
-        r = client.get("/catalog/models", headers=admin_headers)
+        r = client.get("/api/catalog/models", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["total"] == 1
@@ -98,7 +98,7 @@ class TestModels:
     def test_create_model_as_admin(self, client, admin_headers):
         """POST /catalog/models como admin → 201."""
         payload = {"name": "NISSAN - VERSA", "brand": "NISSAN"}
-        r = client.post("/catalog/models", json=payload, headers=admin_headers)
+        r = client.post("/api/catalog/models", json=payload, headers=admin_headers)
         assert r.status_code == 201
         data = r.json()
         assert data["name"] == "NISSAN - VERSA"
@@ -108,22 +108,22 @@ class TestModels:
     def test_create_model_as_viewer_forbidden(self, client, viewer_headers):
         """POST /catalog/models como viewer → 403."""
         payload = {"name": "FORD - FUSION", "brand": "FORD"}
-        r = client.post("/catalog/models", json=payload, headers=viewer_headers)
+        r = client.post("/api/catalog/models", json=payload, headers=viewer_headers)
         assert r.status_code == 403
 
     def test_create_duplicate_model(self, client, admin_headers):
         """Crear dos modelos con el mismo nombre → segundo da 409."""
         payload = {"name": "TOYOTA - COROLLA"}
-        r1 = client.post("/catalog/models", json=payload, headers=admin_headers)
+        r1 = client.post("/api/catalog/models", json=payload, headers=admin_headers)
         assert r1.status_code == 201
 
-        r2 = client.post("/catalog/models", json=payload, headers=admin_headers)
+        r2 = client.post("/api/catalog/models", json=payload, headers=admin_headers)
         assert r2.status_code == 409
         assert "nombre" in r2.json()["detail"].lower() or "existe" in r2.json()["detail"].lower()
 
     def test_get_model_detail(self, client, admin_headers, sample_model):
         """GET /catalog/models/{id} → 200, service_count=0."""
-        r = client.get(f"/catalog/models/{sample_model.id}", headers=admin_headers)
+        r = client.get(f"/api/catalog/models/{sample_model.id}", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["id"] == sample_model.id
@@ -132,24 +132,24 @@ class TestModels:
 
     def test_get_model_not_found(self, client, admin_headers):
         """GET /catalog/models/nonexistent → 404."""
-        r = client.get("/catalog/models/nonexistent-id-9999", headers=admin_headers)
+        r = client.get("/api/catalog/models/nonexistent-id-9999", headers=admin_headers)
         assert r.status_code == 404
 
     def test_update_model(self, client, admin_headers, sample_model):
         """PUT /catalog/models/{id} → 200 con datos actualizados."""
         payload = {"brand": "CHEVROLET_UPDATED", "active": True}
-        r = client.put(f"/catalog/models/{sample_model.id}", json=payload, headers=admin_headers)
+        r = client.put(f"/api/catalog/models/{sample_model.id}", json=payload, headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["brand"] == "CHEVROLET_UPDATED"
 
     def test_soft_delete_model(self, client, admin_headers, sample_model):
         """DELETE /catalog/models/{id} → 204, modelo ya no aparece en listado."""
-        r = client.delete(f"/catalog/models/{sample_model.id}", headers=admin_headers)
+        r = client.delete(f"/api/catalog/models/{sample_model.id}", headers=admin_headers)
         assert r.status_code == 204
 
         # Verificar que el modelo ya no aparece en el listado (soft-delete via deleted_at)
-        r_list = client.get("/catalog/models", headers=admin_headers)
+        r_list = client.get("/api/catalog/models", headers=admin_headers)
         assert r_list.status_code == 200
         ids = [item["id"] for item in r_list.json()["items"]]
         assert sample_model.id not in ids
@@ -163,7 +163,7 @@ class TestServices:
 
     def test_list_services(self, client, admin_headers, sample_service):
         """GET /catalog/services → 200, contiene el servicio creado."""
-        r = client.get("/catalog/services", headers=admin_headers)
+        r = client.get("/api/catalog/services", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["total"] >= 1
@@ -172,7 +172,7 @@ class TestServices:
 
     def test_search_services(self, client, admin_headers, sample_service):
         """GET /catalog/services?search=balatas → solo retorna servicios coincidentes."""
-        r = client.get("/catalog/services?search=balatas", headers=admin_headers)
+        r = client.get("/api/catalog/services?search=balatas", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["total"] >= 1
@@ -181,7 +181,7 @@ class TestServices:
     def test_create_service_as_admin(self, client, admin_headers):
         """POST /catalog/services como admin → 201."""
         payload = {"name": "AFINACION MAYOR", "category": "motor"}
-        r = client.post("/catalog/services", json=payload, headers=admin_headers)
+        r = client.post("/api/catalog/services", json=payload, headers=admin_headers)
         assert r.status_code == 201
         data = r.json()
         assert data["name"] == "AFINACION MAYOR"
@@ -190,10 +190,10 @@ class TestServices:
     def test_create_duplicate_service(self, client, admin_headers):
         """Crear dos servicios con el mismo nombre → segundo da 409."""
         payload = {"name": "CAMBIO DE ACEITE", "category": "motor"}
-        r1 = client.post("/catalog/services", json=payload, headers=admin_headers)
+        r1 = client.post("/api/catalog/services", json=payload, headers=admin_headers)
         assert r1.status_code == 201
 
-        r2 = client.post("/catalog/services", json=payload, headers=admin_headers)
+        r2 = client.post("/api/catalog/services", json=payload, headers=admin_headers)
         assert r2.status_code == 409
 
 
@@ -205,7 +205,7 @@ class TestCosts:
 
     def test_list_costs(self, client, admin_headers, sample_catalog):
         """GET /catalog/costs → 200, solo entradas is_current=True."""
-        r = client.get("/catalog/costs", headers=admin_headers)
+        r = client.get("/api/catalog/costs", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["total"] >= 1
@@ -220,7 +220,7 @@ class TestCosts:
         Verificar que el endpoint responde correctamente.
         """
         # sample_catalog tiene bjx_labor_cost=350 y bjx_parts_cost=800 → completo, no debe salir en /missing
-        r = client.get("/catalog/costs/missing", headers=admin_headers)
+        r = client.get("/api/catalog/costs/missing", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         # La combinacion del sample_catalog+price tiene datos completos, no debe aparecer en missing
@@ -247,7 +247,7 @@ class TestCosts:
         )
         db.add(price); db.commit()
 
-        r = client.get("/catalog/costs/missing", headers=admin_headers)
+        r = client.get("/api/catalog/costs/missing", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         missing_combos = [(item["model_id"], item["service_id"]) for item in data]
@@ -257,7 +257,7 @@ class TestCosts:
         """PUT /catalog/costs → crea nuevo is_current=True, anterior is_current=False."""
         payload = {"bjx_labor_cost": 400.0, "bjx_parts_cost": 900.0}
         r = client.put(
-            f"/catalog/costs/{sample_catalog.model_id}/{sample_catalog.service_id}",
+            f"/api/catalog/costs/{sample_catalog.model_id}/{sample_catalog.service_id}",
             json=payload,
             headers=admin_headers,
         )

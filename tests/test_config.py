@@ -29,7 +29,7 @@ def seeded_config(db):
 
 class TestGetConfig:
     def test_get_config_authenticated(self, client, admin_token, seeded_config):
-        r = client.get("/config", headers={"Authorization": f"Bearer {admin_token}"})
+        r = client.get("/api/config", headers={"Authorization": f"Bearer {admin_token}"})
         assert r.status_code == 200
         data = r.json()
         assert isinstance(data, list)
@@ -38,7 +38,7 @@ class TestGetConfig:
         assert "target_margin" in keys
 
     def test_get_config_no_auth(self, client, seeded_config):
-        r = client.get("/config")
+        r = client.get("/api/config")
         assert r.status_code == 401
 
 
@@ -49,7 +49,7 @@ class TestGetConfig:
 class TestUpdateConfig:
     def test_update_technician_cost(self, client, admin_token, seeded_config):
         r = client.put(
-            "/config/technician_cost_hr",
+            "/api/config/technician_cost_hr",
             json={"value": "200.00"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -60,7 +60,7 @@ class TestUpdateConfig:
 
     def test_update_target_margin(self, client, admin_token, seeded_config):
         r = client.put(
-            "/config/target_margin",
+            "/api/config/target_margin",
             json={"value": "0.35"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -70,7 +70,7 @@ class TestUpdateConfig:
     @pytest.mark.parametrize("bad_value", ["1.00", "0.00", "1.5", "-0.1"])
     def test_update_target_margin_invalid(self, client, admin_token, seeded_config, bad_value):
         r = client.put(
-            "/config/target_margin",
+            "/api/config/target_margin",
             json={"value": bad_value},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -78,7 +78,7 @@ class TestUpdateConfig:
 
     def test_update_as_operador_forbidden(self, client, operador_token, seeded_config):
         r = client.put(
-            "/config/technician_cost_hr",
+            "/api/config/technician_cost_hr",
             json={"value": "100.00"},
             headers={"Authorization": f"Bearer {operador_token}"},
         )
@@ -86,7 +86,7 @@ class TestUpdateConfig:
 
     def test_update_nonexistent_key(self, client, admin_token, seeded_config):
         r = client.put(
-            "/config/nonexistent_key",
+            "/api/config/nonexistent_key",
             json={"value": "42"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -105,7 +105,7 @@ class TestUpdateConfig:
         db.commit()
 
         r = client.put(
-            "/config/scoring_weight_tc",
+            "/api/config/scoring_weight_tc",
             json={"value": "0.20"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -115,7 +115,7 @@ class TestUpdateConfig:
     def test_update_scoring_weight_breaks_sum(self, client, admin_token, seeded_config):
         # price=0.50, time=0.30, tc=0.20 → updating price to 0.70 → sum=1.20 → 422
         r = client.put(
-            "/config/scoring_weight_price",
+            "/api/config/scoring_weight_price",
             json={"value": "0.70"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -130,14 +130,14 @@ class TestConfigHistory:
     def test_history_records_change(self, client, admin_token, seeded_config):
         # Perform one update
         client.put(
-            "/config/technician_cost_hr",
+            "/api/config/technician_cost_hr",
             json={"value": "175.00"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
 
         # Fetch history
         r = client.get(
-            "/config/history/technician_cost_hr",
+            "/api/config/history/technician_cost_hr",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert r.status_code == 200
@@ -151,7 +151,7 @@ class TestConfigHistory:
 
     def test_history_nonexistent_key(self, client, admin_token, seeded_config):
         r = client.get(
-            "/config/history/does_not_exist",
+            "/api/config/history/does_not_exist",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert r.status_code == 404

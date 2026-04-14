@@ -143,6 +143,7 @@ def refresh(
     return TokenResponse(
         access_token=new_access_token,
         refresh_token=payload.refresh_token,  # keep the same refresh token
+        user=UserRead.model_validate(user),
     )
 
 
