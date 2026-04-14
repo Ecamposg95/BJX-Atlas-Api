@@ -18,7 +18,7 @@ def admin_user(db):
 
 @pytest.fixture
 def admin_headers(client, admin_user):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    r = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -73,7 +73,7 @@ class TestSuppliersCRUD:
 
     def test_list_suppliers_empty(self, client, admin_headers):
         """GET /suppliers sin proveedores → lista vacía."""
-        r = client.get("/suppliers", headers=admin_headers)
+        r = client.get("/api/suppliers", headers=admin_headers)
         assert r.status_code == 200
         assert r.json() == []
 
@@ -84,7 +84,7 @@ class TestSuppliersCRUD:
             "lead_time_days": 3,
             "warranty_days": 30,
         }
-        r = client.post("/suppliers", json=payload, headers=admin_headers)
+        r = client.post("/api/suppliers", json=payload, headers=admin_headers)
         assert r.status_code == 201
         data = r.json()
         assert data["name"] == "NUEVO PROVEEDOR"
@@ -99,7 +99,7 @@ class TestSuppliersCRUD:
             "lead_time_days": 0,
             "warranty_days": 30,
         }
-        r = client.post("/suppliers", json=payload, headers=admin_headers)
+        r = client.post("/api/suppliers", json=payload, headers=admin_headers)
         assert r.status_code == 422
         # El detalle debe ser descriptivo
         detail = r.json()["detail"]
@@ -108,15 +108,15 @@ class TestSuppliersCRUD:
     def test_create_duplicate_supplier(self, client, admin_headers):
         """Crear dos proveedores con el mismo nombre → segundo da 409."""
         payload = {"name": "PROVEEDOR DUPLICADO", "lead_time_days": 2, "warranty_days": 60}
-        r1 = client.post("/suppliers", json=payload, headers=admin_headers)
+        r1 = client.post("/api/suppliers", json=payload, headers=admin_headers)
         assert r1.status_code == 201
 
-        r2 = client.post("/suppliers", json=payload, headers=admin_headers)
+        r2 = client.post("/api/suppliers", json=payload, headers=admin_headers)
         assert r2.status_code == 409
 
     def test_soft_delete_supplier_only_one(self, client, admin_headers, sample_supplier, sample_price):
         """Intentar eliminar el unico proveedor activo con precios vigentes → 409."""
-        r = client.delete(f"/suppliers/{sample_supplier.id}", headers=admin_headers)
+        r = client.delete(f"/api/suppliers/{sample_supplier.id}", headers=admin_headers)
         assert r.status_code == 409
         assert "único" in r.json()["detail"] or "proveedor" in r.json()["detail"].lower()
 
@@ -136,7 +136,7 @@ class TestSupplierPrices:
             "labor_cost": 0.0,
             "total_price": 1300.0,
         }
-        r = client.post(f"/suppliers/{sample_supplier.id}/prices", json=payload, headers=admin_headers)
+        r = client.post(f"/api/suppliers/{sample_supplier.id}/prices", json=payload, headers=admin_headers)
         assert r.status_code == 201
         data = r.json()
         assert data["ref_cost"] == 750.0
@@ -148,7 +148,7 @@ class TestSupplierPrices:
         """PUT /suppliers/{id}/prices/{price_id} → nuevo is_current=True, anterior is_current=False."""
         payload = {"total_price": 1600.0, "ref_cost": 900.0}
         r = client.put(
-            f"/suppliers/{sample_price.supplier_id}/prices/{sample_price.id}",
+            f"/api/suppliers/{sample_price.supplier_id}/prices/{sample_price.id}",
             json=payload,
             headers=admin_headers,
         )
@@ -174,14 +174,14 @@ class TestSupplierPrices:
             "labor_cost": 0.0,
             "total_price": 1200.0,
         }
-        r1 = client.post(f"/suppliers/{sample_supplier.id}/prices", json=payload1, headers=admin_headers)
+        r1 = client.post(f"/api/suppliers/{sample_supplier.id}/prices", json=payload1, headers=admin_headers)
         assert r1.status_code == 201
         price1_id = r1.json()["id"]
 
         # Segundo precio (actualiza el primero, creando nueva version)
         payload2 = {"total_price": 1350.0}
         r_update = client.put(
-            f"/suppliers/{sample_supplier.id}/prices/{price1_id}",
+            f"/api/suppliers/{sample_supplier.id}/prices/{price1_id}",
             json=payload2,
             headers=admin_headers,
         )
@@ -189,7 +189,7 @@ class TestSupplierPrices:
 
         # Verificar history
         r_history = client.get(
-            f"/suppliers/{sample_supplier.id}/prices/history/{sample_model.id}/{sample_service.id}",
+            f"/api/suppliers/{sample_supplier.id}/prices/history/{sample_model.id}/{sample_service.id}",
             headers=admin_headers,
         )
         assert r_history.status_code == 200
@@ -206,7 +206,7 @@ class TestCompare:
     def test_compare_single_supplier(self, client, admin_headers, sample_catalog, sample_price):
         """GET /suppliers/compare → 200, 1 proveedor, recommended=True, bjx_calculation presente."""
         r = client.get(
-            f"/suppliers/compare?model_id={sample_catalog.model_id}&service_id={sample_catalog.service_id}",
+            f"/api/suppliers/compare?model_id={sample_catalog.model_id}&service_id={sample_catalog.service_id}",
             headers=admin_headers,
         )
         assert r.status_code == 200
@@ -220,7 +220,7 @@ class TestCompare:
     def test_compare_no_suppliers(self, client, admin_headers, sample_catalog):
         """Sin precios de proveedor → 404."""
         r = client.get(
-            f"/suppliers/compare?model_id={sample_catalog.model_id}&service_id={sample_catalog.service_id}",
+            f"/api/suppliers/compare?model_id={sample_catalog.model_id}&service_id={sample_catalog.service_id}",
             headers=admin_headers,
         )
         assert r.status_code == 404

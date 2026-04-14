@@ -32,7 +32,7 @@ def admin_user(db):
 
 @pytest.fixture
 def admin_headers(client, admin_user):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    r = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -46,7 +46,7 @@ def operador_headers(client, db):
     )
     db.add(user)
     db.commit()
-    r = client.post("/auth/login", json={"email": "op@test.com", "password": "Operador1234"})
+    r = client.post("/api/auth/login", json={"email": "op@test.com", "password": "Operador1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -60,7 +60,7 @@ def viewer_headers(client, db):
     )
     db.add(user)
     db.commit()
-    r = client.post("/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
+    r = client.post("/api/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -119,7 +119,7 @@ def _create_quote(client, headers, full_setup):
     model_id = full_setup["model"].id
     service_id = full_setup["service"].id
     r = client.post(
-        "/quotes",
+        "/api/quotes",
         json={"model_id": model_id, "service_ids": [service_id]},
         headers=headers,
     )
@@ -128,7 +128,7 @@ def _create_quote(client, headers, full_setup):
 
 def _confirm_quote(client, headers, quote_id):
     return client.put(
-        f"/quotes/{quote_id}",
+        f"/api/quotes/{quote_id}",
         json={"status": "confirmed"},
         headers=headers,
     )
@@ -159,7 +159,7 @@ class TestCreateQuote:
 
     def test_create_quote_invalid_model(self, client, admin_headers):
         r = client.post(
-            "/quotes",
+            "/api/quotes",
             json={"model_id": "00000000-0000-0000-0000-000000000000", "service_ids": ["svc1"]},
             headers=admin_headers,
         )
@@ -169,7 +169,7 @@ class TestCreateQuote:
         model_id = full_setup["model"].id
         service_ids = [f"svc-{i}" for i in range(21)]
         r = client.post(
-            "/quotes",
+            "/api/quotes",
             json={"model_id": model_id, "service_ids": service_ids},
             headers=admin_headers,
         )
@@ -216,7 +216,7 @@ class TestQuoteLifecycle:
 
         # Try reverting to draft
         r_back = client.put(
-            f"/quotes/{quote_id}",
+            f"/api/quotes/{quote_id}",
             json={"status": "draft"},
             headers=admin_headers,
         )
@@ -228,7 +228,7 @@ class TestQuoteLifecycle:
         _confirm_quote(client, admin_headers, quote_id)
 
         r_inv = client.put(
-            f"/quotes/{quote_id}",
+            f"/api/quotes/{quote_id}",
             json={"status": "invoiced"},
             headers=admin_headers,
         )
@@ -240,7 +240,7 @@ class TestQuoteLifecycle:
         quote_id = r.json()["id"]
 
         r_upd = client.put(
-            f"/quotes/{quote_id}",
+            f"/api/quotes/{quote_id}",
             json={"status": "confirmed"},
             headers=viewer_headers,
         )
@@ -254,7 +254,7 @@ class TestQuoteLifecycle:
 
         # Cancel as operador
         r_cancel = client.put(
-            f"/quotes/{quote_id}",
+            f"/api/quotes/{quote_id}",
             json={"status": "cancelled"},
             headers=operador_headers,
         )
@@ -273,7 +273,7 @@ class TestQuoteExport:
         quote_id = r.json()["id"]
         _confirm_quote(client, admin_headers, quote_id)
 
-        r_exp = client.get(f"/quotes/{quote_id}/export?format=pdf", headers=admin_headers)
+        r_exp = client.get(f"/api/quotes/{quote_id}/export?format=pdf", headers=admin_headers)
         assert r_exp.status_code == 200, r_exp.text
         assert "application/pdf" in r_exp.headers["content-type"]
 
@@ -282,7 +282,7 @@ class TestQuoteExport:
         quote_id = r.json()["id"]
         _confirm_quote(client, admin_headers, quote_id)
 
-        r_exp = client.get(f"/quotes/{quote_id}/export?format=xlsx", headers=admin_headers)
+        r_exp = client.get(f"/api/quotes/{quote_id}/export?format=xlsx", headers=admin_headers)
         assert r_exp.status_code == 200, r_exp.text
         assert "openxmlformats" in r_exp.headers["content-type"]
 
@@ -290,7 +290,7 @@ class TestQuoteExport:
         r = _create_quote(client, admin_headers, full_setup)
         quote_id = r.json()["id"]
 
-        r_exp = client.get(f"/quotes/{quote_id}/export?format=pdf", headers=admin_headers)
+        r_exp = client.get(f"/api/quotes/{quote_id}/export?format=pdf", headers=admin_headers)
         assert r_exp.status_code == 400
 
 
@@ -301,7 +301,7 @@ class TestQuoteExport:
 
 class TestQuoteList:
     def test_list_quotes_empty(self, client, admin_headers):
-        r = client.get("/quotes", headers=admin_headers)
+        r = client.get("/api/quotes", headers=admin_headers)
         assert r.status_code == 200
         assert r.json()["items"] == []
 
@@ -309,7 +309,7 @@ class TestQuoteList:
         # Create a quote (draft)
         _create_quote(client, admin_headers, full_setup)
 
-        r = client.get("/quotes?status=draft", headers=admin_headers)
+        r = client.get("/api/quotes?status=draft", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         assert data["total"] >= 1
@@ -322,7 +322,7 @@ class TestQuoteList:
         quote_id = r.json()["id"]
         _confirm_quote(client, admin_headers, quote_id)
 
-        r_stats = client.get("/quotes/stats", headers=admin_headers)
+        r_stats = client.get("/api/quotes/stats", headers=admin_headers)
         assert r_stats.status_code == 200, r_stats.text
         stats = r_stats.json()
         assert stats["total_quotes"] > 0

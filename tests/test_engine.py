@@ -18,7 +18,7 @@ def admin_user(db):
 
 @pytest.fixture
 def admin_headers(client, admin_user):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    r = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -77,7 +77,7 @@ class TestEngineCalculate:
             "model_id": sample_catalog.model_id,
             "service_id": sample_catalog.service_id,
         }
-        r = client.post("/engine/calculate", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/calculate", json=payload, headers=admin_headers)
         assert r.status_code == 200
 
         data = r.json()
@@ -92,7 +92,7 @@ class TestEngineCalculate:
             "model_id": sample_catalog.model_id,
             "service_id": sample_catalog.service_id,
         }
-        r = client.post("/engine/calculate", json=payload)
+        r = client.post("/api/engine/calculate", json=payload)
         assert r.status_code == 401
 
     def test_calculate_nonexistent_model(self, client, admin_headers, sample_service):
@@ -101,7 +101,7 @@ class TestEngineCalculate:
             "model_id": "fake-id-00000000000000000000",
             "service_id": sample_service.id,
         }
-        r = client.post("/engine/calculate", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/calculate", json=payload, headers=admin_headers)
         assert r.status_code == 404
 
     def test_calculate_no_catalog_data(self, client, admin_headers, sample_model, sample_service):
@@ -110,7 +110,7 @@ class TestEngineCalculate:
             "model_id": sample_model.id,
             "service_id": sample_service.id,
         }
-        r = client.post("/engine/calculate", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/calculate", json=payload, headers=admin_headers)
         assert r.status_code == 404
         assert "catalog" in r.json()["detail"].lower() or "model_id" in r.json()["detail"].lower()
 
@@ -120,7 +120,7 @@ class TestEngineCalculate:
             "model_id": sample_catalog.model_id,
             "service_id": sample_catalog.service_id,
         }
-        r = client.post("/engine/calculate", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/calculate", json=payload, headers=admin_headers)
         assert r.status_code == 200
 
         data = r.json()
@@ -135,7 +135,7 @@ class TestEngineCalculate:
             "service_id": sample_catalog.service_id,
             "technician_cost_hr": custom_rate,
         }
-        r = client.post("/engine/calculate", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/calculate", json=payload, headers=admin_headers)
         assert r.status_code == 200
 
         data = r.json()
@@ -162,7 +162,7 @@ class TestEngineBatch:
             "model_id": sample_catalog.model_id,
             "service_ids": [sample_catalog.service_id],
         }
-        r = client.post("/engine/batch", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/batch", json=payload, headers=admin_headers)
         assert r.status_code == 200
 
         data = r.json()
@@ -176,7 +176,7 @@ class TestEngineBatch:
             "model_id": sample_model.id,
             "service_ids": [f"fake-service-id-{i:04d}" for i in range(21)],
         }
-        r = client.post("/engine/batch", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/batch", json=payload, headers=admin_headers)
         assert r.status_code == 422
 
     def test_batch_mixed_data(self, client, admin_headers, db, sample_model, sample_catalog):
@@ -189,7 +189,7 @@ class TestEngineBatch:
             "model_id": sample_model.id,
             "service_ids": [sample_catalog.service_id, orphan.id],
         }
-        r = client.post("/engine/batch", json=payload, headers=admin_headers)
+        r = client.post("/api/engine/batch", json=payload, headers=admin_headers)
         assert r.status_code == 200
 
         data = r.json()
@@ -212,5 +212,5 @@ class TestEngineBatch:
             "model_id": "any-model-id",
             "service_ids": ["any-service-id"],
         }
-        r = client.post("/engine/batch", json=payload)
+        r = client.post("/api/engine/batch", json=payload)
         assert r.status_code == 401

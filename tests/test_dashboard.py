@@ -40,7 +40,7 @@ def admin_user(db):
 
 @pytest.fixture
 def admin_headers(client, admin_user):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    r = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -98,13 +98,13 @@ def full_setup(db):
 
 class TestDashboardSummary:
     def test_summary_empty_db(self, client, admin_headers):
-        r = client.get("/dashboard/summary", headers=admin_headers)
+        r = client.get("/api/dashboard/summary", headers=admin_headers)
         assert r.status_code == 200, r.text
         data = r.json()
         assert data["total_combos"] == 0
 
     def test_summary_with_data(self, client, admin_headers, full_setup):
-        r = client.get("/dashboard/summary", headers=admin_headers)
+        r = client.get("/api/dashboard/summary", headers=admin_headers)
         assert r.status_code == 200, r.text
         data = r.json()
 
@@ -123,7 +123,7 @@ class TestDashboardSummary:
         assert "target_margin" in cfg
 
     def test_summary_no_auth(self, client):
-        r = client.get("/dashboard/summary")
+        r = client.get("/api/dashboard/summary")
         assert r.status_code == 401
 
     def test_summary_weighted_margin(self, client, admin_headers, full_setup):
@@ -133,7 +133,7 @@ class TestDashboardSummary:
         avg_margin_pct = 150 / 650 ≈ 0.23
         The API uses weighted average (sum margin_pesos / sum brame_price), not simple avg.
         """
-        r = client.get("/dashboard/summary", headers=admin_headers)
+        r = client.get("/api/dashboard/summary", headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
         # With 1 combo the weighted and simple averages are the same.
@@ -149,7 +149,7 @@ class TestDashboardSummary:
 
 class TestDashboardByModel:
     def test_by_model_with_data(self, client, admin_headers, full_setup):
-        r = client.get("/dashboard/by-model", headers=admin_headers)
+        r = client.get("/api/dashboard/by-model", headers=admin_headers)
         assert r.status_code == 200, r.text
         data = r.json()
         assert len(data) >= 1
@@ -161,7 +161,7 @@ class TestDashboardByModel:
 
     def test_by_model_filter_critical(self, client, admin_headers, full_setup):
         """With ~23% margin the model should be 'low', not 'critical' (threshold=30%)."""
-        r = client.get("/dashboard/by-model?status=critical", headers=admin_headers)
+        r = client.get("/api/dashboard/by-model?status=critical", headers=admin_headers)
         assert r.status_code == 200, r.text
         data = r.json()
         for item in data:
@@ -175,7 +175,7 @@ class TestDashboardByModel:
 
 class TestDashboardByService:
     def test_by_service_with_data(self, client, admin_headers, full_setup):
-        r = client.get("/dashboard/by-service", headers=admin_headers)
+        r = client.get("/api/dashboard/by-service", headers=admin_headers)
         assert r.status_code == 200, r.text
         data = r.json()
         assert len(data) >= 1
@@ -185,7 +185,7 @@ class TestDashboardByService:
         assert "avg_margin_pct" in item
 
     def test_by_service_filter_category(self, client, admin_headers, full_setup):
-        r = client.get("/dashboard/by-service?category=motor", headers=admin_headers)
+        r = client.get("/api/dashboard/by-service?category=motor", headers=admin_headers)
         assert r.status_code == 200, r.text
         data = r.json()
         # We created one service with category=motor; it must appear
@@ -202,7 +202,7 @@ class TestDashboardByService:
 class TestDashboardSimulate:
     def test_simulate_higher_brame_price(self, client, admin_headers, full_setup):
         r = client.post(
-            "/dashboard/simulate",
+            "/api/dashboard/simulate",
             json={"brame_price_increase_pct": 0.10},
             headers=admin_headers,
         )
@@ -214,7 +214,7 @@ class TestDashboardSimulate:
 
     def test_simulate_lower_tech_cost(self, client, admin_headers, full_setup):
         r = client.post(
-            "/dashboard/simulate",
+            "/api/dashboard/simulate",
             json={"technician_cost_hr": 100.0},
             headers=admin_headers,
         )
@@ -231,7 +231,7 @@ class TestDashboardSimulate:
         before = {p.key: p.value for p in db.query(ConfigParam).all()}
 
         client.post(
-            "/dashboard/simulate",
+            "/api/dashboard/simulate",
             json={"technician_cost_hr": 999.0, "target_margin": 0.99},
             headers=admin_headers,
         )

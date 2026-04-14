@@ -58,7 +58,7 @@ def admin_user(db):
 
 @pytest.fixture
 def admin_token(client, admin_user):
-    r = client.post("/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
+    r = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin1234"})
     return r.json()["access_token"]
 
 
@@ -74,7 +74,7 @@ def operador_token(client, db):
     )
     db.add(user)
     db.commit()
-    r = client.post("/auth/login", json={"email": "op@test.com", "password": "Operador1234"})
+    r = client.post("/api/auth/login", json={"email": "op@test.com", "password": "Operador1234"})
     return r.json()["access_token"]
 
 
@@ -90,5 +90,5 @@ def viewer_token(client, db):
     )
     db.add(user)
     db.commit()
-    r = client.post("/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
+    r = client.post("/api/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
     return r.json()["access_token"]
