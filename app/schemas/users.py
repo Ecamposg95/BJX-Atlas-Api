@@ -47,6 +47,11 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class UserUpdate(BaseModel):
+    role: Optional[Role] = None
+    active: Optional[bool] = None
+
+
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str

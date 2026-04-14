@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import {
   LayoutDashboard, Calculator, FileText, BookOpen,
-  Truck, Settings, LogOut, ChevronLeft, Menu
+  Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/catalog',    icon: BookOpen,         label: 'Catálogo' },
   { to: '/suppliers',  icon: Truck,            label: 'Proveedores' },
   { to: '/config',     icon: Settings,         label: 'Configuración', adminOnly: true },
+  { to: '/admin',      icon: ShieldCheck,      label: 'Administración', adminOnly: true },
 ]
 
 const ROLE_COLORS: Record<string, string> = {

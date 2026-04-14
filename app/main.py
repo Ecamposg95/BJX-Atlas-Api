@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.database import check_db_connection
-from app.routers import auth, engine, catalog, suppliers, quotes, dashboard, config
+from app.routers import auth, engine, catalog, suppliers, quotes, dashboard, config, users
 
 logger = logging.getLogger("bjx-atlas")
 
@@ -43,6 +43,7 @@ app.include_router(suppliers.router, prefix="/api", tags=["Proveedores"])
 app.include_router(quotes.router, prefix="/api", tags=["Cotizaciones"])
 app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(config.router, prefix="/api", tags=["Configuración"])
+app.include_router(users.router, prefix="/api", tags=["Usuarios"])
 
 
 @app.get("/api/health", tags=["Sistema"])

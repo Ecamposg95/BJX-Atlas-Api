@@ -11,6 +11,13 @@ export interface UserMe {
   role: 'admin' | 'operador' | 'viewer'
   active: boolean
 }
+export interface UserRead {
+  id: string
+  email: string
+  role: 'admin' | 'operador' | 'viewer'
+  active: boolean
+  created_at: string
+}
 
 // ── Config ───────────────────────────────────────────────────────────────────
 export interface ConfigParam {
