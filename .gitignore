@@ -7,3 +7,6 @@ build/
 *.egg-info/
 venv/
 node_modules/
+frontend/dist/
+*.db-shm
+*.db-wal
