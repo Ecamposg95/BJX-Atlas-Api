@@ -2,15 +2,9 @@
 aptPkgs = ["libpq-dev", "gcc", "libffi-dev"]
 nixPkgs  = ["nodejs_20"]
 
-[phases.install]
-cmds = [
-  "pip install -r requirements.txt",
-  "cd frontend && npm install",
-]
-
 [phases.build]
 cmds = [
-  "cd frontend && npm run build",
+  "cd frontend && npm install && npm run build",
 ]
 
 [start]
