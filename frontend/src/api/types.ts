@@ -122,7 +122,7 @@ export interface Quote {
   target_margin: number
   notes: string | null
   created_at: string
-  lines: QuoteLine[]
+  lines?: QuoteLine[]
 }
 
 export interface QuoteLine {

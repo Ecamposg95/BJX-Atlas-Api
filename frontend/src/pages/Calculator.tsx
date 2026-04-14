@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { getModels, getServices, calculate, createQuote } from '../api'
+import { getModels, getServices, getCosts, calculate, createQuote } from '../api'
 import type { EngineResponse } from '../api/types'
 import { Badge, MarginBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -62,6 +62,18 @@ export function CalculatorPage() {
     queryKey: ['services'],
     queryFn: () => getServices(),
   })
+
+  // Services available for the selected model (from catalog costs)
+  const { data: modelCosts = [] } = useQuery({
+    queryKey: ['catalog-costs-for-model', modelId],
+    queryFn: () => getCosts({ model_id: modelId }),
+    enabled: Boolean(modelId),
+  })
+
+  const availableServiceIds = new Set(modelCosts.map((c) => c.service_id))
+  const filteredServices = modelId
+    ? services.filter((s) => availableServiceIds.has(s.id))
+    : services
 
   // ── Calculate mutation ────────────────────────────────────────────────────
   const calcMutation = useMutation({
@@ -186,7 +198,7 @@ export function CalculatorPage() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
                 >
                   <option value="">-- Selecciona un servicio --</option>
-                  {services.map((s) => (
+                  {filteredServices.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>

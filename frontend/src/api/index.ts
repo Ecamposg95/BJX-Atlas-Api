@@ -29,13 +29,13 @@ export const updateConfig = (key: string, value: string) =>
 
 // ── Catalog ──────────────────────────────────────────────────────────────────
 export const getModels = (params?: { brand?: string; active?: boolean }) =>
-  api.get<VehicleModel[]>('/catalog/models', { params }).then((r) => r.data)
+  api.get<{ items: VehicleModel[] }>('/catalog/models', { params }).then((r) => r.data.items)
 
 export const getServices = (params?: { search?: string; category?: string }) =>
-  api.get<Service[]>('/catalog/services', { params }).then((r) => r.data)
+  api.get<{ items: Service[] }>('/catalog/services', { params }).then((r) => r.data.items)
 
 export const getCosts = (params?: { model_id?: string; service_id?: string }) =>
-  api.get<CatalogCost[]>('/catalog/costs', { params }).then((r) => r.data)
+  api.get<{ items: CatalogCost[] }>('/catalog/costs', { params }).then((r) => r.data.items)
 
 export const getMissingCosts = () =>
   api.get<Array<{ model_id: string; model_name: string; service_id: string; service_name: string }>>('/catalog/costs/missing').then((r) => r.data)
@@ -73,7 +73,7 @@ export const calculate = (data: {
 
 // ── Quotes ───────────────────────────────────────────────────────────────────
 export const getQuotes = (params?: { status?: QuoteStatus; model_id?: string }) =>
-  api.get<Quote[]>('/quotes', { params }).then((r) => r.data)
+  api.get<{ items: Quote[] }>('/quotes', { params }).then((r) => r.data.items)
 
 export const getQuote = (id: string) =>
   api.get<Quote>(`/quotes/${id}`).then((r) => r.data)
@@ -88,7 +88,7 @@ export const createQuote = (data: {
   api.post<Quote>('/quotes', data).then((r) => r.data)
 
 export const updateQuoteStatus = (id: string, status: QuoteStatus) =>
-  api.patch<Quote>(`/quotes/${id}/status`, { status }).then((r) => r.data)
+  api.put<Quote>(`/quotes/${id}`, { status }).then((r) => r.data)
 
 export const exportQuote = (id: string, format: 'pdf' | 'xlsx') =>
   api.get(`/quotes/${id}/export`, {
