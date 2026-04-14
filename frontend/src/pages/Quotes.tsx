@@ -360,9 +360,9 @@ function QuoteDetail({ quoteId }: { quoteId: string }) {
 
       {/* Lines */}
       <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
-        <LinesTable lines={quote.lines} />
+        <LinesTable lines={quote.lines ?? []} />
 
-        {quote.lines.length > 0 && <SummaryBar lines={quote.lines} />}
+        {(quote.lines ?? []).length > 0 && <SummaryBar lines={quote.lines ?? []} />}
       </div>
     </div>
   )
