@@ -31,7 +31,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<Layout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<DashboardPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/calculator" element={<CalculatorPage />} />
             <Route path="/quotes" element={<QuotesPage />} />
@@ -40,7 +41,7 @@ export default function App() {
             <Route path="/config" element={<ConfigPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
