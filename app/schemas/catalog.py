@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------------------------------------------------------------------
 # Generic pagination wrapper
@@ -118,6 +118,19 @@ class ServiceCatalogUpdate(BaseModel):
     bjx_parts_cost: Optional[float] = None
     duration_hrs: Optional[float] = None
     source: Optional[str] = None
+
+
+class TimeStandardRead(ServiceCatalogRead):
+    """Dedicated read schema for service time standards."""
+
+
+class TimeStandardReadEnriched(TimeStandardRead):
+    model_name: Optional[str] = None
+    service_name: Optional[str] = None
+
+
+class TimeStandardUpdate(BaseModel):
+    duration_hrs: float = Field(..., gt=0)
 
 
 # ---------------------------------------------------------------------------
