@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 revision: str = "9a7c8f1d2b10"
-down_revision: Union[str, None] = "7b2f8c1d9a31"
+down_revision: Union[str, None] = "0d8a4e6f3c11"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
