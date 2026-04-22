@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Float, ForeignKey, UniqueConstraint, Text
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.models.mixins import UUIDMixin, AuditMixin
@@ -52,5 +52,12 @@ class ServiceCatalog(Base, UUIDMixin, AuditMixin):
     service = relationship("Service", back_populates="catalog_entries")
 
     __table_args__ = (
-        UniqueConstraint("model_id", "service_id", "is_current", name="uq_catalog_model_service_current"),
+        Index(
+            "uq_catalog_model_service_current",
+            "model_id",
+            "service_id",
+            unique=True,
+            sqlite_where=(is_current.is_(True)),
+            postgresql_where=(is_current.is_(True)),
+        ),
     )

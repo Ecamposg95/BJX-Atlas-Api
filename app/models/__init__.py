@@ -5,11 +5,13 @@ from app.models.vehicles import Vehicle
 from app.models.suppliers import Supplier, SupplierPrice
 from app.models.quotes import Quote, QuoteLine, QuoteStatus
 from app.models.config import ConfigParam, ConfigHistory
+from app.models.work_orders import WorkOrder, WorkOrderStatus
 
 __all__ = [
     "User", "Role",
     "VehicleModel", "Vehicle", "Service", "ServiceCatalog",
     "Supplier", "SupplierPrice",
     "Quote", "QuoteLine", "QuoteStatus",
+    "WorkOrder", "WorkOrderStatus",
     "ConfigParam", "ConfigHistory",
 ]

@@ -24,6 +24,8 @@ from app.schemas.catalog import (
     ServiceCreate,
     ServiceRead,
     ServiceUpdate,
+    TimeStandardReadEnriched,
+    TimeStandardUpdate,
     VehicleModelCreate,
     VehicleModelRead,
     VehicleModelUpdate,
@@ -76,6 +78,19 @@ def _extract_brand(name: str) -> str:
     if " - " in name:
         return name.split(" - ")[0].strip()
     return name.split(" ")[0].strip()
+
+
+def _current_service_catalog_query(db: Session):
+    return (
+        db.query(
+            ServiceCatalog,
+            VehicleModel.name.label("model_name"),
+            Service.name.label("service_name"),
+        )
+        .join(VehicleModel, VehicleModel.id == ServiceCatalog.model_id)
+        .join(Service, Service.id == ServiceCatalog.service_id)
+        .filter(ServiceCatalog.is_current.is_(True))
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -343,6 +358,117 @@ def update_service(
 
     data = ServiceRead.model_validate(svc)
     data.coverage_pct = _coverage_pct_for_service(db, svc.id)
+    return data
+
+
+# ---------------------------------------------------------------------------
+# Time standards endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/time-standards", response_model=PaginatedResponse[TimeStandardReadEnriched])
+def list_time_standards(
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=200),
+    model_id: Optional[str] = Query(None),
+    service_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    _: object = Depends(get_current_user),
+):
+    query = _current_service_catalog_query(db)
+
+    if model_id:
+        query = query.filter(ServiceCatalog.model_id == model_id)
+    if service_id:
+        query = query.filter(ServiceCatalog.service_id == service_id)
+
+    total: int = query.count()
+    rows = query.offset((page - 1) * size).limit(size).all()
+
+    items: list[TimeStandardReadEnriched] = []
+    for sc, model_name, service_name in rows:
+        data = TimeStandardReadEnriched.model_validate(sc)
+        data.model_name = model_name
+        data.service_name = service_name
+        items.append(data)
+
+    return PaginatedResponse(items=items, total=total, page=page, size=size)
+
+
+@router.get("/time-standards/{model_id}/{service_id}", response_model=TimeStandardReadEnriched)
+def get_time_standard(
+    model_id: str,
+    service_id: str,
+    db: Session = Depends(get_db),
+    _: object = Depends(get_current_user),
+):
+    row = (
+        _current_service_catalog_query(db)
+        .filter(ServiceCatalog.model_id == model_id, ServiceCatalog.service_id == service_id)
+        .first()
+    )
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No existe un estándar de tiempo actual para esa combinación modelo/servicio",
+        )
+
+    sc, model_name, service_name = row
+    data = TimeStandardReadEnriched.model_validate(sc)
+    data.model_name = model_name
+    data.service_name = service_name
+    return data
+
+
+@router.put("/time-standards/{model_id}/{service_id}", response_model=TimeStandardReadEnriched)
+def update_time_standard(
+    model_id: str,
+    service_id: str,
+    payload: TimeStandardUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role(["admin"])),
+):
+    current_entry = (
+        db.query(ServiceCatalog)
+        .filter(
+            ServiceCatalog.model_id == model_id,
+            ServiceCatalog.service_id == service_id,
+            ServiceCatalog.is_current.is_(True),
+        )
+        .first()
+    )
+    if not current_entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No existe un estándar de tiempo actual para esa combinación modelo/servicio",
+        )
+
+    current_entry.is_current = False
+
+    new_entry = ServiceCatalog(
+        model_id=model_id,
+        service_id=service_id,
+        bjx_labor_cost=current_entry.bjx_labor_cost,
+        bjx_parts_cost=current_entry.bjx_parts_cost,
+        duration_hrs=payload.duration_hrs,
+        source=current_entry.source,
+        updated_by=current_user.email,
+        is_current=True,
+    )
+    db.add(new_entry)
+    db.commit()
+    db.refresh(new_entry)
+
+    row = _current_service_catalog_query(db).filter(ServiceCatalog.id == new_entry.id).first()
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo cargar el estándar de tiempo actualizado",
+        )
+    sc, model_name, service_name = row
+    data = TimeStandardReadEnriched.model_validate(sc)
+    data.model_name = model_name
+    data.service_name = service_name
     return data
 
 
