@@ -10,6 +10,7 @@ import { CatalogPage } from './pages/Catalog'
 import { SuppliersPage } from './pages/Suppliers'
 import { ConfigPage } from './pages/Config'
 import { AdminPage } from './pages/Admin'
+import { HomePage } from './pages/Home'
 import { applyTheme, useThemeStore } from './store/theme'
 
 const queryClient = new QueryClient({
@@ -32,7 +33,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<Layout />}>
             <Route index element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<DashboardPage />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/calculator" element={<CalculatorPage />} />
             <Route path="/quotes" element={<QuotesPage />} />
