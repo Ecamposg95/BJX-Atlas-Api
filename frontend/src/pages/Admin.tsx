@@ -67,7 +67,7 @@ function UserModal({ mode, user, onClose, onSaved }: ModalProps) {
           <h2 className="text-lg font-black" style={{ color: 'var(--text)' }}>
             {mode === 'create' ? 'Nuevo usuario' : 'Editar usuario'}
           </h2>
-          <button onClick={onClose} style={{ color: 'var(--text-muted)' }} className="hover:text-white text-xl leading-none">&times;</button>
+          <button onClick={onClose} style={{ color: 'var(--text-muted)' }} className="text-xl leading-none transition-colors hover:opacity-80">&times;</button>
         </div>
 
         <div className="space-y-4">
@@ -223,8 +223,8 @@ export function AdminPage() {
                       <span
                         className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold"
                         style={{
-                          background: u.role === 'admin' ? 'rgba(139,92,246,0.2)' : u.role === 'operador' ? 'rgba(59,130,246,0.2)' : 'rgba(100,116,139,0.2)',
-                          color: u.role === 'admin' ? '#a78bfa' : u.role === 'operador' ? '#93c5fd' : '#94a3b8',
+                          background: u.role === 'admin' ? 'color-mix(in srgb, var(--primary) 18%, transparent)' : u.role === 'operador' ? 'color-mix(in srgb, #4f8df7 16%, transparent)' : 'color-mix(in srgb, var(--text-faint) 16%, transparent)',
+                          color: u.role === 'admin' ? 'var(--primary-dark)' : u.role === 'operador' ? '#4f8df7' : 'var(--text-muted)',
                         }}
                       >
                         {ROLE_LABELS[u.role]}
@@ -243,7 +243,7 @@ export function AdminPage() {
                         <button
                           onClick={() => setModal({ mode: 'edit', user: u })}
                           className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                          style={{ background: 'rgba(139,92,246,0.15)', color: 'var(--primary-light)' }}
+                          style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}
                         >
                           Editar
                         </button>

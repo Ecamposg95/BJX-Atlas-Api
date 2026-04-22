@@ -88,8 +88,8 @@ function KpiCard({
 }) {
   const accentMap = {
     blue: {
-      icon: 'bg-violet-500/20 text-violet-300',
-      bar: 'bg-violet-500',
+      icon: 'bg-[color:color-mix(in_srgb,var(--primary)_16%,transparent)] text-[color:var(--primary-dark)]',
+      bar: 'bg-[color:var(--primary)]',
     },
     emerald: {
       icon: 'bg-emerald-500/20 text-emerald-400',
@@ -113,10 +113,10 @@ function KpiCard({
       <div className={`absolute left-0 top-0 h-full w-1 ${colors.bar}`} />
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 tabular-nums">{value}</p>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>{label}</p>
+          <p className="mt-2 text-3xl font-bold tabular-nums" style={{ color: 'var(--text)' }}>{value}</p>
           {sub && (
-            <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-400">
+            <p className="mt-1.5 flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
               {trend === 'up' && <ArrowUpRight size={12} className="text-red-500" />}
               {trend === 'down' && <ArrowDownRight size={12} className="text-emerald-500" />}
               {sub}
@@ -184,9 +184,9 @@ function AlertBanner({ criticalPct }: { criticalPct: number }) {
 function QuickActions() {
   const navigate = useNavigate()
   const actions = [
-    { label: 'Nueva cotización', icon: Calculator, to: '/calculator', color: 'rgba(139,92,246,0.12)', text: 'var(--primary-light)' },
-    { label: 'Ver cotizaciones', icon: FileText, to: '/quotes', color: 'rgba(99,102,241,0.12)', text: '#a5b4fc' },
-    { label: 'Catálogo de costos', icon: Layers, to: '/catalog', color: 'rgba(52,211,153,0.10)', text: '#6ee7b7' },
+    { label: 'Nueva cotización', icon: Calculator, to: '/calculator', color: 'color-mix(in srgb, var(--primary) 14%, transparent)', text: 'var(--primary-dark)' },
+    { label: 'Ver cotizaciones', icon: FileText, to: '/quotes', color: 'color-mix(in srgb, #4f8df7 12%, transparent)', text: '#4f8df7' },
+    { label: 'Catálogo de costos', icon: Layers, to: '/catalog', color: 'color-mix(in srgb, var(--success) 12%, transparent)', text: 'var(--success)' },
   ]
 
   return (
@@ -196,7 +196,7 @@ function QuickActions() {
           key={action.label}
           onClick={() => navigate(action.to)}
           className="flex items-center gap-3 rounded-xl px-5 py-4 text-left transition-all hover:opacity-90"
-          style={{ background: action.color, border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: action.color, border: '1px solid var(--border)' }}
         >
           <action.icon size={18} strokeWidth={1.8} style={{ color: action.text, flexShrink: 0 }} />
           <span className="text-sm font-semibold" style={{ color: action.text }}>{action.label}</span>
@@ -212,8 +212,8 @@ function DonutCenter({ totalCombos, criticalCount }: { totalCombos: number; crit
   const pct = totalCombos > 0 ? Math.round((criticalCount / totalCombos) * 100) : 0
   return (
     <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle">
-      <tspan x="50%" dy="-8" fontSize="22" fontWeight="700" fill="#f1f5f9">{pct}%</tspan>
-      <tspan x="50%" dy="20" fontSize="11" fill="#64748b">críticos</tspan>
+      <tspan x="50%" dy="-8" fontSize="22" fontWeight="700" fill="var(--text)">{pct}%</tspan>
+      <tspan x="50%" dy="20" fontSize="11" fill="var(--text-faint)">críticos</tspan>
     </text>
   )
 }
@@ -371,7 +371,7 @@ export function DashboardPage() {
           <button
             onClick={() => setIsModalOpen(true)}
             className="inline-flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', boxShadow: '0 4px 14px rgba(139,92,246,0.3)' }}
+            style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))', boxShadow: '0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent)' }}
           >
             <Zap size={15} />
             Simular Escenario
@@ -447,14 +447,14 @@ export function DashboardPage() {
               <Skeleton className="h-56 w-full rounded-xl" />
             ) : models.length === 0 ? (
               <div className="flex h-56 items-center justify-center">
-                <p className="text-sm text-gray-400">Sin datos</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin datos</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={models} margin={{ top: 4, right: 8, left: 0, bottom: 52 }}>
                   <XAxis
                     dataKey="model_name"
-                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    tick={{ fontSize: 10, fill: 'var(--text-faint)' }}
                     angle={-40}
                     textAnchor="end"
                     interval={0}
@@ -463,7 +463,7 @@ export function DashboardPage() {
                   />
                   <YAxis
                     tickFormatter={(v: number) => (v * 100).toFixed(0) + '%'}
-                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    tick={{ fontSize: 10, fill: 'var(--text-faint)' }}
                     width={42}
                     axisLine={false}
                     tickLine={false}
@@ -493,7 +493,7 @@ export function DashboardPage() {
               <Skeleton className="mx-auto h-48 w-48 rounded-full" />
             ) : donutData.every((d) => d.value === 0) ? (
               <div className="flex h-56 items-center justify-center">
-                <p className="text-sm text-gray-400">Sin datos</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin datos</p>
               </div>
             ) : (
               <>

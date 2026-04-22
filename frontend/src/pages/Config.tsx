@@ -81,7 +81,7 @@ export function ConfigPage() {
                             className="w-32 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                           {p.key === 'target_margin' && (
-                            <p className="text-xs text-gray-400">Entre 0.01 y 0.99</p>
+                            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Entre 0.01 y 0.99</p>
                           )}
                           {isWeight && (
                             <p className={`text-xs ${Math.abs(weightSum - 1) < 0.001 ? 'text-emerald-600' : 'text-red-500'}`}>

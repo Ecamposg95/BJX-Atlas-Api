@@ -74,10 +74,10 @@ function MarginGauge({ result, targetPct }: { result: CalculationResult; targetP
           transform={`rotate(${startDeg}, ${cx}, ${cy})`}
           style={{ transition: 'stroke-dasharray 0.6s cubic-bezier(0.4,0,0.2,1), stroke 0.3s ease' }} />
         <circle cx={markerX} cy={markerY} r={4} fill="#475569" stroke="#94a3b8" strokeWidth={2} />
-        <text x={cx} y={cy - 10} textAnchor="middle" fontSize="30" fontWeight="800" fill="#f1f5f9">
+        <text x={cx} y={cy - 10} textAnchor="middle" fontSize="30" fontWeight="800" fill="var(--text)">
           {(result.margin_pct * 100).toFixed(1)}%
         </text>
-        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="600">
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="var(--text-faint)" fontWeight="600">
           MARGEN BRUTO
         </text>
         <text x={cx} y={cy + 30} textAnchor="middle" fontSize="10" fill={color} fontWeight="600">
@@ -148,8 +148,8 @@ function SupplierRow({ s, maxScore }: { s: EngineResponse['suppliers'][0]; maxSc
     <div
       className="rounded-xl p-3 transition-colors"
       style={{
-        background: s.recommended ? 'rgba(139,92,246,0.10)' : 'var(--surface-2)',
-        border: s.recommended ? '1px solid rgba(139,92,246,0.3)' : '1px solid var(--border)',
+        background: s.recommended ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'var(--surface-2)',
+        border: s.recommended ? '1px solid color-mix(in srgb, var(--primary) 28%, transparent)' : '1px solid var(--border)',
       }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -208,7 +208,7 @@ function ResultsPanel({
   if (!hasSelection) {
     return (
       <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-2xl p-10 text-center"
-        style={{ border: '2px dashed rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.02)' }}>
+        style={{ border: '2px dashed color-mix(in srgb, var(--primary) 20%, transparent)', background: 'color-mix(in srgb, var(--primary) 4%, transparent)' }}>
         <div className="mb-4 rounded-2xl p-5" style={{ background: 'var(--surface-2)' }}>
           <Wrench size={36} style={{ color: 'var(--text-faint)' }} strokeWidth={1.5} />
         </div>
@@ -336,12 +336,12 @@ function ParamSlider({
         <div className="flex items-center gap-2">
           {modified && (
             <button onClick={() => onChange(defaultValue)} className="text-xs font-bold"
-              style={{ color: 'var(--primary-light)' }}>
+              style={{ color: 'var(--primary-dark)' }}>
               Reset
             </button>
           )}
           <span className="text-sm font-black tabular-nums"
-            style={{ color: modified ? 'var(--primary-light)' : 'var(--text)' }}>
+            style={{ color: modified ? 'var(--primary-dark)' : 'var(--text)' }}>
             {unit === '$' ? `$${value.toFixed(2)}` : `${value}%`}
           </span>
         </div>
@@ -350,7 +350,7 @@ function ParamSlider({
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="h-2 w-full cursor-pointer appearance-none rounded-full"
-        style={{ background: `linear-gradient(to right, #8b5cf6 ${pct}%, #1e293b ${pct}%)` }}
+        style={{ background: `linear-gradient(to right, var(--primary) ${pct}%, var(--surface-3) ${pct}%)` }}
       />
       <div className="mt-0.5 flex justify-between text-xs" style={{ color: 'var(--text-faint)' }}>
         <span>{unit === '$' ? `$${min}` : `${min}%`}</span>
@@ -536,14 +536,14 @@ export function CalculatorPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed right-4 top-4 z-50 flex max-w-sm items-center gap-3 rounded-2xl px-5 py-3.5 text-sm text-white shadow-2xl"
-          style={{ background: 'var(--surface)', border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+        <div className="fixed right-4 top-4 z-50 flex max-w-sm items-center gap-3 rounded-2xl px-5 py-3.5 text-sm shadow-2xl"
+          style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid color-mix(in srgb, var(--primary) 28%, transparent)', boxShadow: 'var(--shadow-lg)' }}>
           <CheckCircle size={16} className="shrink-0 text-emerald-400" />
           <span className="flex-1" style={{ color: 'var(--text)' }}>{toast.message}</span>
           <button
             onClick={() => { setToast(null); navigate('/quotes') }}
             className="flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 text-xs transition-colors"
-            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text)' }}
+            style={{ background: 'color-mix(in srgb, var(--surface-3) 45%, transparent)', color: 'var(--text)' }}
           >
             Ver <ChevronRight size={12} />
           </button>
@@ -560,7 +560,7 @@ export function CalculatorPage() {
           disabled={!canSave}
           onClick={() => setShowModal(true)}
           className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', boxShadow: canSave ? '0 4px 14px rgba(139,92,246,0.3)' : 'none' }}
+          style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))', boxShadow: canSave ? '0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent)' : 'none' }}
         >
           <FileText size={15} />
           Guardar cotización
@@ -587,7 +587,7 @@ export function CalculatorPage() {
               <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Modelo de vehículo</h2>
               {selectedModel && (
                 <span className="ml-auto text-xs font-bold truncate max-w-[120px]"
-                  style={{ color: 'var(--primary-light)' }}>
+                  style={{ color: 'var(--primary-dark)' }}>
                   {selectedModel.name}
                 </span>
               )}
@@ -695,7 +695,7 @@ export function CalculatorPage() {
                 className="shrink-0 px-3.5 py-2.5 text-xs font-bold transition-colors whitespace-nowrap"
                 style={{
                   borderBottom: !categoryFilter ? '2px solid var(--primary)' : '2px solid transparent',
-                  color: !categoryFilter ? 'var(--primary-light)' : 'var(--text-muted)',
+                  color: !categoryFilter ? 'var(--primary-dark)' : 'var(--text-muted)',
                 }}
               >
                 Todos
@@ -707,7 +707,7 @@ export function CalculatorPage() {
                   className="shrink-0 px-3.5 py-2.5 text-xs font-bold transition-colors whitespace-nowrap"
                   style={{
                     borderBottom: categoryFilter === cat ? '2px solid var(--primary)' : '2px solid transparent',
-                    color: categoryFilter === cat ? 'var(--primary-light)' : 'var(--text-muted)',
+                    color: categoryFilter === cat ? 'var(--primary-dark)' : 'var(--text-muted)',
                   }}
                 >
                   {CATEGORY_LABELS[cat]}
@@ -741,13 +741,13 @@ export function CalculatorPage() {
                     key={s.id}
                     className="flex items-center gap-2 rounded-xl px-3 py-2.5 transition-all"
                     style={isSelected
-                      ? { background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)' }
+                      ? { background: 'color-mix(in srgb, var(--primary) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--primary) 28%, transparent)' }
                       : { border: '1px solid transparent' }
                     }
                   >
                     <button className="flex-1 text-left min-w-0" onClick={() => setServiceId(s.id === serviceId ? '' : s.id)}>
                       <p className="text-sm font-semibold truncate"
-                        style={{ color: isSelected ? 'var(--primary-light)' : 'var(--text)' }}>
+                        style={{ color: isSelected ? 'var(--primary-dark)' : 'var(--text)' }}>
                         {s.name}
                       </p>
                       <p className="text-xs capitalize" style={{ color: 'var(--text-faint)' }}>{CATEGORY_LABELS[s.category] ?? s.category}</p>
@@ -782,8 +782,8 @@ export function CalculatorPage() {
           {/* Quote cart */}
           {cartServices.length > 0 && (
             <div className="rounded-2xl p-4 space-y-3"
-              style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
-              <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--primary-light)' }}>
+              style={{ background: 'color-mix(in srgb, var(--primary) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--primary) 20%, transparent)' }}>
+              <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--primary-dark)' }}>
                 Cotización — {cartServices.length} servicio{cartServices.length !== 1 ? 's' : ''}
               </p>
               <div className="space-y-1.5">
@@ -842,7 +842,7 @@ export function CalculatorPage() {
                       type="range" min={0} max={100} value={value}
                       onChange={(e) => setter(parseInt(e.target.value))}
                       className="h-1.5 w-full cursor-pointer appearance-none rounded-full"
-                      style={{ background: `linear-gradient(to right, #8b5cf6 ${value}%, #1e293b ${value}%)` }}
+                      style={{ background: `linear-gradient(to right, var(--primary) ${value}%, var(--surface-3) ${value}%)` }}
                     />
                   </div>
                 ))}
@@ -882,7 +882,7 @@ export function CalculatorPage() {
               <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 {(cartServices.length > 0 ? cartServices : selectedService ? [selectedService] : []).map((s) => (
                   <div key={s.id} className="flex items-center gap-2 text-sm">
-                    <CheckCircle size={13} className="shrink-0" style={{ color: 'var(--primary-light)' }} />
+                    <CheckCircle size={13} className="shrink-0" style={{ color: 'var(--primary-dark)' }} />
                     <span style={{ color: 'var(--text)' }}>{s.name}</span>
                   </div>
                 ))}

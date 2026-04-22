@@ -63,7 +63,7 @@ function QuoteListItem({
       style={{
         borderBottom: '1px solid var(--border-dim)',
         borderLeft: selected ? '2px solid var(--primary)' : '2px solid transparent',
-        background: selected ? 'rgba(139,92,246,0.08)' : 'transparent',
+        background: selected ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'transparent',
       }}
     >
       <div className="flex items-center justify-between gap-2">
@@ -102,7 +102,7 @@ function DetailSkeleton() {
 function LinesTable({ lines }: { lines: QuoteLine[] }) {
   if (lines.length === 0) {
     return (
-      <p className="text-sm text-gray-400 italic py-4 text-center">
+      <p className="py-4 text-center text-sm italic" style={{ color: 'var(--text-muted)' }}>
         Esta cotización no tiene líneas de servicio.
       </p>
     )
@@ -307,7 +307,7 @@ function QuoteDetail({ quoteId }: { quoteId: string }) {
 
   if (!quote) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+      <div className="flex flex-1 items-center justify-center text-sm" style={{ color: 'var(--text-muted)' }}>
         No se pudo cargar la cotización.
       </div>
     )
@@ -398,7 +398,7 @@ export function QuotesPage() {
               className="px-3 py-3 text-xs font-bold whitespace-nowrap transition-colors"
               style={{
                 borderBottom: activeTab === tab.value ? '2px solid var(--primary)' : '2px solid transparent',
-                color: activeTab === tab.value ? 'var(--primary-light)' : 'var(--text-muted)',
+                color: activeTab === tab.value ? 'var(--primary-dark)' : 'var(--text-muted)',
               }}
             >
               {tab.label}
@@ -426,17 +426,18 @@ export function QuotesPage() {
             </div>
           ) : filteredQuotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
-              <svg className="mb-3 h-14 w-14 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <svg className="mb-3 h-14 w-14" style={{ color: 'var(--text-faint)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               {search ? (
-                <p className="text-sm text-gray-400">Sin resultados para la búsqueda.</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin resultados para la búsqueda.</p>
               ) : (
                 <>
-                  <p className="mb-3 text-sm text-gray-400">No hay cotizaciones aquí todavía.</p>
+                  <p className="mb-3 text-sm" style={{ color: 'var(--text-muted)' }}>No hay cotizaciones aquí todavía.</p>
                   <button
                     onClick={() => navigate('/calculator')}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                    className="rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors"
+                    style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))' }}
                   >
                     Crear primera cotización
                   </button>
