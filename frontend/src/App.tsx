@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Layout } from './components/Layout'
@@ -9,6 +10,7 @@ import { CatalogPage } from './pages/Catalog'
 import { SuppliersPage } from './pages/Suppliers'
 import { ConfigPage } from './pages/Config'
 import { AdminPage } from './pages/Admin'
+import { applyTheme, useThemeStore } from './store/theme'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +19,12 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
+  const theme = useThemeStore((state) => state.theme)
+
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
