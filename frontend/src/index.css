@@ -188,6 +188,48 @@ body {
   text-transform: uppercase;
 }
 
+.badge-chip {
+  border-width: 1px;
+}
+
+.badge-chip--ok {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: color-mix(in srgb, var(--success) 88%, white);
+  border-color: color-mix(in srgb, var(--success) 24%, transparent);
+}
+
+.badge-chip--low {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  color: color-mix(in srgb, var(--warning) 90%, #6b4500);
+  border-color: color-mix(in srgb, var(--warning) 26%, transparent);
+}
+
+.badge-chip--critical {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: color-mix(in srgb, var(--danger) 90%, white);
+  border-color: color-mix(in srgb, var(--danger) 26%, transparent);
+}
+
+.badge-chip--draft,
+.badge-chip--viewer {
+  background: color-mix(in srgb, var(--text-faint) 16%, transparent);
+  color: var(--text-muted);
+  border-color: color-mix(in srgb, var(--text-faint) 20%, transparent);
+}
+
+.badge-chip--confirmed,
+.badge-chip--operador {
+  background: color-mix(in srgb, #4f8df7 16%, transparent);
+  color: color-mix(in srgb, #4f8df7 88%, white);
+  border-color: color-mix(in srgb, #4f8df7 24%, transparent);
+}
+
+.badge-chip--admin {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary-dark);
+  border-color: color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
 .login-shell {
   position: relative;
   display: flex;

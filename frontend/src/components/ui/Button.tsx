@@ -44,13 +44,13 @@ export function Button({
 
   const variantStyle: Record<Variant, React.CSSProperties> = {
     primary: {
-      background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-      boxShadow: '0 4px 14px rgba(139,92,246,0.25)',
+      background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+      boxShadow: '0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent)',
     },
     secondary: {
       background: 'var(--surface-2)',
       border: '1px solid var(--border)',
-      color: 'var(--text-muted)',
+      color: 'var(--text)',
     },
     danger: {
       background: 'rgba(225,29,72,0.15)',

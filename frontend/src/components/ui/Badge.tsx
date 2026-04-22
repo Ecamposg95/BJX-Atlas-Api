@@ -6,16 +6,16 @@ type Variant =
   | 'admin' | 'operador' | 'viewer'
 
 const variantClasses: Record<Variant, string> = {
-  ok:        'bg-emerald-400/15 text-emerald-300 border border-emerald-400/25',
-  low:       'bg-amber-400/15   text-amber-300   border border-amber-400/25',
-  critical:  'bg-rose-400/15    text-rose-300    border border-rose-400/25',
-  draft:     'bg-slate-400/15   text-slate-300   border border-slate-400/25',
-  confirmed: 'bg-blue-400/15    text-blue-300    border border-blue-400/25',
-  invoiced:  'bg-emerald-400/15 text-emerald-300 border border-emerald-400/25',
-  cancelled: 'bg-rose-400/15    text-rose-300    border border-rose-400/25',
-  admin:     'bg-violet-500/20  text-violet-300  border border-violet-500/30',
-  operador:  'bg-blue-500/20    text-blue-300    border border-blue-500/30',
-  viewer:    'bg-slate-500/20   text-slate-300   border border-slate-500/30',
+  ok:        'badge-chip badge-chip--ok',
+  low:       'badge-chip badge-chip--low',
+  critical:  'badge-chip badge-chip--critical',
+  draft:     'badge-chip badge-chip--draft',
+  confirmed: 'badge-chip badge-chip--confirmed',
+  invoiced:  'badge-chip badge-chip--ok',
+  cancelled: 'badge-chip badge-chip--critical',
+  admin:     'badge-chip badge-chip--admin',
+  operador:  'badge-chip badge-chip--operador',
+  viewer:    'badge-chip badge-chip--viewer',
 }
 
 export function Badge({ variant, children }: { variant: Variant; children: React.ReactNode }) {
