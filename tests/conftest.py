@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -6,13 +8,16 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db
 
-TEST_DATABASE_URL = "sqlite:///./test.db"
-test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
-
 
 @pytest.fixture(scope="function")
-def db():
+def db(tmp_path):
+    db_path = Path(tmp_path) / "test.db"
+    test_engine = create_engine(
+        f"sqlite:///{db_path}",
+        connect_args={"check_same_thread": False},
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
     Base.metadata.create_all(bind=test_engine)
     session = TestingSessionLocal()
     try:
@@ -20,6 +25,7 @@ def db():
     finally:
         session.close()
         Base.metadata.drop_all(bind=test_engine)
+        test_engine.dispose()
 
 
 @pytest.fixture(scope="function")

@@ -283,3 +283,146 @@ class TestCosts:
             .count()
         )
         assert current_count == 1
+
+
+# ---------------------------------------------------------------------------
+# TestTimeStandards
+# ---------------------------------------------------------------------------
+
+class TestTimeStandards:
+
+    def test_list_time_standards(self, client, admin_headers, sample_catalog):
+        """GET /catalog/time-standards → 200, contiene el registro current."""
+        r = client.get("/api/catalog/time-standards", headers=admin_headers)
+        assert r.status_code == 200
+        data = r.json()
+        assert data["total"] >= 1
+        assert any(
+            item["model_id"] == sample_catalog.model_id and item["service_id"] == sample_catalog.service_id
+            for item in data["items"]
+        )
+
+    def test_list_time_standards_filter_by_model(self, client, admin_headers, sample_catalog):
+        """GET /catalog/time-standards?model_id=... → solo devuelve esa combinación."""
+        r = client.get(
+            f"/api/catalog/time-standards?model_id={sample_catalog.model_id}",
+            headers=admin_headers,
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["total"] >= 1
+        assert all(item["model_id"] == sample_catalog.model_id for item in data["items"])
+
+    def test_get_time_standard_detail(self, client, admin_headers, sample_catalog, sample_model, sample_service):
+        """GET /catalog/time-standards/{model_id}/{service_id} → 200 con nombres enriquecidos."""
+        r = client.get(
+            f"/api/catalog/time-standards/{sample_model.id}/{sample_service.id}",
+            headers=admin_headers,
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["model_id"] == sample_catalog.model_id
+        assert data["service_id"] == sample_catalog.service_id
+        assert data["model_name"] == sample_model.name
+        assert data["service_name"] == sample_service.name
+
+    def test_get_time_standard_missing_combo(self, client, admin_headers, sample_model):
+        """GET /catalog/time-standards/{model_id}/{service_id} inexistente → 404."""
+        r = client.get(
+            f"/api/catalog/time-standards/{sample_model.id}/missing-service-id",
+            headers=admin_headers,
+        )
+        assert r.status_code == 404
+
+    def test_update_time_standard_immutable(self, client, admin_headers, sample_catalog, db):
+        """PUT /catalog/time-standards → nuevo current row, anterior deja de ser current."""
+        payload = {"duration_hrs": 3.5}
+        r = client.put(
+            f"/api/catalog/time-standards/{sample_catalog.model_id}/{sample_catalog.service_id}",
+            json=payload,
+            headers=admin_headers,
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["duration_hrs"] == 3.5
+        assert data["bjx_labor_cost"] == sample_catalog.bjx_labor_cost
+        assert data["bjx_parts_cost"] == sample_catalog.bjx_parts_cost
+        assert data["source"] == sample_catalog.source
+
+        db.expire_all()
+        from app.models.catalog import ServiceCatalog as SC
+
+        old = db.query(SC).filter(SC.id == sample_catalog.id).first()
+        assert old.is_current is False
+
+        current_count = (
+            db.query(SC)
+            .filter(
+                SC.model_id == sample_catalog.model_id,
+                SC.service_id == sample_catalog.service_id,
+                SC.is_current.is_(True),
+            )
+            .count()
+        )
+        assert current_count == 1
+
+    def test_update_time_standard_twice_keeps_single_current_row(self, client, admin_headers, sample_catalog, db):
+        first = client.put(
+            f"/api/catalog/time-standards/{sample_catalog.model_id}/{sample_catalog.service_id}",
+            json={"duration_hrs": 3.5},
+            headers=admin_headers,
+        )
+        assert first.status_code == 200
+
+        second = client.put(
+            f"/api/catalog/time-standards/{sample_catalog.model_id}/{sample_catalog.service_id}",
+            json={"duration_hrs": 4.0},
+            headers=admin_headers,
+        )
+        assert second.status_code == 200
+        assert second.json()["duration_hrs"] == 4.0
+
+        db.expire_all()
+        from app.models.catalog import ServiceCatalog as SC
+
+        current_rows = (
+            db.query(SC)
+            .filter(
+                SC.model_id == sample_catalog.model_id,
+                SC.service_id == sample_catalog.service_id,
+                SC.is_current.is_(True),
+            )
+            .all()
+        )
+        historical_rows = (
+            db.query(SC)
+            .filter(
+                SC.model_id == sample_catalog.model_id,
+                SC.service_id == sample_catalog.service_id,
+                SC.is_current.is_(False),
+            )
+            .all()
+        )
+        assert len(current_rows) == 1
+        assert current_rows[0].duration_hrs == 4.0
+        assert len(historical_rows) == 2
+
+    def test_update_time_standard_forbidden_for_viewer(self, client, viewer_headers, sample_catalog):
+        """PUT /catalog/time-standards como viewer → 403."""
+        payload = {"duration_hrs": 2.5}
+        r = client.put(
+            f"/api/catalog/time-standards/{sample_catalog.model_id}/{sample_catalog.service_id}",
+            json=payload,
+            headers=viewer_headers,
+        )
+        assert r.status_code == 403
+
+    def test_update_time_standard_invalid_duration(self, client, admin_headers, sample_catalog):
+        """PUT /catalog/time-standards con duration_hrs <= 0 → 422."""
+        payload = {"duration_hrs": 0}
+        r = client.put(
+            f"/api/catalog/time-standards/{sample_catalog.model_id}/{sample_catalog.service_id}",
+            json=payload,
+            headers=admin_headers,
+        )
+        assert r.status_code == 422
