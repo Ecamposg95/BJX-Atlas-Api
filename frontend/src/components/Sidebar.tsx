@@ -1,25 +1,30 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import {
-  LayoutDashboard, Calculator, FileText, BookOpen,
+  House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
+import { ThemeToggle } from './ThemeToggle'
 
-const NAV_ITEMS = [
-  { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/calculator', icon: Calculator,       label: 'Calculadora' },
-  { to: '/quotes',     icon: FileText,         label: 'Cotizaciones' },
-  { to: '/catalog',    icon: BookOpen,         label: 'Catálogo' },
-  { to: '/suppliers',  icon: Truck,            label: 'Proveedores' },
+const PRIMARY_ITEMS = [
+  { to: '/home', icon: House, label: 'Home ejecutiva' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/quotes', icon: FileText, label: 'Cotizaciones' },
+  { to: '/calculator', icon: Calculator, label: 'Calculadora' },
+  { to: '/catalog', icon: BookOpen, label: 'Catálogo' },
+  { to: '/suppliers', icon: Truck, label: 'Proveedores' },
+]
+
+const ADMIN_ITEMS = [
   { to: '/config',     icon: Settings,         label: 'Configuración', adminOnly: true },
   { to: '/admin',      icon: ShieldCheck,      label: 'Administración', adminOnly: true },
 ]
 
 const ROLE_COLORS: Record<string, string> = {
-  admin:    'bg-violet-500/20 text-violet-300 border border-violet-500/30',
-  operador: 'bg-blue-500/20   text-blue-300   border border-blue-500/30',
-  viewer:   'bg-slate-500/20  text-slate-300  border border-slate-500/30',
+  admin: 'sidebar-role sidebar-role--admin',
+  operador: 'sidebar-role sidebar-role--operador',
+  viewer: 'sidebar-role sidebar-role--viewer',
 }
 
 interface SidebarProps {
@@ -37,7 +42,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
     navigate('/login')
   }
 
-  const visibleItems = NAV_ITEMS.filter(
+  const visibleAdminItems = ADMIN_ITEMS.filter(
     (item) => !item.adminOnly || user?.role === 'admin'
   )
 
@@ -49,24 +54,16 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
       )}
     >
       {/* Logo / Brand */}
-      <div
-        className={clsx(
-          'flex h-14 items-center border-b px-3',
-          'border-[rgba(139,92,246,0.15)]'
-        )}
-        style={{ justifyContent: collapsed ? 'center' : 'space-between' }}
-      >
+      <div className="sidebar-brand" style={{ justifyContent: collapsed ? 'center' : 'space-between' }}>
         {!collapsed && (
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Logo mark */}
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="sidebar-brand__mark">
               <span className="text-white font-black text-xs leading-none">B</span>
             </div>
             <div className="min-w-0">
-              <p className="text-white font-bold text-sm leading-none truncate">BJX Atlas</p>
-              <p className="text-[10px] font-semibold uppercase tracking-widest leading-none mt-0.5"
-                 style={{ color: 'var(--sb-active-text)' }}>
-                Cotizaciones
+              <p className="sidebar-brand__title">BJX Atlas</p>
+              <p className="sidebar-brand__meta">
+                Executive Suite
               </p>
             </div>
           </div>
@@ -85,12 +82,31 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-3 space-y-0.5 px-1.5 overflow-y-auto">
         {!collapsed && (
-          <p className="px-3 mb-2 text-[10px] font-black uppercase tracking-widest"
-             style={{ color: 'var(--text-faint)' }}>
-            Módulos
+          <p className="sidebar-section-label">
+            Visión general
           </p>
         )}
-        {visibleItems.map(({ to, icon: Icon, label }) => (
+        {PRIMARY_ITEMS.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavClick}
+            title={collapsed ? label : undefined}
+            className={({ isActive }) =>
+              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
+            }
+          >
+            <Icon size={17} className="flex-shrink-0" />
+            {!collapsed && <span className="truncate">{label}</span>}
+          </NavLink>
+        ))}
+
+        {!collapsed && visibleAdminItems.length > 0 && (
+          <p className="sidebar-section-label sidebar-section-label--secondary">
+            Gestión
+          </p>
+        )}
+        {visibleAdminItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -107,13 +123,9 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
       </nav>
 
       {/* User + Logout */}
-      <div
-        className="border-t p-2 space-y-1"
-        style={{ borderColor: 'rgba(139,92,246,0.12)' }}
-      >
+      <div className="sidebar-footer">
         {!collapsed && user && (
-          <div className="px-2 py-1.5 rounded-lg"
-               style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <div className="sidebar-user-card">
             <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-muted)' }}>
               {user.email}
             </p>
@@ -125,6 +137,12 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
             >
               {user.role}
             </span>
+          </div>
+        )}
+
+        {!collapsed && (
+          <div className="px-2 py-1">
+            <ThemeToggle />
           </div>
         )}
 

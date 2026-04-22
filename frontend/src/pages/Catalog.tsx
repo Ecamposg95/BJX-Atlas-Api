@@ -198,7 +198,7 @@ function ModelsTab() {
                       <button
                         onClick={() => setModal({ mode: 'edit', item: m })}
                         className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                        style={{ background: 'rgba(139,92,246,0.15)', color: 'var(--primary-light)' }}
+                        style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}
                       >
                         Editar
                       </button>
@@ -336,7 +336,7 @@ function ServicesTab() {
                 <tr key={s.id}>
                   <td className="px-5 py-3 font-medium" style={{ color: 'var(--text)' }}>{s.name}</td>
                   <td className="px-5 py-3">
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(139,92,246,0.15)', color: 'var(--primary-light)' }}>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}>
                       {CATEGORY_LABELS[s.category] ?? s.category}
                     </span>
                   </td>
@@ -347,7 +347,7 @@ function ServicesTab() {
                     <button
                       onClick={() => setModal({ mode: 'edit', item: s })}
                       className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                      style={{ background: 'rgba(139,92,246,0.15)', color: 'var(--primary-light)' }}
+                      style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}
                     >
                       Editar
                     </button>
@@ -434,7 +434,7 @@ function EditableCell({ value, onSave, saving }: { value: number | null; onSave:
       title="Click para editar"
     >
       <span className="text-sm" style={{ color: 'var(--text)' }}>{fmtCurrency(value)}</span>
-      <span className="text-xs opacity-0 group-hover:opacity-100" style={{ color: 'var(--primary-light)' }}>✎</span>
+      <span className="text-xs opacity-0 group-hover:opacity-100" style={{ color: 'var(--primary-dark)' }}>✎</span>
     </button>
   )
 }
@@ -629,7 +629,7 @@ export function CatalogPage() {
             className="px-4 py-2.5 text-sm font-bold transition-colors -mb-px"
             style={{
               borderBottom: activeTab === key ? '2px solid var(--primary)' : '2px solid transparent',
-              color: activeTab === key ? 'var(--primary-light)' : 'var(--text-muted)',
+              color: activeTab === key ? 'var(--primary-dark)' : 'var(--text-muted)',
             }}
           >
             {label}

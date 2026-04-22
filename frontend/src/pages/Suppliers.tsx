@@ -255,7 +255,7 @@ function SupplierCard({
         <button
           onClick={onEdit}
           className="px-3 py-1.5 rounded-lg text-xs font-bold"
-          style={{ background: 'rgba(139,92,246,0.15)', color: 'var(--primary-light)' }}
+          style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}
         >
           Editar
         </button>
