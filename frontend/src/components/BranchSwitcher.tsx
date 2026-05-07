@@ -82,11 +82,13 @@ export function BranchSwitcher({ collapsed = false, className }: BranchSwitcherP
   if (isReadonly) {
     return (
       <div
-        className={clsx('inline-flex items-center gap-2.5', className)}
+        className={clsx('flex items-center gap-2', className)}
         style={{
+          width: '100%',
           minWidth: 0,
-          padding: collapsed ? '0.45rem' : '0.55rem 0.85rem',
-          borderRadius: collapsed ? '12px' : '14px',
+          maxWidth: '100%',
+          padding: collapsed ? '0.4rem' : '0.4rem 0.6rem',
+          borderRadius: '12px',
           border: '1px solid var(--border)',
           background: 'color-mix(in srgb, var(--surface-2) 70%, transparent)',
           color: 'var(--text)',
@@ -96,37 +98,25 @@ export function BranchSwitcher({ collapsed = false, className }: BranchSwitcherP
         <span
           className="inline-flex items-center justify-center"
           style={{
-            width: '1.6rem',
-            height: '1.6rem',
+            width: '1.4rem',
+            height: '1.4rem',
             borderRadius: '8px',
             background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
             color: 'var(--primary-dark)',
             flexShrink: 0,
           }}
         >
-          <Building2 size={14} />
+          <Building2 size={12} />
         </span>
         {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p
-              className="truncate text-[0.62rem] font-extrabold"
-              style={{
-                color: 'var(--text-faint)',
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Sede asignada
-            </p>
-            <p
-              className="truncate text-xs font-bold"
-              style={{ color: 'var(--text)' }}
-            >
-              {triggerLabel.code} · {triggerLabel.name}
-            </p>
-          </div>
+          <p
+            className="truncate text-[0.7rem] font-bold"
+            style={{ color: 'var(--text)', flex: 1, minWidth: 0 }}
+          >
+            {triggerLabel.code}
+          </p>
         )}
-        <Lock size={12} style={{ color: 'var(--text-faint)', flexShrink: 0 }} />
+        <Lock size={10} style={{ color: 'var(--text-faint)', flexShrink: 0 }} />
       </div>
     )
   }
@@ -137,13 +127,15 @@ export function BranchSwitcher({ collapsed = false, className }: BranchSwitcherP
         <button
           type="button"
           className={clsx(
-            'inline-flex items-center gap-2.5 transition-colors focus:outline-none',
+            'flex items-center gap-2 transition-colors focus:outline-none',
             className,
           )}
           style={{
+            width: '100%',
             minWidth: 0,
-            padding: collapsed ? '0.45rem' : '0.55rem 0.85rem',
-            borderRadius: collapsed ? '12px' : '14px',
+            maxWidth: '100%',
+            padding: collapsed ? '0.4rem' : '0.4rem 0.6rem',
+            borderRadius: '12px',
             border: '1px solid var(--border)',
             background: 'color-mix(in srgb, var(--surface-2) 80%, transparent)',
             color: 'var(--text)',
@@ -154,38 +146,26 @@ export function BranchSwitcher({ collapsed = false, className }: BranchSwitcherP
           <span
             className="inline-flex items-center justify-center"
             style={{
-              width: '1.6rem',
-              height: '1.6rem',
+              width: '1.4rem',
+              height: '1.4rem',
               borderRadius: '8px',
               background: 'color-mix(in srgb, var(--primary) 14%, transparent)',
               color: 'var(--primary-dark)',
               flexShrink: 0,
             }}
           >
-            <Building2 size={14} />
+            <Building2 size={12} />
           </span>
           {!collapsed && (
             <>
-              <div className="min-w-0 flex-1 text-left">
-                <p
-                  className="truncate text-[0.62rem] font-extrabold"
-                  style={{
-                    color: 'var(--text-faint)',
-                    letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Sede activa
-                </p>
-                <p
-                  className="truncate text-xs font-bold"
-                  style={{ color: 'var(--text)' }}
-                >
-                  {triggerLabel.code} · {triggerLabel.name}
-                </p>
-              </div>
+              <p
+                className="truncate text-[0.7rem] font-bold text-left"
+                style={{ color: 'var(--text)', flex: 1, minWidth: 0 }}
+              >
+                {triggerLabel.code}
+              </p>
               <ChevronDown
-                size={14}
+                size={12}
                 style={{
                   color: 'var(--text-muted)',
                   flexShrink: 0,
