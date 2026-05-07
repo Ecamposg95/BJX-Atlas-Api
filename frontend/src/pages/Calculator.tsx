@@ -20,6 +20,8 @@ import type { EngineResponse, CalculationResult } from '../api/types'
 import { MarginBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Skeleton } from '../components/ui/Skeleton'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const DEFAULT_TECH_COST = 156.25
@@ -532,7 +534,7 @@ export function CalculatorPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="relative">
+    <PageShell className="relative">
 
       {/* Toast */}
       {toast && (
@@ -550,28 +552,28 @@ export function CalculatorPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-7 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Calculadora</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Motor de precios y márgenes BJX × Brame</p>
-        </div>
-        <button
-          disabled={!canSave}
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))', boxShadow: canSave ? '0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent)' : 'none' }}
-        >
-          <FileText size={15} />
-          Guardar cotización
-          {quoteServiceCount > 0 && (
-            <span className="rounded-full px-1.5 py-0.5 text-xs font-black"
-              style={{ background: 'rgba(255,255,255,0.25)' }}>
-              {quoteServiceCount}
-            </span>
-          )}
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Calculadora"
+        title="Cotización rápida"
+        description="Calcula márgenes y compara proveedores en tiempo real."
+        actions={
+          <button
+            disabled={!canSave}
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))', boxShadow: canSave ? '0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent)' : 'none' }}
+          >
+            <FileText size={15} />
+            Guardar cotización
+            {quoteServiceCount > 0 && (
+              <span className="rounded-full px-1.5 py-0.5 text-xs font-black"
+                style={{ background: 'rgba(255,255,255,0.25)' }}>
+                {quoteServiceCount}
+              </span>
+            )}
+          </button>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[400px_1fr]">
         {/* ── Left Panel ────────────────────────────────────────────────── */}
@@ -937,6 +939,6 @@ export function CalculatorPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }
