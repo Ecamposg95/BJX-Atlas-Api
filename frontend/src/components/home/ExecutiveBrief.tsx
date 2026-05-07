@@ -1,4 +1,5 @@
 import type { DashboardSummary } from '../../api/types'
+import { fmtPct } from '../../utils/format'
 
 interface ExecutiveBriefProps {
   summary?: DashboardSummary
@@ -9,37 +10,31 @@ export function ExecutiveBrief({ summary, isLoading }: ExecutiveBriefProps) {
   return (
     <section className="executive-panel">
       <div className="executive-panel__header">
-        <div>
-          <p className="executive-panel__eyebrow">Executive brief</p>
-          <h2 className="executive-panel__title">Panorama del negocio</h2>
-        </div>
+        <p className="executive-panel__eyebrow">Brief</p>
+        <h2 className="executive-panel__title">Lectura del día</h2>
       </div>
 
       <div className="executive-brief__list">
         <article className="executive-brief__item">
-          <span className="executive-brief__label">Rentabilidad</span>
+          <span className="executive-brief__label">Margen promedio</span>
           <p className="executive-brief__text">
-            {isLoading
-              ? 'Cargando lectura ejecutiva…'
-              : `El margen promedio actual es de ${((summary?.avg_margin_pct ?? 0) * 100).toFixed(1)}%, con ${summary?.ok_combos ?? 0} combinaciones dentro de rango saludable.`}
+            {isLoading ? '—' : fmtPct(summary?.avg_margin_pct ?? 0)}
           </p>
         </article>
 
         <article className="executive-brief__item">
-          <span className="executive-brief__label">Operación comercial</span>
+          <span className="executive-brief__label">Combos saludables</span>
           <p className="executive-brief__text">
-            {isLoading
-              ? 'Cargando lectura ejecutiva…'
-              : `El catálogo activo cubre ${summary?.total_models ?? 0} modelos y ${summary?.total_services ?? 0} servicios, suficiente para sostener una vista ejecutiva consolidada.`}
+            {isLoading ? '—' : `${summary?.ok_combos ?? 0} combinaciones`}
           </p>
         </article>
 
         <article className="executive-brief__item">
-          <span className="executive-brief__label">Atención inmediata</span>
+          <span className="executive-brief__label">Atención prioritaria</span>
           <p className="executive-brief__text">
             {isLoading
-              ? 'Cargando lectura ejecutiva…'
-              : `Se detectan ${summary?.critical_combos ?? 0} combinaciones críticas y ${summary?.low_combos ?? 0} de margen bajo; ese frente merece seguimiento prioritario.`}
+              ? '—'
+              : `${summary?.critical_combos ?? 0} críticas · ${summary?.low_combos ?? 0} bajo objetivo`}
           </p>
         </article>
       </div>
