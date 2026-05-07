@@ -211,6 +211,15 @@ def seed_defaults():
             except Exception as e:
                 print(f"[BOOT]   Demo users seed failed (non-fatal): {e}", flush=True)
 
+        # --- Operational data (parts/warehouses/vehicles/OS por sede) ---
+        if os.getenv("SEED_OPERATIONAL_DATA", "0") == "1":
+            print("[BOOT]   Seeding operational data (SEED_OPERATIONAL_DATA=1)...", flush=True)
+            try:
+                from scripts.seed_operational import main as _seed_ops
+                _seed_ops()
+            except Exception as e:
+                print(f"[BOOT]   Operational seed failed (non-fatal): {e}", flush=True)
+
     except Exception as exc:
         db.rollback()
         print(f"[ERROR] Seeding failed: {exc}", flush=True)
