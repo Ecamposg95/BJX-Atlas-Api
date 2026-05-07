@@ -1,15 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { login } from '../api'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from '../components/ThemeToggle'
-
-const DEMO_USERS = [
-  { label: 'Jorge', email: 'jorge@bjx.com', role: 'Admin' },
-  { label: 'Rene', email: 'rene@bjx.com', role: 'Operador' },
-  { label: 'Carlos', email: 'carlos@bjx.com', role: 'Viewer' },
-]
 
 export function LoginPage() {
   const [email, setEmail]       = useState('')
@@ -127,33 +121,6 @@ export function LoginPage() {
               {!loading && <ArrowRight size={16} />}
             </button>
           </form>
-
-          <div className="login-demo">
-            <div className="login-demo__header">
-              <ShieldCheck size={15} />
-              <span>Accesos demo MVP</span>
-            </div>
-            <div className="login-demo__list">
-              {DEMO_USERS.map((user) => (
-                <button
-                  key={user.email}
-                  type="button"
-                  className="login-demo__item"
-                  onClick={() => {
-                    setEmail(user.email)
-                    setPassword('1234')
-                    setError('')
-                  }}
-                >
-                  <div>
-                    <p className="login-demo__name">{user.label}</p>
-                    <p className="login-demo__email">{user.email}</p>
-                  </div>
-                  <span className="login-demo__role">{user.role}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </section>
       </div>
     </div>
