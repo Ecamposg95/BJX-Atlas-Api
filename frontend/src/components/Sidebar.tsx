@@ -109,7 +109,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
           clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
         }
       >
-        <Icon size={17} className="flex-shrink-0" />
+        <Icon size={15} className="flex-shrink-0" />
         {!collapsed && <span className="truncate">{label}</span>}
       </NavLink>
     ))
@@ -122,38 +122,36 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
       )}
     >
       {/* Logo / Brand */}
-      <div className="sidebar-brand" style={{ justifyContent: collapsed ? 'center' : 'space-between' }}>
+      <div className="sidebar-brand" style={{ justifyContent: collapsed ? 'center' : 'space-between', gap: '0.5rem' }}>
         {!collapsed && (
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="sidebar-brand__mark">
               <span className="text-white font-black text-xs leading-none">B</span>
             </div>
-            <div className="min-w-0">
-              <p className="sidebar-brand__title">BJX Atlas</p>
-              <p className="sidebar-brand__meta">
-                Executive Suite
-              </p>
-            </div>
+            <p className="sidebar-brand__title truncate">BJX Atlas</p>
           </div>
         )}
-        <button
-          onClick={onToggle}
-          className="p-1.5 rounded-lg transition-colors flex-shrink-0"
-          style={{ color: 'var(--sb-text)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'var(--sb-text)')}
-        >
-          {collapsed ? <Menu size={16} /> : <ChevronLeft size={16} />}
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {!collapsed && <ThemeToggle />}
+          <button
+            onClick={onToggle}
+            className="p-1 rounded-lg transition-colors flex-shrink-0"
+            style={{ color: 'var(--sb-text)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--sb-text)')}
+          >
+            {collapsed ? <Menu size={14} /> : <ChevronLeft size={14} />}
+          </button>
+        </div>
       </div>
 
       {/* Branch switcher */}
-      <div className={clsx('px-2', collapsed ? 'py-2' : 'py-2.5')} style={{ borderBottom: '1px solid var(--sb-border, transparent)' }}>
+      <div className={clsx('px-2', collapsed ? 'py-1.5' : 'py-2')} style={{ borderBottom: '1px solid var(--sb-border, transparent)' }}>
         <BranchSwitcher collapsed={collapsed} />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-3 space-y-0.5 px-1.5 overflow-y-auto">
+      <nav className="flex-1 py-2 space-y-0 px-1 overflow-y-auto">
         {primary.length > 0 && (
           <>
             {!collapsed && <p className="sidebar-section-label">Visión general</p>}
@@ -186,24 +184,18 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
       {/* User + Logout */}
       <div className="sidebar-footer">
         {!collapsed && user && (
-          <div className="sidebar-user-card">
-            <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-muted)' }}>
+          <div className="sidebar-user-card flex items-center justify-between gap-2">
+            <p className="text-[0.7rem] font-semibold truncate" style={{ color: 'var(--text-muted)', flex: 1, minWidth: 0 }}>
               {user.email}
             </p>
             <span
               className={clsx(
-                'inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                'inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0',
                 ROLE_COLORS[user.role] ?? ROLE_COLORS.viewer
               )}
             >
               {ROLE_LABELS[user.role] ?? user.role}
             </span>
-          </div>
-        )}
-
-        {!collapsed && (
-          <div className="px-2 py-1">
-            <ThemeToggle />
           </div>
         )}
 
@@ -214,7 +206,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
             collapsed && 'justify-center'
           )}
         >
-          <LogOut size={17} className="flex-shrink-0" />
+          <LogOut size={15} className="flex-shrink-0" />
           {!collapsed && <span>Salir</span>}
         </button>
       </div>
