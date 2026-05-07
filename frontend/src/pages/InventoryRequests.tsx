@@ -17,6 +17,8 @@ import { TableSkeleton } from '../components/ui/Skeleton'
 import { Modal } from '../components/ui/Modal'
 import { FormField } from '../components/ui/FormField'
 import { EmptyState } from '../components/ui/EmptyState'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import { useToast } from '../components/ui/ToastProvider'
 import { fmtDate } from '../utils/format'
 
@@ -78,15 +80,14 @@ export function InventoryRequestsPage() {
   })
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <header>
-        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Solicitudes de refacciones</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-          Cola del almacén — aprueba, pickea y entrega
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Solicitudes"
+        title="Solicitudes de refacciones"
+        description="Cola del almacén — aprueba, pickea y entrega"
+      />
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="executive-kpi-rail">
         {STATUS_COUNTERS.map((s) => (
           <article key={s} className="executive-kpi">
             <span className="executive-kpi__label">{STATUS_LABELS[s]}</span>
@@ -154,7 +155,7 @@ export function InventoryRequestsPage() {
           </div>
         )}
       </section>
-    </div>
+    </PageShell>
   )
 }
 
