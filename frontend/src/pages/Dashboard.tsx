@@ -628,8 +628,8 @@ export function DashboardPage() {
     queryKey: ['dashboard-work-orders'],
     queryFn: () =>
       api
-        .get<{ items: WorkOrder[] }>('/workshop/work-orders', { params: { page_size: 100 } })
-        .then((r) => r.data.items)
+        .get<{ items: WorkOrder[] }>('/work-orders', { params: { size: 100 } })
+        .then((r) => r.data.items ?? [])
         .catch(() => [] as WorkOrder[]),
     refetchInterval: 60_000,
   })
