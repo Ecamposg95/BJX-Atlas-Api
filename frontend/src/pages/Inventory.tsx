@@ -18,6 +18,8 @@ import { TableSkeleton } from '../components/ui/Skeleton'
 import { Modal } from '../components/ui/Modal'
 import { FormField } from '../components/ui/FormField'
 import { EmptyState } from '../components/ui/EmptyState'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import { useToast } from '../components/ui/ToastProvider'
 import { fmtCurrency, fmtDate, fmtNumber } from '../utils/format'
 
@@ -37,23 +39,22 @@ export function InventoryPage() {
   const [editingPart, setEditingPart] = useState<Part | null>(null)
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Inventario</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-            Refacciones, almacenes y movimientos del taller
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setMovementModalOpen(true)}>
-            <Truck size={14} /> Nuevo movimiento
-          </Button>
-          <Button onClick={() => { setEditingPart(null); setPartModalOpen(true) }}>
-            <Plus size={14} /> Nueva refacción
-          </Button>
-        </div>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Inventario"
+        title="Inventario"
+        description="Refacciones, almacenes y movimientos del taller"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setMovementModalOpen(true)}>
+              <Truck size={14} /> Nuevo movimiento
+            </Button>
+            <Button onClick={() => { setEditingPart(null); setPartModalOpen(true) }}>
+              <Plus size={14} /> Nueva refacción
+            </Button>
+          </>
+        }
+      />
 
       <nav
         className="flex flex-wrap gap-1 rounded-2xl p-1"
@@ -92,7 +93,7 @@ export function InventoryPage() {
         />
       )}
       {movementModalOpen && <MovementModal onClose={() => setMovementModalOpen(false)} />}
-    </div>
+    </PageShell>
   )
 }
 

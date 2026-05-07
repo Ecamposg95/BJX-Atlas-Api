@@ -16,6 +16,8 @@ import { Modal } from '../components/ui/Modal'
 import { Drawer } from '../components/ui/Drawer'
 import { FormField } from '../components/ui/FormField'
 import { EmptyState } from '../components/ui/EmptyState'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import { useToast } from '../components/ui/ToastProvider'
 import { fmtDate } from '../utils/format'
 import { useAuthStore } from '../store/auth'
@@ -68,16 +70,12 @@ export function MechanicWorkPage() {
   }, [orders])
 
   return (
-    <div
-      className="space-y-5 mx-auto"
-      style={{ maxWidth: 720 }}
-    >
-      <header>
-        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Mi trabajo</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-          Órdenes asignadas a {user?.email ?? 'ti'}
-        </p>
-      </header>
+    <PageShell narrow>
+      <PageHeader
+        eyebrow="Mi trabajo"
+        title="Mi trabajo"
+        description={`Órdenes asignadas a ${user?.email ?? 'ti'}`}
+      />
 
       {ordersQuery.isLoading ? (
         <div className="space-y-3">
@@ -113,7 +111,7 @@ export function MechanicWorkPage() {
       {evidenceWoId && (
         <PhotoUploadDrawer workOrderId={evidenceWoId} onClose={() => setEvidenceWoId(null)} />
       )}
-    </div>
+    </PageShell>
   )
 }
 

@@ -18,6 +18,8 @@ import { Modal } from '../components/ui/Modal'
 import { Drawer } from '../components/ui/Drawer'
 import { FormField } from '../components/ui/FormField'
 import { EmptyState } from '../components/ui/EmptyState'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import { useToast } from '../components/ui/ToastProvider'
 import { fmtDate } from '../utils/format'
 
@@ -88,20 +90,19 @@ export function WorkshopBoardPage() {
   }, [orders])
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Tablero del taller</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-            Estado de las órdenes de servicio en tiempo real
-          </p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus size={14} /> Recepción rápida
-        </Button>
-      </header>
+    <PageShell wide>
+      <PageHeader
+        eyebrow="Taller"
+        title="Tablero del taller"
+        description="Estado de las órdenes de servicio en tiempo real"
+        actions={
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus size={14} /> Recepción rápida
+          </Button>
+        }
+      />
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+      <div className="executive-kpi-rail executive-kpi-rail--3">
         <article className="executive-kpi">
           <span className="executive-kpi__label">Autos en taller</span>
           <strong className="executive-kpi__value">{kpis.totalActive}</strong>
@@ -173,7 +174,7 @@ export function WorkshopBoardPage() {
       {createOpen && (
         <QuickReceptionModal onClose={() => setCreateOpen(false)} />
       )}
-    </div>
+    </PageShell>
   )
 }
 
