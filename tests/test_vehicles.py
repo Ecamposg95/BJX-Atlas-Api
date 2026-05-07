@@ -93,9 +93,9 @@ class TestVehicles:
             text(
                 """
                 INSERT INTO vehicles (
-                    id, customer_name, contact, brand, model, year, plates, vin, mileage, color, active, created_at, updated_at, deleted_at
+                    id, customer_name, contact, brand, model, year, plates, vin, mileage, color, active, created_at, updated_at, deleted_at, branch_id
                 ) VALUES (
-                    'dirty-plates-1', 'Juan Perez', NULL, NULL, NULL, NULL, ' ABC-123 ', NULL, NULL, NULL, 1, CURRENT_TIMESTAMP, NULL, NULL
+                    'dirty-plates-1', 'Juan Perez', NULL, NULL, NULL, NULL, ' ABC-123 ', NULL, NULL, NULL, 1, CURRENT_TIMESTAMP, NULL, NULL, '00000000-0000-0000-0000-0000000000aa'
                 )
                 """
             )
@@ -114,9 +114,9 @@ class TestVehicles:
             text(
                 """
                 INSERT INTO vehicles (
-                    id, customer_name, contact, brand, model, year, plates, vin, mileage, color, active, created_at, updated_at, deleted_at
+                    id, customer_name, contact, brand, model, year, plates, vin, mileage, color, active, created_at, updated_at, deleted_at, branch_id
                 ) VALUES (
-                    'dirty-vin-1', 'Juan Perez', NULL, NULL, NULL, NULL, NULL, ' 1HGBH41JXMN109186 ', NULL, NULL, 1, CURRENT_TIMESTAMP, NULL, NULL
+                    'dirty-vin-1', 'Juan Perez', NULL, NULL, NULL, NULL, NULL, ' 1HGBH41JXMN109186 ', NULL, NULL, 1, CURRENT_TIMESTAMP, NULL, NULL, '00000000-0000-0000-0000-0000000000aa'
                 )
                 """
             )

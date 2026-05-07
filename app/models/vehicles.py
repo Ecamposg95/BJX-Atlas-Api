@@ -1,10 +1,10 @@
 from sqlalchemy import Boolean, Column, Index, Integer, String, func
 
 from app.database import Base
-from app.models.mixins import AuditMixin, UUIDMixin
+from app.models.mixins import AuditMixin, BranchScopedMixin, UUIDMixin
 
 
-class Vehicle(Base, UUIDMixin, AuditMixin):
+class Vehicle(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
     __tablename__ = "vehicles"
 
     customer_name = Column(String(255), nullable=False, index=True)

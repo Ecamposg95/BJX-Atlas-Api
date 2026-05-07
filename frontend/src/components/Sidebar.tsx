@@ -2,30 +2,53 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
-  Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck
+  Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
+  Package, ClipboardList, Wrench, Wrench as WrenchIcon, Building2, Activity,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
+import { BranchSwitcher } from './BranchSwitcher'
 
 const PRIMARY_ITEMS = [
   { to: '/home', icon: House, label: 'Home ejecutiva' },
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard/operational', icon: Activity, label: 'Operativo' },
   { to: '/quotes', icon: FileText, label: 'Cotizaciones' },
   { to: '/calculator', icon: Calculator, label: 'Calculadora' },
   { to: '/catalog', icon: BookOpen, label: 'Catálogo' },
   { to: '/suppliers', icon: Truck, label: 'Proveedores' },
 ]
 
+const WORKSHOP_ITEMS = [
+  { to: '/workshop/board', icon: Wrench, label: 'Tablero taller' },
+  { to: '/me/work', icon: WrenchIcon, label: 'Mis OS' },
+]
+
+const INVENTORY_ITEMS = [
+  { to: '/inventory', icon: Package, label: 'Inventario' },
+  { to: '/inventory/requests', icon: ClipboardList, label: 'Solicitudes' },
+]
+
 const ADMIN_ITEMS = [
+  { to: '/branches',   icon: Building2,        label: 'Sucursales',     adminOnly: true },
   { to: '/config',     icon: Settings,         label: 'Configuración', adminOnly: true },
   { to: '/admin',      icon: ShieldCheck,      label: 'Administración', adminOnly: true },
 ]
 
 const ROLE_COLORS: Record<string, string> = {
   admin: 'sidebar-role sidebar-role--admin',
+  director: 'sidebar-role sidebar-role--admin',
+  gerente_sede: 'sidebar-role sidebar-role--operador',
+  jefe_taller: 'sidebar-role sidebar-role--operador',
   operador: 'sidebar-role sidebar-role--operador',
+  recepcion: 'sidebar-role sidebar-role--operador',
+  mecanico: 'sidebar-role sidebar-role--operador',
+  almacen: 'sidebar-role sidebar-role--operador',
+  cliente_corp: 'sidebar-role sidebar-role--viewer',
   viewer: 'sidebar-role sidebar-role--viewer',
 }
+
+const ADMIN_ROLES = new Set(['admin', 'director'])
 
 interface SidebarProps {
   collapsed: boolean
@@ -43,7 +66,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
   }
 
   const visibleAdminItems = ADMIN_ITEMS.filter(
-    (item) => !item.adminOnly || user?.role === 'admin'
+    (item) => !item.adminOnly || (user?.role && ADMIN_ROLES.has(user.role))
   )
 
   return (
@@ -79,6 +102,11 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
         </button>
       </div>
 
+      {/* Branch switcher */}
+      <div className={clsx('px-2', collapsed ? 'py-2' : 'py-2.5')} style={{ borderBottom: '1px solid var(--sb-border, transparent)' }}>
+        <BranchSwitcher collapsed={collapsed} />
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 py-3 space-y-0.5 px-1.5 overflow-y-auto">
         {!collapsed && (
@@ -87,6 +115,46 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
           </p>
         )}
         {PRIMARY_ITEMS.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavClick}
+            title={collapsed ? label : undefined}
+            className={({ isActive }) =>
+              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
+            }
+          >
+            <Icon size={17} className="flex-shrink-0" />
+            {!collapsed && <span className="truncate">{label}</span>}
+          </NavLink>
+        ))}
+
+        {!collapsed && (
+          <p className="sidebar-section-label sidebar-section-label--secondary">
+            Taller
+          </p>
+        )}
+        {WORKSHOP_ITEMS.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavClick}
+            title={collapsed ? label : undefined}
+            className={({ isActive }) =>
+              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
+            }
+          >
+            <Icon size={17} className="flex-shrink-0" />
+            {!collapsed && <span className="truncate">{label}</span>}
+          </NavLink>
+        ))}
+
+        {!collapsed && (
+          <p className="sidebar-section-label sidebar-section-label--secondary">
+            Inventario
+          </p>
+        )}
+        {INVENTORY_ITEMS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}

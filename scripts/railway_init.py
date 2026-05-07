@@ -190,7 +190,7 @@ def seed_defaults():
             admin = User(
                 email=admin_email,
                 hashed_password=hash_password(admin_password),
-                role=Role.admin,
+                role=Role.admin.value,
                 active=True,
             )
             db.add(admin)

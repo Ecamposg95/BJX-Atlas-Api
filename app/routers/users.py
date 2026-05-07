@@ -28,7 +28,7 @@ def update_user(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     if payload.role is not None:
-        user.role = payload.role
+        user.role = payload.role.value if hasattr(payload.role, "value") else str(payload.role)
     if payload.active is not None:
         user.active = payload.active
     db.commit()

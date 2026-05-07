@@ -1,10 +1,10 @@
 from sqlalchemy import Column, String, Boolean, Float, Integer, ForeignKey, Date, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
-from app.models.mixins import UUIDMixin, AuditMixin
+from app.models.mixins import UUIDMixin, AuditMixin, BranchScopedMixin
 
 
-class Supplier(Base, UUIDMixin, AuditMixin):
+class Supplier(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
     __tablename__ = "suppliers"
 
     name = Column(String(255), nullable=False, unique=True, index=True)

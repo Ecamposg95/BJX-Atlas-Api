@@ -5,6 +5,10 @@ import type {
   Supplier, SupplierPrice,
   EngineResponse, SimulateRequest, SimulateResponse,
   Quote, QuoteStatus, DashboardSummary, ModelProfitability,
+  Branch, BranchSwitchResponse,
+  Warehouse, Part, StockLevel, InventoryRequest, InventoryRequestStatus, InventoryMovement,
+  ServiceBay, WorkOrderLine, Evidence,
+  Paginated,
 } from './types'
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -193,3 +197,168 @@ export const getByService = (params?: { category?: string; sort?: string }) =>
 
 export const simulate = (data: SimulateRequest) =>
   api.post<SimulateResponse>('/dashboard/simulate', data).then((r) => r.data)
+
+// ── Branches ─────────────────────────────────────────────────────────────────
+export const listBranches = () =>
+  api.get<Branch[]>('/branches').then((r) => r.data)
+
+export const switchBranch = (branch_id: string) =>
+  api.post<BranchSwitchResponse>('/branches/switch', { branch_id }).then((r) => r.data)
+
+// ── Inventory: Warehouses ────────────────────────────────────────────────────
+export const listWarehouses = () =>
+  api.get<Warehouse[]>('/inventory/warehouses').then((r) => r.data)
+
+export const createWarehouse = (data: { code: string; name: string; kind?: string; branch_id?: string }) =>
+  api.post<Warehouse>('/inventory/warehouses', data).then((r) => r.data)
+
+export const updateWarehouse = (id: string, data: Partial<Warehouse>) =>
+  api.put<Warehouse>(`/inventory/warehouses/${id}`, data).then((r) => r.data)
+
+// ── Inventory: Parts ─────────────────────────────────────────────────────────
+export const listParts = (params?: {
+  q?: string; category?: string; only_active?: boolean; only_low_stock?: boolean
+  page?: number; page_size?: number
+}) =>
+  api.get<Paginated<Part>>('/inventory/parts', { params }).then((r) => r.data)
+
+export const createPart = (data: Partial<Part> & { sku: string; name: string }) =>
+  api.post<Part>('/inventory/parts', data).then((r) => r.data)
+
+export const updatePart = (id: string, data: Partial<Part>) =>
+  api.put<Part>(`/inventory/parts/${id}`, data).then((r) => r.data)
+
+// ── Inventory: Stock + Movements ─────────────────────────────────────────────
+export const listStock = (params?: { warehouse_id?: string; part_id?: string }) =>
+  api.get<StockLevel[]>('/inventory/stock', { params }).then((r) => r.data)
+
+export const listMovements = (params?: {
+  warehouse_id?: string; part_id?: string; movement_type?: string
+  page?: number; page_size?: number
+}) =>
+  api.get<Paginated<InventoryMovement>>('/inventory/movements', { params }).then((r) => r.data)
+
+export const createMovement = (data: {
+  warehouse_id: string
+  part_id: string
+  movement_type: 'inbound' | 'outbound' | 'adjustment' | 'transfer_out'
+  quantity: number
+  unit_cost?: number
+  work_order_id?: string
+  counterpart_warehouse_id?: string
+  reason?: string
+}) =>
+  api.post<InventoryMovement>('/inventory/movements', data).then((r) => r.data)
+
+// ── Inventory: Requests ──────────────────────────────────────────────────────
+export const listInventoryRequests = (params?: {
+  work_order_id?: string; status?: InventoryRequestStatus; requested_by?: string
+  page?: number; page_size?: number
+}) =>
+  api.get<Paginated<InventoryRequest>>('/inventory/requests', { params }).then((r) => r.data)
+
+export const createInventoryRequest = (data: {
+  work_order_id: string
+  part_id: string
+  quantity: number
+  priority?: 'low' | 'normal' | 'high' | 'urgent'
+  notes?: string
+}) =>
+  api.post<InventoryRequest>('/inventory/requests', data).then((r) => r.data)
+
+export const approveInventoryRequest = (id: string, notes?: string) =>
+  api.post<InventoryRequest>(`/inventory/requests/${id}/approve`, { notes }).then((r) => r.data)
+
+export const rejectInventoryRequest = (id: string, reason: string) =>
+  api.post<InventoryRequest>(`/inventory/requests/${id}/reject`, { reason }).then((r) => r.data)
+
+export const pickInventoryRequest = (id: string, warehouse_id: string) =>
+  api.post<InventoryRequest>(`/inventory/requests/${id}/pick`, { warehouse_id }).then((r) => r.data)
+
+export const deliverInventoryRequest = (id: string) =>
+  api.post<InventoryRequest>(`/inventory/requests/${id}/deliver`).then((r) => r.data)
+
+export const useInventoryRequest = (id: string) =>
+  api.post<InventoryRequest>(`/inventory/requests/${id}/use`).then((r) => r.data)
+
+export const returnInventoryRequest = (id: string) =>
+  api.post<InventoryRequest>(`/inventory/requests/${id}/return`).then((r) => r.data)
+
+// ── Workshop: Bays ───────────────────────────────────────────────────────────
+export const listBays = (only_active = true) =>
+  api.get<ServiceBay[]>('/workshop/bays', { params: { only_active } }).then((r) => r.data)
+
+export const createBay = (data: { code: string; name: string; branch_id?: string }) =>
+  api.post<ServiceBay>('/workshop/bays', data).then((r) => r.data)
+
+// ── Workshop: Lines ──────────────────────────────────────────────────────────
+export const listLines = (work_order_id: string) =>
+  api.get<WorkOrderLine[]>(`/workshop/work-orders/${work_order_id}/lines`).then((r) => r.data)
+
+export const createLine = (work_order_id: string, data: {
+  service_id: string
+  bay_id?: string
+  mechanic_id?: string
+  standard_duration_hrs?: number
+  notes?: string
+}) =>
+  api.post<WorkOrderLine>(`/workshop/work-orders/${work_order_id}/lines`, data).then((r) => r.data)
+
+export const updateLine = (line_id: string, data: { bay_id?: string; mechanic_id?: string; notes?: string }) =>
+  api.put<WorkOrderLine>(`/workshop/lines/${line_id}`, data).then((r) => r.data)
+
+export const startLine = (line_id: string) =>
+  api.post<WorkOrderLine>(`/workshop/lines/${line_id}/start`).then((r) => r.data)
+
+export const pauseLine = (line_id: string) =>
+  api.post<WorkOrderLine>(`/workshop/lines/${line_id}/pause`).then((r) => r.data)
+
+export const resumeLine = (line_id: string) =>
+  api.post<WorkOrderLine>(`/workshop/lines/${line_id}/resume`).then((r) => r.data)
+
+export const finishLine = (line_id: string) =>
+  api.post<WorkOrderLine>(`/workshop/lines/${line_id}/finish`).then((r) => r.data)
+
+// ── Workshop: Evidence ───────────────────────────────────────────────────────
+export const listEvidence = (work_order_id: string) =>
+  api.get<Evidence[]>(`/workshop/work-orders/${work_order_id}/evidence`).then((r) => r.data)
+
+export const uploadEvidence = (
+  work_order_id: string,
+  file: File,
+  meta: { kind?: string; stage?: string; note?: string; work_order_line_id?: string } = {},
+) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  if (meta.kind) fd.append('kind', meta.kind)
+  if (meta.stage) fd.append('stage', meta.stage)
+  if (meta.note) fd.append('note', meta.note)
+  if (meta.work_order_line_id) fd.append('work_order_line_id', meta.work_order_line_id)
+  return api
+    .post<Evidence>(`/workshop/work-orders/${work_order_id}/evidence`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((r) => r.data)
+}
+
+// ── Audit ────────────────────────────────────────────────────────────────────
+export interface AuditLogEntry {
+  id: string
+  branch_id: string | null
+  user_id: string | null
+  user_email: string | null
+  action: string
+  table_name: string
+  record_id: string | null
+  old_data: Record<string, unknown> | null
+  new_data: Record<string, unknown> | null
+  ip: string | null
+  user_agent: string | null
+  created_at: string
+}
+
+export const listAuditLogs = (params?: {
+  branch_id?: string; table_name?: string; record_id?: string
+  user_id?: string; action?: string; page?: number; page_size?: number
+}) =>
+  api.get<Paginated<AuditLogEntry>>('/audit/logs', { params }).then((r) => r.data)

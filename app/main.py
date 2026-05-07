@@ -10,8 +10,15 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app.database import check_db_connection
 from app.routers import auth, engine, catalog, suppliers, quotes, dashboard, config, users, vehicles, work_orders
+from app.routers import branches as branches_router, audit as audit_router
+from app.routers import inventory as inventory_router, workshop as workshop_router
+from app.middleware import AuditContextMiddleware
+from app.services.audit import install_audit_listeners
 
 logger = logging.getLogger("bjx-atlas")
+
+# Registrar event listeners de auditoría una sola vez al boot.
+install_audit_listeners()
 
 app = FastAPI(
     title="BJX Atlas API",
@@ -34,6 +41,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(AuditContextMiddleware)
 
 # ── API routers (all under /api) ─────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api", tags=["Autenticación"])
@@ -46,6 +54,10 @@ app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(config.router, prefix="/api", tags=["Configuración"])
 app.include_router(users.router, prefix="/api", tags=["Usuarios"])
 app.include_router(work_orders.router, prefix="/api", tags=["Órdenes de trabajo"])
+app.include_router(branches_router.router, prefix="/api", tags=["Sucursales"])
+app.include_router(audit_router.router, prefix="/api", tags=["Auditoría"])
+app.include_router(inventory_router.router, prefix="/api", tags=["Inventario"])
+app.include_router(workshop_router.router, prefix="/api", tags=["Taller"])
 
 
 @app.get("/api/health", tags=["Sistema"])

@@ -7,7 +7,7 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.models.mixins import AuditMixin, UUIDMixin
+from app.models.mixins import AuditMixin, BranchScopedMixin, UUIDMixin
 
 
 class WorkOrderStatus(str, enum.Enum):
@@ -18,7 +18,7 @@ class WorkOrderStatus(str, enum.Enum):
     delivered = "delivered"
 
 
-class WorkOrder(Base, UUIDMixin, AuditMixin):
+class WorkOrder(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
     __tablename__ = "work_orders"
 
     order_number = Column(String(20), unique=True, nullable=False, index=True)
