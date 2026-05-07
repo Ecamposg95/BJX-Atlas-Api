@@ -3,36 +3,47 @@ import { clsx } from 'clsx'
 import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
-  Package, ClipboardList, Wrench, Wrench as WrenchIcon, Building2, Activity,
+  Package, ClipboardList, Wrench, HardHat, Building2, Activity,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
 import { BranchSwitcher } from './BranchSwitcher'
+import type { Role } from '../api/types'
 
-const PRIMARY_ITEMS = [
-  { to: '/home', icon: House, label: 'Home ejecutiva' },
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/dashboard/operational', icon: Activity, label: 'Operativo' },
-  { to: '/quotes', icon: FileText, label: 'Cotizaciones' },
-  { to: '/calculator', icon: Calculator, label: 'Calculadora' },
-  { to: '/catalog', icon: BookOpen, label: 'Catálogo' },
-  { to: '/suppliers', icon: Truck, label: 'Proveedores' },
+type NavItem = {
+  to: string
+  icon: typeof House
+  label: string
+  roles: Role[]   // roles que pueden ver este item
+}
+
+// Convención: cada ruta declara explícitamente qué roles la pueden ver.
+// El backend valida con require_role() — esto es solo UI.
+
+const PRIMARY_ITEMS: NavItem[] = [
+  { to: '/home',                 icon: House,           label: 'Home ejecutiva',   roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'mecanico', 'almacen', 'cliente_corp', 'operador', 'viewer'] },
+  { to: '/dashboard',            icon: LayoutDashboard, label: 'Dashboard',        roles: ['admin', 'director', 'gerente_sede', 'operador', 'viewer'] },
+  { to: '/dashboard/operational',icon: Activity,        label: 'Operativo',        roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'viewer'] },
+  { to: '/quotes',               icon: FileText,        label: 'Cotizaciones',     roles: ['admin', 'director', 'gerente_sede', 'recepcion', 'operador'] },
+  { to: '/calculator',           icon: Calculator,      label: 'Calculadora',      roles: ['admin', 'director', 'gerente_sede', 'operador'] },
+  { to: '/catalog',              icon: BookOpen,        label: 'Catálogo',         roles: ['admin', 'director', 'gerente_sede'] },
+  { to: '/suppliers',            icon: Truck,           label: 'Proveedores',      roles: ['admin', 'director', 'almacen'] },
 ]
 
-const WORKSHOP_ITEMS = [
-  { to: '/workshop/board', icon: Wrench, label: 'Tablero taller' },
-  { to: '/me/work', icon: WrenchIcon, label: 'Mis OS' },
+const WORKSHOP_ITEMS: NavItem[] = [
+  { to: '/workshop/board', icon: Wrench,  label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
+  { to: '/me/work',        icon: HardHat, label: 'Mis OS',         roles: ['mecanico', 'jefe_taller'] },
 ]
 
-const INVENTORY_ITEMS = [
-  { to: '/inventory', icon: Package, label: 'Inventario' },
-  { to: '/inventory/requests', icon: ClipboardList, label: 'Solicitudes' },
+const INVENTORY_ITEMS: NavItem[] = [
+  { to: '/inventory',          icon: Package,       label: 'Inventario',  roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
+  { to: '/inventory/requests', icon: ClipboardList, label: 'Solicitudes', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'mecanico'] },
 ]
 
-const ADMIN_ITEMS = [
-  { to: '/branches',   icon: Building2,        label: 'Sucursales',     adminOnly: true },
-  { to: '/config',     icon: Settings,         label: 'Configuración', adminOnly: true },
-  { to: '/admin',      icon: ShieldCheck,      label: 'Administración', adminOnly: true },
+const ADMIN_ITEMS: NavItem[] = [
+  { to: '/branches', icon: Building2,   label: 'Sucursales',     roles: ['admin', 'director'] },
+  { to: '/config',   icon: Settings,    label: 'Configuración',  roles: ['admin', 'director'] },
+  { to: '/admin',    icon: ShieldCheck, label: 'Administración', roles: ['admin'] },
 ]
 
 const ROLE_COLORS: Record<string, string> = {
@@ -48,7 +59,18 @@ const ROLE_COLORS: Record<string, string> = {
   viewer: 'sidebar-role sidebar-role--viewer',
 }
 
-const ADMIN_ROLES = new Set(['admin', 'director'])
+const ROLE_LABELS: Record<Role, string> = {
+  admin: 'Admin',
+  director: 'Director',
+  gerente_sede: 'Gerente sede',
+  jefe_taller: 'Jefe taller',
+  recepcion: 'Recepción',
+  mecanico: 'Mecánico',
+  almacen: 'Almacén',
+  cliente_corp: 'Cliente',
+  operador: 'Operador',
+  viewer: 'Viewer',
+}
 
 interface SidebarProps {
   collapsed: boolean
@@ -56,18 +78,41 @@ interface SidebarProps {
   onNavClick?: () => void
 }
 
+function filterByRole(items: NavItem[], role: Role | undefined): NavItem[] {
+  if (!role) return []
+  return items.filter((i) => i.roles.includes(role))
+}
+
 export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+
+  const role = user?.role
+  const primary = filterByRole(PRIMARY_ITEMS, role)
+  const workshop = filterByRole(WORKSHOP_ITEMS, role)
+  const inventory = filterByRole(INVENTORY_ITEMS, role)
+  const admin = filterByRole(ADMIN_ITEMS, role)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
 
-  const visibleAdminItems = ADMIN_ITEMS.filter(
-    (item) => !item.adminOnly || (user?.role && ADMIN_ROLES.has(user.role))
-  )
+  const renderItems = (items: NavItem[]) =>
+    items.map(({ to, icon: Icon, label }) => (
+      <NavLink
+        key={to}
+        to={to}
+        onClick={onNavClick}
+        title={collapsed ? label : undefined}
+        className={({ isActive }) =>
+          clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
+        }
+      >
+        <Icon size={17} className="flex-shrink-0" />
+        {!collapsed && <span className="truncate">{label}</span>}
+      </NavLink>
+    ))
 
   return (
     <aside
@@ -109,85 +154,33 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 py-3 space-y-0.5 px-1.5 overflow-y-auto">
-        {!collapsed && (
-          <p className="sidebar-section-label">
-            Visión general
-          </p>
+        {primary.length > 0 && (
+          <>
+            {!collapsed && <p className="sidebar-section-label">Visión general</p>}
+            {renderItems(primary)}
+          </>
         )}
-        {PRIMARY_ITEMS.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavClick}
-            title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
-            }
-          >
-            <Icon size={17} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </NavLink>
-        ))}
 
-        {!collapsed && (
-          <p className="sidebar-section-label sidebar-section-label--secondary">
-            Taller
-          </p>
+        {workshop.length > 0 && (
+          <>
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Taller</p>}
+            {renderItems(workshop)}
+          </>
         )}
-        {WORKSHOP_ITEMS.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavClick}
-            title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
-            }
-          >
-            <Icon size={17} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </NavLink>
-        ))}
 
-        {!collapsed && (
-          <p className="sidebar-section-label sidebar-section-label--secondary">
-            Inventario
-          </p>
+        {inventory.length > 0 && (
+          <>
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Inventario</p>}
+            {renderItems(inventory)}
+          </>
         )}
-        {INVENTORY_ITEMS.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavClick}
-            title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
-            }
-          >
-            <Icon size={17} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </NavLink>
-        ))}
 
-        {!collapsed && visibleAdminItems.length > 0 && (
-          <p className="sidebar-section-label sidebar-section-label--secondary">
-            Gestión
-          </p>
+        {admin.length > 0 && (
+          <>
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Gestión</p>}
+            {renderItems(admin)}
+          </>
         )}
-        {visibleAdminItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavClick}
-            title={collapsed ? label : undefined}
-            className={({ isActive }) =>
-              clsx('nav-item', isActive && 'active', collapsed && 'justify-center')
-            }
-          >
-            <Icon size={17} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </NavLink>
-        ))}
       </nav>
 
       {/* User + Logout */}
@@ -203,7 +196,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
                 ROLE_COLORS[user.role] ?? ROLE_COLORS.viewer
               )}
             >
-              {user.role}
+              {ROLE_LABELS[user.role] ?? user.role}
             </span>
           </div>
         )}
