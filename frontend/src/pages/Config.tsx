@@ -4,6 +4,8 @@ import { getConfig, updateConfig } from '../api'
 import { useAuthStore } from '../store/auth'
 import { Button } from '../components/ui/Button'
 import { TableSkeleton } from '../components/ui/Skeleton'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import type { ConfigParam } from '../api/types'
 
 const WEIGHT_KEYS = ['scoring_weight_price', 'scoring_weight_time', 'scoring_weight_tc']
@@ -37,14 +39,22 @@ export function ConfigPage() {
   }, 0)
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
-        <p className="text-sm text-gray-500 mt-1">Parámetros del motor de cálculo</p>
-      </div>
+    <PageShell narrow>
+      <PageHeader
+        eyebrow="Configuración"
+        title="Parámetros del motor"
+        description="Constantes globales del motor de cálculo."
+      />
 
       {toast && (
-        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
+        <div
+          className="rounded-lg px-4 py-3 text-sm"
+          style={{
+            background: 'rgba(16,185,129,0.10)',
+            border: '1px solid rgba(16,185,129,0.30)',
+            color: '#6ee7b7',
+          }}
+        >
           {toast}
         </div>
       )}
@@ -52,24 +62,27 @@ export function ConfigPage() {
       {isLoading ? (
         <TableSkeleton rows={6} cols={4} />
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
+          <table className="min-w-full text-sm">
+            <thead style={{ background: 'var(--surface-2)' }}>
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Parámetro</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Descripción</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Valor</th>
+                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--text-muted)' }}>Parámetro</th>
+                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--text-muted)' }}>Descripción</th>
+                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--text-muted)' }}>Valor</th>
                 {isAdmin && <th className="px-4 py-3" />}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {params.map((p: ConfigParam) => {
                 const isEditingRow = p.key in editing
                 const isWeight = WEIGHT_KEYS.includes(p.key)
                 return (
-                  <tr key={p.key} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">{p.key}</td>
-                    <td className="px-4 py-3 text-gray-500">{p.description ?? '—'}</td>
+                  <tr key={p.key} style={{ borderTop: '1px solid var(--border-dim)' }}>
+                    <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--text)' }}>{p.key}</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>{p.description ?? '—'}</td>
                     <td className="px-4 py-3">
                       {isEditingRow ? (
                         <div className="space-y-1">
@@ -78,19 +91,20 @@ export function ConfigPage() {
                             step="0.01"
                             value={editing[p.key]}
                             onChange={(e) => setEditing((ev) => ({ ...ev, [p.key]: e.target.value }))}
-                            className="w-32 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-32 rounded px-2 py-1 text-sm focus:outline-none"
+                            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
                           />
                           {p.key === 'target_margin' && (
                             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Entre 0.01 y 0.99</p>
                           )}
                           {isWeight && (
-                            <p className={`text-xs ${Math.abs(weightSum - 1) < 0.001 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <p className="text-xs" style={{ color: Math.abs(weightSum - 1) < 0.001 ? '#34d399' : '#fb7185' }}>
                               Suma pesos: {weightSum.toFixed(2)} {Math.abs(weightSum - 1) < 0.001 ? '✓' : '≠ 1.0'}
                             </p>
                           )}
                         </div>
                       ) : (
-                        <span className="font-medium">{p.value}</span>
+                        <span className="font-medium" style={{ color: 'var(--text)' }}>{p.value}</span>
                       )}
                     </td>
                     {isAdmin && (
@@ -130,6 +144,6 @@ export function ConfigPage() {
           </table>
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }

@@ -5,6 +5,8 @@ import type { Supplier, SupplierPrice } from '../api/types'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Skeleton } from '../components/ui/Skeleton'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 const fmtCurrency = (val: number) =>
@@ -310,26 +312,24 @@ export function SuppliersPage() {
   })
 
   return (
-    <div className="space-y-7">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Proveedores</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-            Gestión de proveedores y precios de refacciones
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {!isLoading && (
-            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              {suppliers.length} proveedor{suppliers.length !== 1 ? 'es' : ''}
-            </span>
-          )}
-          <Button variant="primary" size="sm" onClick={() => setModal({})}>
-            + Nuevo proveedor
-          </Button>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Proveedores"
+        title="Base de proveedores"
+        description="Proveedores, listas de precios y comparativos."
+        actions={
+          <>
+            {!isLoading && (
+              <span className="text-sm self-center" style={{ color: 'var(--text-muted)' }}>
+                {suppliers.length} proveedor{suppliers.length !== 1 ? 'es' : ''}
+              </span>
+            )}
+            <Button variant="primary" size="sm" onClick={() => setModal({})}>
+              + Nuevo proveedor
+            </Button>
+          </>
+        }
+      />
 
       {/* Error */}
       {suppliersQuery.isError && (
@@ -384,6 +384,6 @@ export function SuppliersPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }
