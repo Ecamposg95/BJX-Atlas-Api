@@ -46,7 +46,7 @@ interface WorkOrder {
 }
 
 const fetchWorkOrders = () =>
-  api.get<{ items: WorkOrder[] }>('/work-orders').then(r => r.data.items ?? []).catch(() => [])
+  api.get<{ items: WorkOrder[] }>('/work-orders').then(r => Array.isArray(r.data?.items) ? r.data.items : []).catch(() => [])
 
 const createWorkOrder = (data: {
   vehicle_plates: string

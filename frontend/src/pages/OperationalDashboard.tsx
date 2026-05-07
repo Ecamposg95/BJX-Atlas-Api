@@ -36,12 +36,15 @@ interface MechanicStats {
 }
 
 const fetchWorkOrders = () =>
-  api.get<{ items: OpWorkOrder[] }>('/work-orders').then(r => r.data.items ?? []).catch(() => [])
+  api.get<{ items: OpWorkOrder[] }>('/work-orders')
+    .then(r => Array.isArray(r.data?.items) ? r.data.items : [])
+    .catch(() => [] as OpWorkOrder[])
 
-// Best-effort: try to get per-mechanic stats, otherwise we compute client-side
+// Best-effort: el endpoint puede no existir todavía → defensa contra
+// SPA fallback que devuelve HTML 200 (axios no rechaza).
 const fetchMechanicStats = () =>
   api.get<MechanicStats[]>('/workshop/stats/mechanics-today')
-    .then(r => r.data)
+    .then(r => Array.isArray(r.data) ? r.data : [])
     .catch(() => [] as MechanicStats[])
 
 const STATUS_LABELS: Record<OpWorkOrder['status'], string> = {

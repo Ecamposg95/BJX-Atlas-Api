@@ -629,7 +629,7 @@ export function DashboardPage() {
     queryFn: () =>
       api
         .get<{ items: WorkOrder[] }>('/work-orders', { params: { size: 100 } })
-        .then((r) => r.data.items ?? [])
+        .then((r) => Array.isArray(r.data?.items) ? r.data.items : [])
         .catch(() => [] as WorkOrder[]),
     refetchInterval: 60_000,
   })
