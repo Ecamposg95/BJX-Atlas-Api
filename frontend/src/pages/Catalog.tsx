@@ -9,6 +9,8 @@ import type { VehicleModel, Service, CatalogCost } from '../api/types'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { TableSkeleton } from '../components/ui/Skeleton'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 const fmtCurrency = (val: number | null) =>
@@ -613,13 +615,12 @@ export function CatalogPage() {
   const [activeTab, setActiveTab] = useState<Tab>('models')
 
   return (
-    <div className="space-y-7">
-      <div>
-        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Catálogo</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-          Modelos, servicios y costos por combinación
-        </p>
-      </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Modelos, servicios y costos"
+        description="Catálogo BJX de combinaciones modelo × servicio."
+      />
 
       <div className="flex gap-1" style={{ borderBottom: '1px solid var(--border)' }}>
         {TABS.map(({ key, label }) => (
@@ -641,6 +642,6 @@ export function CatalogPage() {
       {activeTab === 'services' && <ServicesTab />}
       {activeTab === 'costs'    && <CostsTab />}
       {activeTab === 'missing'  && <MissingTab />}
-    </div>
+    </PageShell>
   )
 }

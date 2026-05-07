@@ -5,6 +5,8 @@ import type { UserRead } from '../api/types'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Skeleton } from '../components/ui/Skeleton'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (d: string) =>
@@ -180,19 +182,17 @@ export function AdminPage() {
   })
 
   return (
-    <div className="space-y-7">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Administración</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-            Gestión de usuarios y accesos
-          </p>
-        </div>
-        <Button variant="primary" size="sm" onClick={() => setModal({ mode: 'create' })}>
-          + Nuevo usuario
-        </Button>
-      </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Administración"
+        title="Usuarios y permisos"
+        description="Gestión de cuentas, roles y accesos."
+        actions={
+          <Button variant="primary" size="sm" onClick={() => setModal({ mode: 'create' })}>
+            + Nuevo usuario
+          </Button>
+        }
+      />
 
       {/* Error */}
       {usersQuery.isError && (
@@ -308,6 +308,6 @@ export function AdminPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }

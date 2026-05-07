@@ -7,6 +7,8 @@ import { Badge, MarginBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Skeleton, TableSkeleton } from '../components/ui/Skeleton'
 import { useAuthStore } from '../store/auth'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -383,7 +385,13 @@ export function QuotesPage() {
     : quotes
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <PageShell>
+      <PageHeader
+        eyebrow="Cotizaciones"
+        title="Pipeline comercial"
+        description="Cotizaciones, su estado y exportación."
+      />
+      <div className="flex overflow-hidden rounded-2xl" style={{ minHeight: '70vh', background: 'var(--surface)', border: '1px solid var(--border)' }}>
       {/* ── Left pane ─────────────────────────────────── */}
       <aside className="w-72 shrink-0 flex flex-col" style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         {/* Tab filter */}
@@ -472,6 +480,7 @@ export function QuotesPage() {
           </div>
         )}
       </main>
-    </div>
+      </div>
+    </PageShell>
   )
 }
