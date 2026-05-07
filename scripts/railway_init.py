@@ -181,9 +181,10 @@ def seed_defaults():
         else:
             print("[BOOT]   Config params OK (already exist)", flush=True)
 
-        # --- Admin user ---
+        # --- Admin user (asegura branch_id default = MAIN si existe) ---
         admin_email = os.getenv("ADMIN_EMAIL", "admin@bjx.com")
         admin_password = os.getenv("ADMIN_PASSWORD", "Admin1234")
+        DEFAULT_MAIN_BRANCH_ID = "00000000-0000-0000-0000-0000000000aa"
 
         existing_admin = db.query(User).filter(User.email == admin_email).first()
         if not existing_admin:
@@ -191,6 +192,7 @@ def seed_defaults():
                 email=admin_email,
                 hashed_password=hash_password(admin_password),
                 role=Role.admin.value,
+                default_branch_id=DEFAULT_MAIN_BRANCH_ID,
                 active=True,
             )
             db.add(admin)
@@ -198,6 +200,16 @@ def seed_defaults():
             print(f"[BOOT]   Admin created: {admin_email}", flush=True)
         else:
             print(f"[BOOT]   Admin OK: {admin_email}", flush=True)
+
+        # --- Demo users (1 por rol) — opt-in via SEED_DEMO_USERS=1 ---
+        if os.getenv("SEED_DEMO_USERS", "0") == "1":
+            print("[BOOT]   Seeding demo users (SEED_DEMO_USERS=1)...", flush=True)
+            try:
+                from scripts.seed_users import seed_users as _seed_demo_users
+                created, skipped = _seed_demo_users()
+                print(f"[BOOT]   Demo users: {created} created, {skipped} existed", flush=True)
+            except Exception as e:
+                print(f"[BOOT]   Demo users seed failed (non-fatal): {e}", flush=True)
 
     except Exception as exc:
         db.rollback()
