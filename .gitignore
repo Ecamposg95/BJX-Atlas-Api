@@ -10,3 +10,11 @@ node_modules/
 frontend/dist/
 *.db-shm
 *.db-wal
+
+# Local plan/notes/context (not project source)
+.claude/
+docs/
+context/*.pdf
+
+# Local storage (R2-equivalent for dev)
+storage_local/
