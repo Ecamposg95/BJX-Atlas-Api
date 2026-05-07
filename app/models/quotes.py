@@ -2,7 +2,7 @@ import enum
 from sqlalchemy import Column, String, Boolean, Float, ForeignKey, Text, Integer, Enum
 from sqlalchemy.orm import relationship
 from app.database import Base
-from app.models.mixins import UUIDMixin, AuditMixin
+from app.models.mixins import UUIDMixin, AuditMixin, BranchScopedMixin
 
 
 class QuoteStatus(str, enum.Enum):
@@ -12,7 +12,7 @@ class QuoteStatus(str, enum.Enum):
     cancelled = "cancelled"
 
 
-class Quote(Base, UUIDMixin, AuditMixin):
+class Quote(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
     __tablename__ = "quotes"
 
     quote_number = Column(String(20), unique=True, nullable=False, index=True)

@@ -640,7 +640,8 @@ def update_quote(
     quote = _get_quote_or_404(quote_id, db)
 
     if payload.status is not None:
-        _validate_transition(quote.status, payload.status, current_user.role.value)
+        user_role = current_user.role if isinstance(current_user.role, str) else current_user.role.value
+        _validate_transition(quote.status, payload.status, user_role)
         quote.status = payload.status
 
     if payload.notes is not None:
@@ -666,7 +667,8 @@ def delete_quote(
     quote = _get_quote_or_404(quote_id, db)
 
     if quote.status == QuoteStatus.invoiced:
-        if current_user.role.value != "admin":
+        user_role = current_user.role if isinstance(current_user.role, str) else current_user.role.value
+        if user_role != "admin":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Solo un administrador puede cancelar una cotización facturada",

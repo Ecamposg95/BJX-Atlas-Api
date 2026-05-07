@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { UserMe } from '../api/types'
+import type { Role, UserMe } from '../api/types'
 import { logout as apiLogout } from '../api'
 
 interface AuthState {
@@ -10,7 +10,7 @@ interface AuthState {
   setUser: (user: UserMe) => void
   logout: () => void
   isAuthenticated: () => boolean
-  hasRole: (roles: Array<'admin' | 'operador' | 'viewer'>) => boolean
+  hasRole: (roles: Role[]) => boolean
 }
 
 export const useAuthStore = create<AuthState>()(

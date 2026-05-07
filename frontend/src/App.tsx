@@ -11,6 +11,13 @@ import { SuppliersPage } from './pages/Suppliers'
 import { ConfigPage } from './pages/Config'
 import { AdminPage } from './pages/Admin'
 import { HomePage } from './pages/Home'
+import { InventoryPage } from './pages/Inventory'
+import { InventoryRequestsPage } from './pages/InventoryRequests'
+import { WorkshopBoardPage } from './pages/WorkshopBoard'
+import { MechanicWorkPage } from './pages/MechanicWork'
+import { OperationalDashboardPage } from './pages/OperationalDashboard'
+import { BranchesPage } from './pages/Branches'
+import { ToastProvider } from './components/ui/ToastProvider'
 import { applyTheme, useThemeStore } from './store/theme'
 
 const queryClient = new QueryClient({
@@ -28,23 +35,31 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route element={<Layout />}>
-            <Route index element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/calculator" element={<CalculatorPage />} />
-            <Route path="/quotes" element={<QuotesPage />} />
-            <Route path="/catalog" element={<CatalogPage />} />
-            <Route path="/suppliers" element={<SuppliersPage />} />
-            <Route path="/config" element={<ConfigPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<Layout />}>
+              <Route index element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/calculator" element={<CalculatorPage />} />
+              <Route path="/quotes" element={<QuotesPage />} />
+              <Route path="/catalog" element={<CatalogPage />} />
+              <Route path="/suppliers" element={<SuppliersPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/inventory/requests" element={<InventoryRequestsPage />} />
+              <Route path="/workshop/board" element={<WorkshopBoardPage />} />
+              <Route path="/me/work" element={<MechanicWorkPage />} />
+              <Route path="/dashboard/operational" element={<OperationalDashboardPage />} />
+              <Route path="/branches" element={<BranchesPage />} />
+              <Route path="/config" element={<ConfigPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

@@ -50,7 +50,7 @@ def register(
     new_user = User(
         email=payload.email,
         hashed_password=hash_password(payload.password),
-        role=payload.role,
+        role=payload.role.value if hasattr(payload.role, "value") else str(payload.role),
         active=True,
     )
     db.add(new_user)

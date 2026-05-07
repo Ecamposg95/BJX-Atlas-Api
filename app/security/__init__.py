@@ -36,11 +36,19 @@ def hash_password(password: str) -> str:
 # Token creation
 # ---------------------------------------------------------------------------
 
-def create_access_token(email: str, role: Role) -> str:
+def _role_value(role) -> str:
+    """Accept either a Role enum, a string or any object with .value attribute."""
+    if isinstance(role, str):
+        return role
+    return getattr(role, "value", str(role))
+
+
+def create_access_token(email: str, role, branch_id: Optional[str] = None) -> str:
     expire = datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     payload = {
         "sub": email,
-        "role": role.value,
+        "role": _role_value(role),
+        "branch_id": branch_id,
         "type": "access",
         "exp": expire,
     }
@@ -108,6 +116,21 @@ def get_current_user(
     if user is None or not user.active:
         raise credentials_exception
 
+    # Populate audit context with the resolved user
+    try:
+        from app.services.audit import _audit_ctx  # local import to avoid cycles
+        ctx = _audit_ctx.get()
+        ctx.user_id = user.id
+        ctx.user_email = user.email
+        ctx.branch_id = user.default_branch_id
+        # request header X-Branch-Id override (si lo hay)
+        header_b = request.headers.get("X-Branch-Id")
+        if header_b:
+            ctx.branch_id = header_b
+        _audit_ctx.set(ctx)
+    except Exception:
+        pass
+
     return user
 
 
@@ -138,10 +161,16 @@ def get_current_user_optional(
 
 
 def require_role(roles: list[str]):
-    """Dependency factory — raises 403 if user's role is not in the allowed list."""
+    """Dependency factory — raises 403 if user's role is not in the allowed list.
+
+    Acepta los roles legacy (admin/operador/viewer) y los nuevos
+    (director/jefe_taller/recepcion/mecanico/almacen/etc). El campo `role` ahora
+    es un String columna, así que comparamos directo.
+    """
 
     def _check(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role.value not in roles:
+        user_role = _role_value(current_user.role)
+        if user_role not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permiso para realizar esta acción",
@@ -149,3 +178,11 @@ def require_role(roles: list[str]):
         return current_user
 
     return _check
+
+
+def require_permission(*role_groups: str):
+    """Sugar para require_role que acepta grupos legibles.
+
+    Ejemplo: require_permission("admin", "director", "gerente_sede")
+    """
+    return require_role(list(role_groups))

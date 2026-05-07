@@ -14,3 +14,4 @@ openpyxl
 reportlab
 pandas
 slowapi
+boto3>=1.40.0
