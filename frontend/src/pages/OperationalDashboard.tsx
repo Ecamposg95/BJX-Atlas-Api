@@ -12,6 +12,8 @@ import type { Part, InventoryMovement, Paginated } from '../api/types'
 import { Badge } from '../components/ui/Badge'
 import { Skeleton } from '../components/ui/Skeleton'
 import { EmptyState } from '../components/ui/EmptyState'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import { fmtDate, fmtNumber } from '../utils/format'
 
 // ── Local types ──────────────────────────────────────────────────────────────
@@ -137,15 +139,14 @@ export function OperationalDashboardPage() {
     .filter((m) => isToday(m.created_at))
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <header>
-        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Tablero operativo</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-          KPIs en vivo de la sucursal · auto-refresco cada 60s
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Operación"
+        title="Tablero operativo"
+        description="KPIs en vivo de la sucursal · auto-refresco cada 60s"
+      />
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+      <div className="executive-kpi-rail executive-kpi-rail--5">
         <KpiTile icon={Wrench} label="Autos en taller" value={kpis.autosEnTaller} loading={wosQuery.isLoading} />
         <KpiTile icon={TrendingUp} label="SLA actual" value={`${kpis.slaActual}%`} tone={kpis.slaActual >= 80 ? 'good' : 'warn'} loading={wosQuery.isLoading} />
         <KpiTile icon={Clock} label="Tiempo prom." value={`${kpis.tiempoPromedio} min`} loading={wosQuery.isLoading} />
@@ -299,7 +300,7 @@ export function OperationalDashboardPage() {
           )}
         </section>
       </div>
-    </div>
+    </PageShell>
   )
 }
 

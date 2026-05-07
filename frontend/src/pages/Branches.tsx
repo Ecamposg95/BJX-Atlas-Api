@@ -10,6 +10,8 @@ import { TableSkeleton } from '../components/ui/Skeleton'
 import { Modal } from '../components/ui/Modal'
 import { FormField } from '../components/ui/FormField'
 import { EmptyState } from '../components/ui/EmptyState'
+import { PageShell } from '../components/ui/PageShell'
+import { PageHeader } from '../components/ui/PageHeader'
 import { useToast } from '../components/ui/ToastProvider'
 import { useAuthStore } from '../store/auth'
 
@@ -59,18 +61,17 @@ export function BranchesPage() {
   const branches = branchesQuery.data ?? []
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>Sucursales</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-            Administra las sucursales de la organización
-          </p>
-        </div>
-        <Button onClick={() => { setEditing(null); setModalOpen(true) }}>
-          <Plus size={14} /> Nueva sucursal
-        </Button>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Gestión"
+        title="Sucursales"
+        description="Administra las sucursales de la organización"
+        actions={
+          <Button onClick={() => { setEditing(null); setModalOpen(true) }}>
+            <Plus size={14} /> Nueva sucursal
+          </Button>
+        }
+      />
 
       <section className="executive-panel">
         {branchesQuery.isLoading ? (
@@ -121,7 +122,7 @@ export function BranchesPage() {
           onClose={() => { setModalOpen(false); setEditing(null) }}
         />
       )}
-    </div>
+    </PageShell>
   )
 }
 

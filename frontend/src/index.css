@@ -684,7 +684,18 @@ body {
 .executive-kpi-rail {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+/* Variantes con N items específicos. Las queries breakpoint debajo
+   cubren los casos por defecto, pero si hay 5+ KPIs el auto-fit
+   los reparte. */
+.executive-kpi-rail--3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+}
+
+.executive-kpi-rail--5 {
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
 }
 
 .executive-kpi {
@@ -1131,10 +1142,6 @@ select option { background-color: var(--surface-2); color: var(--text); }
     padding: 1.5rem;
   }
 
-  .executive-kpi-rail {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .login-shell {
     padding: 1.5rem;
   }
@@ -1151,7 +1158,6 @@ select option { background-color: var(--surface-2); color: var(--text); }
     padding: 2rem;
   }
 
-  .executive-kpi-rail,
   .executive-access-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
