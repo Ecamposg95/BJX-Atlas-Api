@@ -12,6 +12,7 @@ from app.database import check_db_connection
 from app.routers import auth, engine, catalog, suppliers, quotes, dashboard, config, users, vehicles, work_orders
 from app.routers import branches as branches_router, audit as audit_router
 from app.routers import inventory as inventory_router, workshop as workshop_router
+from app.routers import admin_seed as admin_seed_router
 from app.middleware import AuditContextMiddleware
 from app.services.audit import install_audit_listeners
 
@@ -58,6 +59,7 @@ app.include_router(branches_router.router, prefix="/api", tags=["Sucursales"])
 app.include_router(audit_router.router, prefix="/api", tags=["Auditoría"])
 app.include_router(inventory_router.router, prefix="/api", tags=["Inventario"])
 app.include_router(workshop_router.router, prefix="/api", tags=["Taller"])
+app.include_router(admin_seed_router.router, prefix="/api", tags=["Admin"])
 
 
 @app.get("/api/health", tags=["Sistema"])
