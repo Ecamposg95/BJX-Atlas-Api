@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { login } from '../api'
 import { useAuthStore } from '../store/auth'
-import { ThemeToggle } from '../components/ThemeToggle'
+import { LoginTopBar } from '../components/login/LoginTopBar'
+import { RacingStreaks } from '../components/login/RacingStreaks'
+import { TelemetryGauge } from '../components/login/TelemetryGauge'
+import { RacingCarSilhouette } from '../components/login/RacingCarSilhouette'
 
 export function LoginPage() {
   const [email, setEmail]       = useState('')
@@ -33,60 +36,54 @@ export function LoginPage() {
   return (
     <div className="login-shell">
       <div className="login-shell__ambient" />
+      <RacingStreaks />
 
-      <div className="login-shell__header">
+      <LoginTopBar />
+
+      <div className="login-shell__header" style={{ marginTop: '1rem' }}>
         <div className="login-shell__brandmark">
-          <span>BJX</span>
-          <small>Motors</small>
+          <span>BJX Atlas</span>
+          <small>RACING-GRADE OPS</small>
         </div>
-        <ThemeToggle />
       </div>
 
       <div className="login-shell__content">
+        {/* ── EDITORIAL (left) ─────────────────────────────────── */}
         <section className="login-editorial">
-          <span className="login-editorial__eyebrow">
-            <Sparkles size={14} />
-            Suite corporativa premium
-          </span>
-          <h1 className="login-editorial__title">
-            La vista ejecutiva para rentabilidad, operación y decisión comercial.
-          </h1>
+          <span className="login-editorial__eyebrow">GARAGE ZONE / 19</span>
+
+          <h1 className="login-editorial__title">Pit Lane Atlas</h1>
+
           <p className="login-editorial__text">
-            BJX Atlas consolida la lectura del negocio en un solo lugar para
-            dirección, seguimiento estratégico y foco operativo de alto nivel.
+            La plataforma de operación racing-grade para el pit lane y el taller —
+            telemetría, control y velocidad en cada decisión.
           </p>
 
-          <div className="login-editorial__highlights">
-            <article className="login-highlight">
-              <span className="login-highlight__label">Lectura ejecutiva</span>
-              <p className="login-highlight__body">
-                Indicadores clave y alertas prioritarias desde la primera pantalla.
-              </p>
-            </article>
-            <article className="login-highlight">
-              <span className="login-highlight__label">Decisión rápida</span>
-              <p className="login-highlight__body">
-                Cotizaciones, costos y señales de riesgo en una experiencia clara y premium.
-              </p>
-            </article>
+          <div className="login-editorial__telemetry">
+            <TelemetryGauge label="AUTOS HOY" value={12} max={20} accent="gold" />
+            <TelemetryGauge label="OS ACTIVAS" value={8} max={15} accent="gold" />
+            <TelemetryGauge label="RPM" value={7400} max={9000} unit="rpm" accent="red" />
           </div>
+
+          <RacingCarSilhouette className="login-editorial__silhouette" />
         </section>
 
+        {/* ── CARD (right) ─────────────────────────────────────── */}
         <section className="login-card">
-          <div className="login-card__intro">
-            <span className="login-card__eyebrow">Acceso ejecutivo</span>
-            <h2 className="login-card__title">Iniciar sesión</h2>
-            <p className="login-card__subtitle">
-              Entra a tu centro ejecutivo BJX con la cuenta asignada.
-            </p>
-          </div>
+          <span className="login-card__eyebrow">IGNITION</span>
+          <h2 className="login-card__title">Iniciar sesión</h2>
+          <p className="login-card__subtitle">
+            Acceso al pit lane BJX. Identifícate para entrar al centro de operaciones.
+          </p>
 
           <form onSubmit={handleSubmit} className="login-form">
             <div className="login-field">
-              <label className="login-field__label">Correo</label>
+              <label className="login-field__label" htmlFor="login-email">CORREO</label>
               <input
+                id="login-email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="jorge@bjx.com"
@@ -95,10 +92,12 @@ export function LoginPage() {
             </div>
 
             <div className="login-field">
-              <label className="login-field__label">Contraseña</label>
+              <label className="login-field__label" htmlFor="login-password">CONTRASEÑA</label>
               <input
+                id="login-password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -106,19 +105,24 @@ export function LoginPage() {
               />
             </div>
 
-            {error && (
-              <div className="login-error">
-                {error}
-              </div>
-            )}
+            {error && <div className="login-error">[ ERR ] {error}</div>}
 
             <button
               type="submit"
               disabled={loading}
               className="login-submit"
             >
-              <span>{loading ? 'Ingresando…' : 'Entrar al centro ejecutivo'}</span>
-              {!loading && <ArrowRight size={16} />}
+              {loading ? (
+                <>
+                  <span className="login-submit__spinner" />
+                  <span>ARRANCANDO…</span>
+                </>
+              ) : (
+                <>
+                  <ChevronRight size={16} strokeWidth={3} />
+                  <span>ARRANCAR SESIÓN</span>
+                </>
+              )}
             </button>
           </form>
         </section>
