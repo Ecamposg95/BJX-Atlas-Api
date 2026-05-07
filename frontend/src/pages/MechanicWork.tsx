@@ -33,9 +33,9 @@ interface MyWorkOrder {
 }
 
 const fetchMyWorkOrders = (mechanicId: string) =>
-  api.get<{ items: MyWorkOrder[] }>('/workshop/work-orders', {
+  api.get<{ items: MyWorkOrder[] }>('/work-orders', {
     params: { mechanic_id: mechanicId },
-  }).then(r => r.data.items)
+  }).then(r => r.data.items ?? []).catch(() => [])
 
 const STATUS_LABELS: Record<string, string> = {
   received: 'Recibida',

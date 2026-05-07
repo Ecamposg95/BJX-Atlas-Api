@@ -46,7 +46,7 @@ interface WorkOrder {
 }
 
 const fetchWorkOrders = () =>
-  api.get<{ items: WorkOrder[] }>('/workshop/work-orders').then(r => r.data.items)
+  api.get<{ items: WorkOrder[] }>('/work-orders').then(r => r.data.items ?? []).catch(() => [])
 
 const createWorkOrder = (data: {
   vehicle_plates: string
@@ -55,7 +55,7 @@ const createWorkOrder = (data: {
   mechanic_id?: string
   notes?: string
 }) =>
-  api.post<WorkOrder>('/workshop/work-orders', data).then(r => r.data)
+  api.post<WorkOrder>('/work-orders', data).then(r => r.data)
 
 // ── Status config ────────────────────────────────────────────────────────────
 const STATUS_COLUMNS: Array<{ key: WorkOrderStatus; label: string; color: string }> = [
@@ -131,7 +131,7 @@ export function WorkshopBoardPage() {
         <EmptyState
           icon={<AlertTriangle size={28} />}
           title="No se pudo cargar el tablero"
-          description="Verifica que el endpoint /workshop/work-orders esté disponible."
+          description="Verifica que el endpoint /work-orders esté disponible."
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-5">
