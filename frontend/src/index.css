@@ -950,10 +950,10 @@ body {
 
 .sidebar-brand {
   display: flex;
-  min-height: 5.25rem;
+  min-height: 3.75rem;
   align-items: center;
   border-bottom: 1px solid var(--sb-border);
-  padding: 1rem 0.9rem;
+  padding: 0.65rem 0.85rem;
 }
 
 .sidebar-brand__mark {
@@ -987,12 +987,12 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin: 2px 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  gap: 0.65rem;
+  margin: 1px 6px;
+  padding: 6px 11px;
+  border-radius: 9px;
   color: var(--sb-text);
-  font-size: 0.8125rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   transition: all 0.15s ease-out;
@@ -1015,29 +1015,30 @@ body {
 .nav-item:hover svg { color: var(--sb-active-icon); }
 
 .sidebar-section-label {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.35rem;
   padding: 0 0.85rem;
   color: color-mix(in srgb, var(--sb-text) 75%, white);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .sidebar-section-label--secondary {
-  margin-top: 1.2rem;
+  margin-top: 0.7rem;
 }
 
 .sidebar-footer {
   border-top: 1px solid var(--sb-border);
-  padding: 0.65rem;
+  padding: 0.4rem 0.5rem;
 }
 
 .sidebar-user-card {
   border: 1px solid color-mix(in srgb, var(--sb-border) 80%, transparent);
-  border-radius: 16px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
-  padding: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.35rem;
 }
 
 .sidebar-role {
