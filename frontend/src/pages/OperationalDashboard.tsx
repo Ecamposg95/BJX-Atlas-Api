@@ -36,7 +36,7 @@ interface MechanicStats {
 }
 
 const fetchWorkOrders = () =>
-  api.get<{ items: OpWorkOrder[] }>('/workshop/work-orders').then(r => r.data.items)
+  api.get<{ items: OpWorkOrder[] }>('/work-orders').then(r => r.data.items ?? []).catch(() => [])
 
 // Best-effort: try to get per-mechanic stats, otherwise we compute client-side
 const fetchMechanicStats = () =>
