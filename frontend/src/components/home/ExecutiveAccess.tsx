@@ -1,53 +1,42 @@
-import { ArrowRight, BookOpen, Calculator, FileText, LayoutDashboard, Truck } from 'lucide-react'
+import { ArrowRight, BookOpen, Calculator, FileText, LayoutDashboard, Truck, Wrench, Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../store/auth'
+import type { Role } from '../../api/types'
 
-const ACCESS_ITEMS = [
-  {
-    title: 'Cotizaciones',
-    description: 'Revisa el pipeline comercial y el avance de propuestas.',
-    to: '/quotes',
-    icon: FileText,
-  },
-  {
-    title: 'Calculadora',
-    description: 'Simula rentabilidad y escenarios de costo con rapidez.',
-    to: '/calculator',
-    icon: Calculator,
-  },
-  {
-    title: 'Dashboard',
-    description: 'Profundiza en lectura táctica del desempeño actual.',
-    to: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'Catálogo',
-    description: 'Consulta cobertura, costos y estructura de servicios.',
-    to: '/catalog',
-    icon: BookOpen,
-  },
-  {
-    title: 'Proveedores',
-    description: 'Contrasta cobertura y base de suministro disponible.',
-    to: '/suppliers',
-    icon: Truck,
-  },
+interface AccessItem {
+  title: string
+  to: string
+  icon: typeof FileText
+  roles: Role[]
+}
+
+const ACCESS_ITEMS: AccessItem[] = [
+  { title: 'Cotizaciones',  to: '/quotes',               icon: FileText,        roles: ['admin', 'director', 'gerente_sede', 'recepcion', 'operador'] },
+  { title: 'Calculadora',   to: '/calculator',           icon: Calculator,      roles: ['admin', 'director', 'gerente_sede', 'operador'] },
+  { title: 'Dashboard',     to: '/dashboard',            icon: LayoutDashboard, roles: ['admin', 'director', 'gerente_sede', 'operador', 'viewer'] },
+  { title: 'Tablero',       to: '/workshop/board',       icon: Wrench,          roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
+  { title: 'Inventario',    to: '/inventory',            icon: Package,         roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
+  { title: 'Catálogo',      to: '/catalog',              icon: BookOpen,        roles: ['admin', 'director', 'gerente_sede'] },
+  { title: 'Proveedores',   to: '/suppliers',            icon: Truck,           roles: ['admin', 'director', 'almacen'] },
 ]
 
 export function ExecutiveAccess() {
   const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
+  if (!user) return null
+
+  const items = ACCESS_ITEMS.filter((i) => i.roles.includes(user.role))
+  if (items.length === 0) return null
 
   return (
     <section className="executive-panel">
       <div className="executive-panel__header">
-        <div>
-          <p className="executive-panel__eyebrow">Access layer</p>
-          <h2 className="executive-panel__title">Herramientas ejecutivas</h2>
-        </div>
+        <p className="executive-panel__eyebrow">Accesos rápidos</p>
+        <h2 className="executive-panel__title">Tus herramientas</h2>
       </div>
 
       <div className="executive-access-grid">
-        {ACCESS_ITEMS.map((item) => (
+        {items.map((item) => (
           <button
             key={item.title}
             type="button"
@@ -59,7 +48,6 @@ export function ExecutiveAccess() {
             </div>
             <div className="executive-access-card__content">
               <p className="executive-access-card__title">{item.title}</p>
-              <p className="executive-access-card__description">{item.description}</p>
             </div>
             <ArrowRight size={16} className="executive-access-card__arrow" />
           </button>
