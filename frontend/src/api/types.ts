@@ -1,4 +1,18 @@
 // ── Auth ────────────────────────────────────────────────────────────────────
+export type Role =
+  | 'admin'
+  | 'director'
+  | 'gerente_sede'
+  | 'jefe_taller'
+  | 'recepcion'
+  | 'mecanico'
+  | 'almacen'
+  | 'cliente_corp'
+  | 'operador'
+  | 'viewer'
+
+export const GLOBAL_ROLES: Role[] = ['admin', 'director', 'viewer', 'cliente_corp']
+
 export interface LoginPayload { email: string; password: string }
 export interface TokenResponse {
   access_token: string
@@ -8,15 +22,180 @@ export interface TokenResponse {
 export interface UserMe {
   id: string
   email: string
-  role: 'admin' | 'operador' | 'viewer'
+  role: Role
   active: boolean
+  default_branch_id?: string | null
 }
 export interface UserRead {
   id: string
   email: string
-  role: 'admin' | 'operador' | 'viewer'
+  role: Role
   active: boolean
   created_at: string
+  default_branch_id?: string | null
+}
+
+// ── Branches ─────────────────────────────────────────────────────────────────
+export interface Branch {
+  id: string
+  organization_id: string
+  code: string
+  name: string
+  address: string | null
+  city: string | null
+  state: string | null
+  timezone: string
+  phone: string | null
+  active: boolean
+}
+
+export interface BranchSwitchResponse {
+  branch_id: string
+  branch_code: string
+  branch_name: string
+}
+
+// ── Inventory ────────────────────────────────────────────────────────────────
+export interface Warehouse {
+  id: string
+  branch_id: string
+  code: string
+  name: string
+  kind: 'main' | 'satellite' | 'mobile'
+  active: boolean
+}
+
+export interface Part {
+  id: string
+  sku: string
+  name: string
+  description: string | null
+  category: string | null
+  unit: string
+  image_url: string | null
+  default_supplier_id: string | null
+  min_stock: number
+  max_stock: number | null
+  lead_time_days: number
+  last_unit_cost: number | null
+  active: boolean
+  total_quantity?: number
+  total_reserved?: number
+  total_available?: number
+  is_low_stock?: boolean
+}
+
+export interface StockLevel {
+  id: string
+  branch_id: string
+  warehouse_id: string
+  part_id: string
+  quantity: number
+  reserved: number
+  available: number
+}
+
+export type InventoryRequestStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'picked'
+  | 'delivered'
+  | 'used'
+  | 'returned'
+
+export interface InventoryRequest {
+  id: string
+  branch_id: string
+  work_order_id: string
+  requested_by: string | null
+  part_id: string
+  quantity: number
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  status: InventoryRequestStatus
+  approved_by: string | null
+  rejected_reason: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string | null
+  part_name?: string
+  part_sku?: string
+  requested_by_email?: string
+  work_order_number?: string
+}
+
+export interface InventoryMovement {
+  id: string
+  branch_id: string
+  warehouse_id: string
+  part_id: string
+  movement_type: string
+  quantity: number
+  unit_cost: number | null
+  work_order_id: string | null
+  inventory_request_id: string | null
+  counterpart_warehouse_id: string | null
+  performed_by: string | null
+  reason: string | null
+  created_at: string
+}
+
+// ── Workshop ─────────────────────────────────────────────────────────────────
+export interface ServiceBay {
+  id: string
+  branch_id: string
+  code: string
+  name: string
+  active: boolean
+}
+
+export type LineStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'paused'
+  | 'waiting_parts'
+  | 'completed'
+  | 'cancelled'
+
+export interface WorkOrderLine {
+  id: string
+  branch_id: string
+  work_order_id: string
+  service_id: string
+  bay_id: string | null
+  mechanic_id: string | null
+  status: LineStatus
+  standard_duration_hrs: number | null
+  started_at: string | null
+  paused_at: string | null
+  finished_at: string | null
+  actual_duration_minutes: number | null
+  notes: string | null
+  service_name?: string
+  bay_name?: string
+  mechanic_email?: string
+}
+
+export interface Evidence {
+  id: string
+  branch_id: string
+  work_order_id: string
+  work_order_line_id: string | null
+  document_id: string | null
+  kind: 'photo' | 'video' | 'document' | 'note'
+  stage: string | null
+  note: string | null
+  captured_by: string | null
+  created_at: string
+  download_url: string | null
+}
+
+// ── Pagination genérica ──────────────────────────────────────────────────────
+export interface Paginated<T> {
+  total: number
+  page: number
+  page_size: number
+  items: T[]
 }
 
 // ── Config ───────────────────────────────────────────────────────────────────

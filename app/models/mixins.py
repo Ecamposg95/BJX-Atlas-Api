@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime
-from sqlalchemy.orm import declarative_mixin
+from sqlalchemy import Column, String, DateTime, ForeignKey, Index
+from sqlalchemy.orm import declarative_mixin, declared_attr
 
 
 @declarative_mixin
@@ -22,3 +22,17 @@ class AuditMixin:
         nullable=True,
     )
     deleted_at = Column(DateTime(timezone=True), nullable=True)
+
+
+@declarative_mixin
+class BranchScopedMixin:
+    """Multi-tenant row-level isolation: every operational record belongs to a branch."""
+
+    @declared_attr
+    def branch_id(cls):
+        return Column(
+            String(36),
+            ForeignKey("branches.id", ondelete="RESTRICT"),
+            nullable=False,
+            index=True,
+        )
