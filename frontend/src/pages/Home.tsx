@@ -4,6 +4,7 @@ import { ExecutiveAccess } from '../components/home/ExecutiveAccess'
 import { ExecutiveBrief } from '../components/home/ExecutiveBrief'
 import { ExecutiveHero } from '../components/home/ExecutiveHero'
 import { KpiRail } from '../components/home/KpiRail'
+import { OperationalPulse } from '../components/home/OperationalPulse'
 import { PriorityAlerts } from '../components/home/PriorityAlerts'
 
 export function HomePage() {
@@ -16,7 +17,10 @@ export function HomePage() {
     <div className="executive-home">
       <div className="executive-home__container">
         <ExecutiveHero />
+
         <KpiRail summary={summaryQuery.data} isLoading={summaryQuery.isLoading} />
+
+        <OperationalPulse />
 
         <div className="executive-home__grid">
           <ExecutiveBrief summary={summaryQuery.data} isLoading={summaryQuery.isLoading} />
