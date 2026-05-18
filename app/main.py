@@ -15,11 +15,15 @@ from app.routers import inventory as inventory_router, workshop as workshop_rout
 from app.routers import admin_seed as admin_seed_router
 from app.middleware import AuditContextMiddleware
 from app.services.audit import install_audit_listeners
+from app.events.subscribers import setup_event_subscribers
 
 logger = logging.getLogger("bjx-atlas")
 
 # Registrar event listeners de auditoría una sola vez al boot.
 install_audit_listeners()
+
+# Registrar subscribers del EventBus (Fase 1+): audit, notifications, KPIs.
+setup_event_subscribers()
 
 app = FastAPI(
     title="BJX Atlas API",
