@@ -19,6 +19,10 @@ docs/**
 !docs/superpowers/
 !docs/superpowers/specs/
 !docs/superpowers/specs/**
+!docs/superpowers/plans/
+!docs/superpowers/plans/**
+!docs/runbooks/
+!docs/runbooks/**
 context/*.pdf
 
 # Local storage (R2-equivalent for dev)
