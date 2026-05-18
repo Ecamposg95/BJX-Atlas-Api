@@ -13,7 +13,12 @@ frontend/dist/
 
 # Local plan/notes/context (not project source)
 .claude/
-docs/
+# Ignora contenido de docs/ excepto specs de diseño (Superpowers) que sí van al repo
+docs/**
+!docs/
+!docs/superpowers/
+!docs/superpowers/specs/
+!docs/superpowers/specs/**
 context/*.pdf
 
 # Local storage (R2-equivalent for dev)
