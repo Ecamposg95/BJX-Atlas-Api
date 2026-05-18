@@ -1,8 +1,13 @@
 """Tests para migración add_workshop_workflow_core."""
+from pathlib import Path
+
 import pytest
 from sqlalchemy import inspect, create_engine, text
 from alembic.config import Config
 from alembic import command
+
+# Project root: tests/migrations/ -> tests/ -> repo_root
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
@@ -14,9 +19,9 @@ def alembic_engine(tmp_path):
 
 @pytest.fixture
 def alembic_config(alembic_engine):
-    cfg = Config("alembic.ini")
+    cfg = Config(str(PROJECT_ROOT / "alembic.ini"))
     cfg.set_main_option("sqlalchemy.url", str(alembic_engine.url))
-    cfg.set_main_option("script_location", "alembic")
+    cfg.set_main_option("script_location", str(PROJECT_ROOT / "alembic"))
     return cfg
 
 
