@@ -68,3 +68,61 @@ class WorkOrderRead(BaseModel):
     semaphore_status: SemaphoreStatus
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------------------------------------------------------------------
+# v1 — Status transitions + history (Fase 1)
+# ---------------------------------------------------------------------------
+
+WorkOrderStatusLiteral = Literal[
+    "received", "assigned", "in_progress", "waiting_parts",
+    "quality_check", "completed", "delivered", "cancelled",
+]
+
+
+class WorkOrderStatusTransitionRequest(BaseModel):
+    to_status: WorkOrderStatusLiteral
+    reason: Optional[str] = None
+    metadata: Optional[dict] = None
+
+
+class _ActorBrief(BaseModel):
+    id: str
+    email: str
+
+
+class WorkOrderStatusTransitionResponse(BaseModel):
+    id: str
+    status: str
+    previous_status: str
+    history_entry_id: str
+    transitioned_at: datetime
+    transitioned_by: _ActorBrief
+
+
+class _ChangedByBrief(BaseModel):
+    id: str
+    email: str
+    role: str
+
+
+class WorkOrderStatusHistoryEntry(BaseModel):
+    id: str
+    from_status: Optional[str]
+    to_status: str
+    changed_by: Optional[_ChangedByBrief] = None
+    reason: Optional[str] = None
+    occurred_at: datetime
+    duration_in_previous_status_seconds: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WorkOrderStatusHistoryResponse(BaseModel):
+    work_order_id: str
+    current_status: str
+    entries: list[WorkOrderStatusHistoryEntry]
+
+
+class WorkOrderCancelRequest(BaseModel):
+    reason: str
