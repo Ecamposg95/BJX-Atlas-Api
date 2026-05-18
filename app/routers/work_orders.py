@@ -252,3 +252,159 @@ def deliver_work_order(
     db.refresh(work_order)
     work_order = _get_work_order_or_404(db, work_order.id)
     return _build_work_order_read(db, work_order)
+
+
+# ===========================================================================
+# /api/v1/work-orders — Fase 1: state machine + history + cancel
+# ===========================================================================
+
+from fastapi import status as http_status
+
+from app.models.workshop_history import WorkOrderStatusHistory
+from app.schemas.work_orders import (
+    WorkOrderCancelRequest,
+    WorkOrderStatusHistoryEntry,
+    WorkOrderStatusHistoryResponse,
+    WorkOrderStatusTransitionRequest,
+    WorkOrderStatusTransitionResponse,
+)
+from app.security.tenant import TenantContext, assert_branch_access, get_tenant_context
+from app.services.state_machines import Forbidden as SMForbidden
+from app.services.state_machines import InvalidTransition
+from app.services.state_machines.work_order_sm import transition as wo_transition
+
+router_v1 = APIRouter(prefix="/v1/work-orders", tags=["work-orders-v1"])
+
+
+@router_v1.patch("/{work_order_id}/status", response_model=WorkOrderStatusTransitionResponse)
+def patch_work_order_status(
+    work_order_id: str,
+    payload: WorkOrderStatusTransitionRequest,
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+):
+    wo = _get_work_order_or_404(db, work_order_id)
+    assert_branch_access(wo.branch_id, ctx)
+
+    previous_status = wo.status
+
+    try:
+        history = wo_transition(
+            db,
+            work_order=wo,
+            to_status=WorkOrderStatus(payload.to_status),
+            actor=ctx.user,
+            reason=payload.reason,
+            metadata=payload.metadata,
+        )
+    except InvalidTransition as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_409_CONFLICT,
+            detail={"error": {"code": e.code, "detail": e.detail}},
+        )
+    except SMForbidden as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": e.code, "detail": e.detail}},
+        )
+
+    db.commit()
+    db.refresh(wo)
+
+    return WorkOrderStatusTransitionResponse(
+        id=wo.id,
+        status=wo.status,
+        previous_status=previous_status,
+        history_entry_id=history.id,
+        transitioned_at=history.occurred_at,
+        transitioned_by={"id": ctx.user.id, "email": ctx.user.email},
+    )
+
+
+@router_v1.get("/{work_order_id}/status-history", response_model=WorkOrderStatusHistoryResponse)
+def get_work_order_status_history(
+    work_order_id: str,
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+):
+    wo = _get_work_order_or_404(db, work_order_id)
+    assert_branch_access(wo.branch_id, ctx)
+
+    entries_raw = (
+        db.query(WorkOrderStatusHistory)
+        .filter(WorkOrderStatusHistory.work_order_id == wo.id)
+        .order_by(WorkOrderStatusHistory.occurred_at.asc())
+        .all()
+    )
+
+    entries: list[WorkOrderStatusHistoryEntry] = []
+    prev_time = None
+    for h in entries_raw:
+        duration = None
+        if prev_time is not None:
+            duration = int((h.occurred_at - prev_time).total_seconds())
+
+        changed_by = None
+        if h.changed_by:
+            user_obj = db.query(User).filter(User.id == h.changed_by).first()
+            if user_obj:
+                changed_by = {"id": user_obj.id, "email": user_obj.email, "role": user_obj.role}
+
+        entries.append(WorkOrderStatusHistoryEntry(
+            id=h.id,
+            from_status=h.from_status,
+            to_status=h.to_status,
+            changed_by=changed_by,
+            reason=h.reason,
+            occurred_at=h.occurred_at,
+            duration_in_previous_status_seconds=duration,
+        ))
+        prev_time = h.occurred_at
+
+    return WorkOrderStatusHistoryResponse(
+        work_order_id=wo.id,
+        current_status=wo.status,
+        entries=entries,
+    )
+
+
+@router_v1.post("/{work_order_id}/cancel", response_model=WorkOrderStatusTransitionResponse)
+def cancel_work_order_v1(
+    work_order_id: str,
+    payload: WorkOrderCancelRequest,
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+):
+    wo = _get_work_order_or_404(db, work_order_id)
+    assert_branch_access(wo.branch_id, ctx)
+
+    previous_status = wo.status
+    try:
+        history = wo_transition(
+            db,
+            work_order=wo,
+            to_status=WorkOrderStatus.cancelled,
+            actor=ctx.user,
+            reason=payload.reason,
+        )
+    except InvalidTransition as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_409_CONFLICT,
+            detail={"error": {"code": e.code, "detail": e.detail}},
+        )
+    except SMForbidden as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": e.code, "detail": e.detail}},
+        )
+
+    db.commit()
+    db.refresh(wo)
+    return WorkOrderStatusTransitionResponse(
+        id=wo.id,
+        status=wo.status,
+        previous_status=previous_status,
+        history_entry_id=history.id,
+        transitioned_at=history.occurred_at,
+        transitioned_by={"id": ctx.user.id, "email": ctx.user.email},
+    )
