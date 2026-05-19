@@ -23,6 +23,7 @@ docs/**
 !docs/superpowers/plans/**
 !docs/runbooks/
 !docs/runbooks/**
+!docs/TEST_CREDENTIALS.md
 context/*.pdf
 
 # Local storage (R2-equivalent for dev)

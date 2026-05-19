@@ -15,8 +15,10 @@ import { InventoryPage } from './pages/Inventory'
 import { InventoryRequestsPage } from './pages/InventoryRequests'
 import { WorkshopBoardPage } from './pages/WorkshopBoard'
 import { MechanicWorkPage } from './pages/MechanicWork'
+import { MechanicHomeV1 } from './pages/MechanicHomeV1'
 import { OperationalDashboardPage } from './pages/OperationalDashboard'
 import { BranchesPage } from './pages/Branches'
+import { ClientPortalPage } from './pages/ClientPortal'
 import { ToastProvider } from './components/ui/ToastProvider'
 import { applyTheme, useThemeStore } from './store/theme'
 
@@ -39,6 +41,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/client/:folio" element={<ClientPortalPage />} />
             <Route element={<Layout />}>
               <Route index element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />
@@ -51,6 +54,7 @@ export default function App() {
               <Route path="/inventory/requests" element={<InventoryRequestsPage />} />
               <Route path="/workshop/board" element={<WorkshopBoardPage />} />
               <Route path="/me/work" element={<MechanicWorkPage />} />
+              <Route path="/mechanic" element={<MechanicHomeV1 />} />
               <Route path="/dashboard/operational" element={<OperationalDashboardPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/config" element={<ConfigPage />} />

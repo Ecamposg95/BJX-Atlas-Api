@@ -16,6 +16,13 @@ class ServiceRequiredLevel(str, enum.Enum):
     master = "master"
 
 
+class ServiceStatus(str, enum.Enum):
+    """Workflow de aprobación del catálogo de servicios (US-07)."""
+    proposed = "proposed"
+    approved = "approved"
+    rejected = "rejected"
+
+
 class VehicleModel(Base, UUIDMixin, AuditMixin):
     __tablename__ = "models"
 
@@ -46,12 +53,23 @@ class Service(Base, UUIDMixin, AuditMixin):
     # Nivel mínimo requerido del mecánico para ejecutar este servicio (Fase 1)
     required_level = Column(String(16), nullable=False, default=ServiceRequiredLevel.junior.value, index=True)
 
-    # Workflow de aprobación de catálogo (Fase 3 lo usa, columnas ya disponibles en Fase 1)
+    # Workflow de aprobación de catálogo (US-07)
+    # `status` modela el ciclo proposed → approved/rejected; default approved para compat retro.
+    status = Column(
+        String(16),
+        nullable=False,
+        default=ServiceStatus.approved.value,
+        server_default=ServiceStatus.approved.value,
+        index=True,
+    )
     approved = Column(Boolean, nullable=False, default=True, index=True)
     approved_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     approved_at = Column(DateTime(timezone=True), nullable=True)
     proposed_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    proposed_by_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     proposal_id = Column(String(36), nullable=True)
+    rejection_reason = Column(String(500), nullable=True)
 
     catalog_entries = relationship("ServiceCatalog", back_populates="service", lazy="dynamic")
 

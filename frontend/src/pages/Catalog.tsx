@@ -4,13 +4,16 @@ import {
   getAllModels, createModel, updateModel, deleteModel,
   getServices, createService, updateService,
   getCosts, getMissingCosts, updateCost,
+  approveService, rejectService,
 } from '../api'
-import type { VehicleModel, Service, CatalogCost } from '../api/types'
+import type { VehicleModel, Service, CatalogCost, ServiceStatus } from '../api/types'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { TableSkeleton } from '../components/ui/Skeleton'
 import { PageShell } from '../components/ui/PageShell'
 import { PageHeader } from '../components/ui/PageHeader'
+import { usePermission } from '../hooks/usePermission'
+import { Permission } from '../lib/permissions'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 const fmtCurrency = (val: number | null) =>
@@ -271,14 +274,41 @@ function ModelsTab() {
   )
 }
 
+// ── Service Status Badge (US-07) ──────────────────────────────────────────────
+function ServiceStatusBadge({ status }: { status?: ServiceStatus }) {
+  const value = status ?? 'approved'
+  const styles: Record<ServiceStatus, { bg: string; color: string; border: string; label: string }> = {
+    approved: { bg: 'rgba(34,197,94,0.15)', color: '#86efac', border: 'rgba(34,197,94,0.3)', label: 'Aprobado' },
+    proposed: { bg: 'rgba(251,191,36,0.15)', color: '#fde68a', border: 'rgba(251,191,36,0.3)', label: 'Propuesto' },
+    rejected: { bg: 'rgba(148,163,184,0.18)', color: '#cbd5e1', border: 'rgba(148,163,184,0.35)', label: 'Rechazado' },
+  }
+  const s = styles[value]
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold"
+      style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}
+    >
+      {s.label}
+    </span>
+  )
+}
+
 // ── Services Tab ──────────────────────────────────────────────────────────────
 function ServicesTab() {
   const qc = useQueryClient()
-  const [search, setSearch]       = useState('')
-  const [catFilter, setCatFilter] = useState('')
-  const [modal, setModal]         = useState<{ mode: 'create' | 'edit'; item?: Service } | null>(null)
+  const [search, setSearch]               = useState('')
+  const [catFilter, setCatFilter]         = useState('')
+  const [statusFilter, setStatusFilter]   = useState<'' | ServiceStatus>('')
+  const [modal, setModal]                 = useState<{ mode: 'create' | 'edit'; item?: Service } | null>(null)
 
-  const query = useQuery({ queryKey: ['catalog-all-services'], queryFn: () => getServices() })
+  const canApprove = usePermission(Permission.SERVICE_APPROVE)
+  const canReject  = usePermission(Permission.SERVICE_REJECT)
+  const canPropose = usePermission(Permission.SERVICE_PROPOSE)
+
+  const query = useQuery({
+    queryKey: ['catalog-all-services', statusFilter],
+    queryFn: () => getServices(statusFilter ? { status: statusFilter } : undefined),
+  })
   const items = (query.data ?? []).filter((s) => {
     const matchCat    = !catFilter || s.category === catFilter
     const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase())
@@ -293,6 +323,23 @@ function ServicesTab() {
     mutationFn: ({ id, data }: { id: string; data: { name?: string; category?: string; active?: boolean } }) => updateService(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['catalog-all-services'] }),
   })
+  const approveMut = useMutation({
+    mutationFn: (id: string) => approveService(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['catalog-all-services'] }),
+  })
+  const rejectMut = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectService(id, reason),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['catalog-all-services'] }),
+  })
+
+  const handleReject = (svc: Service) => {
+    const reason = window.prompt('Motivo del rechazo (mínimo 5 caracteres):')
+    if (!reason || reason.trim().length < 5) {
+      if (reason !== null) window.alert('El motivo debe tener al menos 5 caracteres.')
+      return
+    }
+    rejectMut.mutate({ id: svc.id, reason: reason.trim() })
+  }
 
   return (
     <div className="space-y-4">
@@ -315,50 +362,97 @@ function ServicesTab() {
             <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
           ))}
         </select>
-        <Button variant="primary" size="sm" onClick={() => setModal({ mode: 'create' })}>
-          + Nuevo servicio
-        </Button>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as '' | ServiceStatus)}
+          className="px-3 py-2 rounded-lg text-sm focus:outline-none"
+          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+        >
+          <option value="">Todos los estados</option>
+          <option value="proposed">Solo pendientes</option>
+          <option value="approved">Solo aprobados</option>
+          <option value="rejected">Solo rechazados</option>
+        </select>
+        {canPropose && (
+          <Button variant="primary" size="sm" onClick={() => setModal({ mode: 'create' })}>
+            + Nuevo servicio
+          </Button>
+        )}
       </div>
 
       <div className="rounded-xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         {query.isLoading ? (
-          <div className="p-5"><TableSkeleton rows={6} cols={4} /></div>
+          <div className="p-5"><TableSkeleton rows={6} cols={5} /></div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr>
                 <th className="px-5 py-3 text-left">Nombre</th>
                 <th className="px-5 py-3 text-left">Categoría</th>
-                <th className="px-5 py-3 text-center">Estado</th>
+                <th className="px-5 py-3 text-center">Workflow</th>
+                <th className="px-5 py-3 text-center">Activo</th>
                 <th className="px-5 py-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((s) => (
-                <tr key={s.id}>
-                  <td className="px-5 py-3 font-medium" style={{ color: 'var(--text)' }}>{s.name}</td>
-                  <td className="px-5 py-3">
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}>
-                      {CATEGORY_LABELS[s.category] ?? s.category}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-center">
-                    <Badge variant={s.active ? 'ok' : 'cancelled'}>{s.active ? 'Activo' : 'Inactivo'}</Badge>
-                  </td>
-                  <td className="px-5 py-3 text-center">
-                    <button
-                      onClick={() => setModal({ mode: 'edit', item: s })}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                      style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}
-                    >
-                      Editar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {items.map((s) => {
+                const isProposed = (s.status ?? 'approved') === 'proposed'
+                return (
+                  <tr key={s.id}>
+                    <td className="px-5 py-3 font-medium" style={{ color: 'var(--text)' }}>{s.name}</td>
+                    <td className="px-5 py-3">
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}>
+                        {CATEGORY_LABELS[s.category] ?? s.category}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <ServiceStatusBadge status={s.status} />
+                      {s.status === 'rejected' && s.rejection_reason && (
+                        <div className="mt-1 text-[10px]" style={{ color: 'var(--text-muted)' }} title={s.rejection_reason}>
+                          {s.rejection_reason.length > 32 ? s.rejection_reason.slice(0, 32) + '…' : s.rejection_reason}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <Badge variant={s.active ? 'ok' : 'cancelled'}>{s.active ? 'Activo' : 'Inactivo'}</Badge>
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <div className="flex justify-center gap-2 flex-wrap">
+                        {isProposed && canApprove && (
+                          <button
+                            onClick={() => approveMut.mutate(s.id)}
+                            disabled={approveMut.isPending}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
+                            style={{ background: 'rgba(34,197,94,0.18)', color: '#86efac' }}
+                          >
+                            Aprobar
+                          </button>
+                        )}
+                        {isProposed && canReject && (
+                          <button
+                            onClick={() => handleReject(s)}
+                            disabled={rejectMut.isPending}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
+                            style={{ background: 'rgba(239,68,68,0.12)', color: '#fca5a5' }}
+                          >
+                            Rechazar
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setModal({ mode: 'edit', item: s })}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                          style={{ background: 'color-mix(in srgb, var(--primary) 14%, transparent)', color: 'var(--primary-dark)' }}
+                        >
+                          Editar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <td colSpan={5} className="px-5 py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
                     Sin resultados
                   </td>
                 </tr>

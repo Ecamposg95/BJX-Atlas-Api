@@ -42,6 +42,10 @@ class Permission(str, enum.Enum):
     FINDING_LIST    = "finding:list"
     # Me
     ME_TASKS_READ   = "me:tasks:read"
+    # Service catalog approval workflow (US-07)
+    SERVICE_PROPOSE = "service:propose"
+    SERVICE_APPROVE = "service:approve"
+    SERVICE_REJECT  = "service:reject"
 
 
 PERMISSION_MATRIX: dict[Permission, set[Role]] = {
@@ -102,6 +106,15 @@ PERMISSION_MATRIX: dict[Permission, set[Role]] = {
         Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller, Role.viewer,
     },
     Permission.ME_TASKS_READ: {Role.admin, Role.mecanico},
+    Permission.SERVICE_PROPOSE: {
+        Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller,
+    },
+    Permission.SERVICE_APPROVE: {
+        Role.admin, Role.director, Role.gerente_sede,
+    },
+    Permission.SERVICE_REJECT: {
+        Role.admin, Role.director, Role.gerente_sede,
+    },
 }
 
 

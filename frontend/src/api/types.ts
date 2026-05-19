@@ -215,11 +215,18 @@ export interface VehicleModel {
   service_count: number
 }
 
+export type ServiceStatus = 'proposed' | 'approved' | 'rejected'
+
 export interface Service {
   id: string
   name: string
   category: string
   active: boolean
+  status?: ServiceStatus
+  proposed_by_id?: string | null
+  approved_by_id?: string | null
+  approved_at?: string | null
+  rejection_reason?: string | null
 }
 
 export interface CatalogCost {
