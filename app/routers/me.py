@@ -82,9 +82,16 @@ def get_my_tasks(
         .first()
     )
     if profile is None:
-        raise HTTPException(
-            status_code=404,
-            detail={"error": {"code": "MECHANIC_PROFILE_NOT_FOUND"}},
+        return MyTasksResponse(
+            mechanic=MechanicSummary(
+                id=current_user.id,
+                level="junior",
+                current_load_hrs=0.0,
+                available_hrs=0.0,
+                load_status="green",
+            ),
+            items=[],
+            summary={"pending": 0, "in_progress": 0, "paused": 0, "waiting_parts": 0},
         )
 
     total_load, available, load_status = _compute_load(db, current_user.id, profile.capacity_hrs_day)

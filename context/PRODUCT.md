@@ -1,7 +1,7 @@
 # BJX Atlas — Producto (Master)
 
 > **Documento maestro**. Antes de tocar código, leer este archivo + `STACK.md`.
-> Actualizado: 2026-05-19 (Wave 5 — Cliente corporativo + portal publico)
+> Actualizado: 2026-05-19 (Wave 6 — Compras)
 
 ---
 
@@ -115,26 +115,29 @@ Load status del mecanico:
 - ✅ Mecanico: solicitar refacciones con check de disponibilidad inline — `PartSearchModal`
 - ✅ QA pass/fail UI — `/workshop/qa`
 
-### Ola 4 — Manager + Director (parcial)
+### Ola 4 — Manager + Director ✅
 
 - ✅ `/manager`: dashboard de sucursal con KPIs cacheados (TTL 60s, cycle_time avg/p95, on_time_pct, top OS estancadas)
-- 🟡 `/executive`: KPIs operativos en mapa + ranking. Falta: cycle_time + on-time comparativos
+- ✅ `/executive`: BranchComparison multi-sucursal (cycle_time, on_time, margin ponderado por revenue, ranking 30/90 dias)
 - ✅ Notificaciones in-app drawer (bell en topbar + endpoint `/v1/notifications`)
 - ✅ Notificaciones WhatsApp (citas, entrega)
-- ❌ Notificaciones email (sin SMTP/transactional aun)
-- ⚠ `margin_pct_avg` en `/manager` queda como `None` hasta modelar precio/costo final en OS
+- ✅ Notificaciones email — SMTP via stdlib, modo dry-run sin SMTP_HOST, BackgroundTasks (FastAPI)
+- ✅ Cableado de eventos reales: appointment_confirmed, wo_status_changed, qa_pending, delivery_ready, parts_request
+- ⚠ `margin_pct_avg` en `/manager` queda como `None` hasta modelar precio/costo final en OS (en `/executive` se calcula con `total_amount`/`cost_total` cuando existen)
 
-### Ola 5 — Cliente corporativo + portal publico (en curso)
+### Ola 5 — Cliente corporativo + portal publico ✅
 
 - ✅ `/client-corp`: dashboard de flota con scoping por `customer_id`, KPIs (unidades, en taller, listas, gasto del mes)
 - ✅ Portal publico `/client/:folio` — etapas, lineas, galeria fotos check-in, ETA humanizado
-- ❌ Service proposals (jefe propone → gerente aprueba) — modelo parcial en `Service.status`, falta tabla `service_proposals` independiente
+- ✅ Service proposals: tabla independiente `service_proposals`, flujo jefe_taller propone → gerente_sede aprueba → materializa nueva `WorkOrderLine`
 
-### Ola 6 (planeada) — Compras
+### Ola 6 — Compras (en curso)
 
-- Procurement: PurchaseOrder draft → submitted → approved → received
-- `inbound` movements actualizan `last_unit_cost` (logica ya existe en `inventory_engine.apply_inbound`)
-- Deprecacion definitiva de `operador`
+- ✅ Procurement: `PurchaseOrder` + `PurchaseOrderItem`, state machine draft → submitted → approved → received → cancelled, 8 endpoints `/v1/procurement/*`, UI `/procurement`
+- ✅ `receive_po()` invoca `inventory_engine.apply_inbound()` por item → actualiza `Part.last_unit_cost` + crea `InventoryMovement` inbound
+- ❌ Recepciones parciales (solo total en MVP)
+- ❌ Rotacion automatica de `SupplierPrice` cuando `unit_cost` final difiere del precio vigente (TODO en `procurement_engine.receive_po`)
+- ❌ Deprecacion definitiva de `operador` (9 endpoints en quotes/workshop + UI + enum SQL — alto blast radius)
 
 ---
 

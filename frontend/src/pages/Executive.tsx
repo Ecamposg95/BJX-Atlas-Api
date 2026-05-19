@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getDashboardSummary } from '../api'
+import { BranchComparison } from '../components/executive/BranchComparison'
 import { ExecutiveAccess } from '../components/home/ExecutiveAccess'
 import { ExecutiveBrief } from '../components/home/ExecutiveBrief'
 import { ExecutiveHero } from '../components/home/ExecutiveHero'
@@ -26,6 +27,8 @@ export function ExecutivePage() {
           <ExecutiveBrief summary={summaryQuery.data} isLoading={summaryQuery.isLoading} />
           <PriorityAlerts summary={summaryQuery.data} isLoading={summaryQuery.isLoading} />
         </div>
+
+        <BranchComparison />
 
         <ExecutiveAccess />
       </div>

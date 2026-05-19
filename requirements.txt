@@ -15,6 +15,4 @@ reportlab
 pandas
 slowapi
 boto3>=1.40.0
-factory-boy==3.3.0
-faker==30.8.1
 freezegun==1.5.1

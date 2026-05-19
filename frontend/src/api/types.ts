@@ -379,6 +379,82 @@ export interface EngineResponse {
   scoring_weights: { price: number; time: number; tc: number }
 }
 
+// ── Procurement (Ola 6) ──────────────────────────────────────────────────────
+export type PurchaseOrderStatus =
+  | 'draft'
+  | 'submitted'
+  | 'approved'
+  | 'received'
+  | 'cancelled'
+
+export interface PurchaseOrderItem {
+  id: string
+  purchase_order_id: string
+  part_id: string
+  quantity: number | string
+  unit_cost: number | string
+  line_total: number | string
+  notes: string | null
+  part_sku?: string
+  part_name?: string
+}
+
+export interface PurchaseOrder {
+  id: string
+  branch_id: string
+  folio: string
+  supplier_id: string
+  status: PurchaseOrderStatus
+  notes: string | null
+  total_amount: number | string
+  expected_at: string | null
+  submitted_at: string | null
+  approved_at: string | null
+  received_at: string | null
+  cancelled_at: string | null
+  approved_by_id: string | null
+  received_by_id: string | null
+  created_by_id: string | null
+  cancel_reason: string | null
+  created_at: string
+  updated_at: string | null
+  items: PurchaseOrderItem[]
+  supplier_name?: string
+}
+
+export interface PurchaseOrderItemCreate {
+  part_id: string
+  quantity: number
+  unit_cost: number
+  notes?: string | null
+}
+
+export interface PurchaseOrderCreate {
+  supplier_id: string
+  notes?: string | null
+  expected_at?: string | null
+  items: PurchaseOrderItemCreate[]
+  branch_id?: string | null
+}
+
+export interface PurchaseOrderUpdate {
+  supplier_id?: string
+  notes?: string | null
+  expected_at?: string | null
+  items?: PurchaseOrderItemCreate[]
+}
+
+export interface ReceiveItemPayload {
+  item_id: string
+  quantity_received: number
+  unit_cost?: number | null
+}
+
+export interface ReceivePayload {
+  warehouse_id: string
+  receipts: ReceiveItemPayload[]
+}
+
 // ── Quotes ───────────────────────────────────────────────────────────────────
 export type QuoteStatus = 'draft' | 'confirmed' | 'invoiced' | 'cancelled'
 
@@ -454,6 +530,26 @@ export interface ModelProfitability {
   }>
 }
 
+export interface BranchComparisonRow {
+  branch_id: string
+  branch_name: string
+  branch_code: string
+  city: string | null
+  cycle_time_avg_hrs: number
+  cycle_time_p95_hrs: number
+  on_time_pct: number
+  margin_pct_avg: number | null
+  revenue_period: number
+  completed_count: number
+  open_count: number
+}
+
+export interface BranchComparisonResponse {
+  period_days: number
+  calculated_at: string
+  rows: BranchComparisonRow[]
+}
+
 export interface SimulateRequest {
   technician_cost_hr?: number
   target_margin?: number
@@ -468,4 +564,48 @@ export interface SimulateResponse {
     critical_combos_delta: number
     ok_combos_delta: number
   }
+}
+
+// ── Service Proposals (Wave 5) ───────────────────────────────────────────────
+export type ServiceProposalStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled'
+
+export interface ServiceProposal {
+  id: string
+  branch_id: string
+  work_order_id: string
+  service_id: string | null
+  service_name: string
+  quantity: number
+  estimated_hours: string | number | null
+  estimated_parts_cost: string | number | null
+  estimated_total: string | number | null
+  reason: string
+  status: ServiceProposalStatus
+  proposed_by_id: string | null
+  proposed_at: string | null
+  reviewed_by_id: string | null
+  reviewed_at: string | null
+  review_notes: string | null
+  materialized_line_id: string | null
+  created_at: string
+}
+
+export interface ServiceProposalCreate {
+  work_order_id: string
+  service_id?: string | null
+  service_name: string
+  quantity?: number
+  estimated_hours?: string | number | null
+  estimated_parts_cost?: string | number | null
+  estimated_total?: string | number | null
+  reason: string
+}
+
+export interface ServiceProposalListResponse {
+  items: ServiceProposal[]
+  total: number
 }

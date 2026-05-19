@@ -79,11 +79,18 @@ def create_notification(
     branch_id: Optional[str] = None,
     entity_type: Optional[str] = None,
     entity_id: Optional[str] = None,
+    send_email: bool = False,
+    background_tasks=None,
 ):
     """Persist an in-app notification for `user_id`.
 
     `kind` can be a NotificationKind enum or a string value.
     Caller is responsible for db.commit() if not part of an outer transaction.
+
+    If `send_email=True`, also dispatches an email via `send_notification_email`.
+    If `background_tasks` (FastAPI `BackgroundTasks`) is provided, the email is
+    enqueued for after-response; otherwise it runs inline (wrapped in try/except,
+    failures never break the request).
     """
     from app.models.notifications import Notification, NotificationKind
 
@@ -101,4 +108,20 @@ def create_notification(
     )
     db.add(notif)
     db.flush()
+
+    if send_email:
+        try:
+            from app.services.email import send_notification_email
+
+            if background_tasks is not None:
+                background_tasks.add_task(send_notification_email, db, notif.id)
+            else:
+                send_notification_email(db, notif.id)
+        except Exception:  # noqa: BLE001
+            # Never let email failures break the calling request.
+            import logging
+            logging.getLogger("bjx-atlas.email").warning(
+                "send_notification_email failed for notif=%s", notif.id, exc_info=True,
+            )
+
     return notif

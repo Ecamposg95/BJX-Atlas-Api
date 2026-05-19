@@ -42,6 +42,13 @@ from app.models.evidence import MobileEvidence, MobileEvidenceKind
 from app.models.appointments import Appointment, AppointmentStatus
 from app.models.deliveries import Delivery
 from app.models.notifications import Notification, NotificationKind
+from app.models.procurement import (
+    PurchaseOrder,
+    PurchaseOrderItem,
+    PurchaseOrderStatus,
+    TERMINAL_PO_STATUSES,
+)
+from app.models.service_proposals import ServiceProposal, ServiceProposalStatus
 
 __all__ = [
     "Organization", "Branch",
@@ -69,4 +76,6 @@ __all__ = [
     "Appointment", "AppointmentStatus",
     "Delivery",
     "Notification", "NotificationKind",
+    "PurchaseOrder", "PurchaseOrderItem", "PurchaseOrderStatus", "TERMINAL_PO_STATUSES",
+    "ServiceProposal", "ServiceProposalStatus",
 ]

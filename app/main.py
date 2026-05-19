@@ -24,6 +24,8 @@ from app.routers import appointments as appointments_router
 from app.routers import deliveries as deliveries_router
 from app.routers import notifications as notifications_router
 from app.routers import client_corp as client_corp_router
+from app.routers import procurement as procurement_router
+from app.routers import service_proposals as service_proposals_router
 from app.middleware import AuditContextMiddleware
 from app.services.audit import install_audit_listeners
 from app.events.subscribers import setup_event_subscribers
@@ -87,6 +89,8 @@ app.include_router(appointments_router.router, prefix="/api", tags=["Citas v1"])
 app.include_router(deliveries_router.router, prefix="/api", tags=["Entregas v1"])
 app.include_router(notifications_router.router, prefix="/api", tags=["Notificaciones v1"])
 app.include_router(client_corp_router.router, prefix="/api", tags=["Cliente Corporativo v1"])
+app.include_router(procurement_router.router, prefix="/api", tags=["Procurement v1"])
+app.include_router(service_proposals_router.router, prefix="/api", tags=["Service Proposals v1"])
 
 
 @app.get("/api/health", tags=["Sistema"])
