@@ -145,7 +145,7 @@ def get_vehicle(
 def create_vehicle(
     payload: VehicleCreate,
     db: Session = Depends(get_db),
-    _current_user: object = Depends(require_role(["admin", "operador"])),
+    _current_user: object = Depends(require_role(["admin", "operador", "recepcion", "jefe_taller", "gerente_sede", "director"])),
 ):
     duplicate_field, existing = _find_duplicate_vehicle(db, payload)
     if existing:
@@ -166,7 +166,7 @@ def update_vehicle(
     vehicle_id: str,
     payload: VehicleUpdate,
     db: Session = Depends(get_db),
-    _current_user: object = Depends(require_role(["admin", "operador"])),
+    _current_user: object = Depends(require_role(["admin", "operador", "recepcion", "jefe_taller", "gerente_sede", "director"])),
 ):
     vehicle = _vehicle_query(db).filter(Vehicle.id == vehicle_id).first()
     if not vehicle:
