@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
 import { BranchSwitcher } from './BranchSwitcher'
+import { NotificationDrawer } from './NotificationDrawer'
 import type { Role } from '../api/types'
 
 type NavItem = {
@@ -150,6 +151,7 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
           </div>
         )}
         <div className="flex items-center gap-1 flex-shrink-0">
+          {!collapsed && <NotificationDrawer />}
           {!collapsed && <ThemeToggle />}
           <button
             onClick={onToggle}
