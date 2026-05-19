@@ -1,7 +1,9 @@
 import { useMemo, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Wrench, Plus, Camera, Clock, AlertTriangle, Play, Pause, Square, Package,
+  ClipboardCheck,
 } from 'lucide-react'
 import api from '../api/client'
 import {
@@ -210,7 +212,9 @@ function KanbanCard({ order, onClick }: { order: WorkOrder; onClick: () => void 
 
 // ── Work Order Drawer ────────────────────────────────────────────────────────
 function WorkOrderDrawer({ order, onClose }: { order: WorkOrder; onClose: () => void }) {
+  const navigate = useNavigate()
   const [reqOpen, setReqOpen] = useState(false)
+  const canDeliver = order.status === 'completed' || (order.status as string) === 'qa_passed'
 
   const linesQuery = useQuery({
     queryKey: ['workshop', 'lines', order.id],
@@ -234,6 +238,14 @@ function WorkOrderDrawer({ order, onClose }: { order: WorkOrder; onClose: () => 
             <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
               Mecánico: {order.mechanic_email}
             </p>
+          )}
+          {canDeliver && (
+            <Button
+              className="mt-3"
+              onClick={() => navigate(`/advisor/delivery/${order.id}`)}
+            >
+              <ClipboardCheck size={14} /> Entregar al cliente
+            </Button>
           )}
         </section>
 

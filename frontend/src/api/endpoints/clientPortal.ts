@@ -24,6 +24,19 @@ export interface ClientTimelineEntry {
   note: string | null;
 }
 
+export interface ClientServiceLine {
+  label: string;
+  status: string;
+  completed_at: string | null;
+}
+
+export interface ClientStage {
+  key: string;
+  label: string;
+  pct: number;
+  completed_at: string | null;
+}
+
 export interface ClientUnitView {
   folio: string;
   status: string;
@@ -34,6 +47,10 @@ export interface ClientUnitView {
   progress_pct: number;
   branch_name: string | null;
   timeline: ClientTimelineEntry[];
+  lines: ClientServiceLine[];
+  photos: string[];
+  stages: ClientStage[];
+  eta_text: string | null;
 }
 
 export async function getClientUnit(folio: string): Promise<ClientUnitView> {

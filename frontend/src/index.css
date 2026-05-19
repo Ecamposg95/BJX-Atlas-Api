@@ -2,9 +2,41 @@
 
 /* ============================================================
    BJX ATLAS — DESIGN SYSTEM  (theme infrastructure)
+   Espejo de frontend/src/design-system/tokens.ts
    ============================================================ */
 
-/* --- 1. DESIGN TOKENS --------------------------------------- */
+/* --- Tailwind v4 @theme — habilita utilities como bg-brand-yellow */
+@theme {
+  --color-brand-yellow: #FBBF24;
+  --color-brand-navy: #1E293B;
+  --color-brand-red: #DC2626;
+
+  --color-semaphore-green: #10B981;
+  --color-semaphore-green-light: #34D399;
+  --color-semaphore-green-dark: #059669;
+  --color-semaphore-amber: #F59E0B;
+  --color-semaphore-amber-light: #FBBF24;
+  --color-semaphore-amber-dark: #D97706;
+  --color-semaphore-red: #EF4444;
+  --color-semaphore-red-light: #FB7185;
+  --color-semaphore-red-dark: #B91C1C;
+
+  --radius-token-sm: 6px;
+  --radius-token-md: 10px;
+  --radius-token-lg: 14px;
+  --radius-token-xl: 20px;
+
+  --duration-token-fast: 150ms;
+  --duration-token-base: 250ms;
+  --duration-token-slow: 400ms;
+
+  --shadow-token-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-token-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-token-lg: 0 12px 30px rgba(15, 23, 42, 0.10);
+  --shadow-token-xl: 0 32px 80px rgba(15, 23, 42, 0.14);
+}
+
+/* --- 1. DESIGN TOKENS (CSS vars para var(--...) y temas) --- */
 :root {
   --radius-xl: 24px;
   --radius-2xl: 32px;
@@ -12,12 +44,34 @@
   --duration-fast: 160ms;
   --duration-base: 260ms;
 
+  /* Brand */
+  --color-brand-yellow: #FBBF24;
+  --color-brand-navy: #1E293B;
+  --color-brand-red: #DC2626;
+
+  /* Semaforo */
+  --color-semaphore-green: #10B981;
+  --color-semaphore-amber: #F59E0B;
+  --color-semaphore-red: #EF4444;
+
+  /* Aliases legacy (mantener compat) */
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #fb7185;
   --color-ok: #10b981;
   --color-low: #f97316;
   --color-critical: #ef4444;
+}
+
+:root.dark,
+html[data-theme='dark'] {
+  /* Brand y semaforo no cambian con el tema; los valores son fijos. */
+  --color-brand-yellow: #FBBF24;
+  --color-brand-navy: #1E293B;
+  --color-brand-red: #DC2626;
+  --color-semaphore-green: #10B981;
+  --color-semaphore-amber: #F59E0B;
+  --color-semaphore-red: #EF4444;
 }
 
 html[data-theme='light'] {

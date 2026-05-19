@@ -22,4 +22,8 @@ export const queryKeys = {
   // Findings
   findings: (filters?: Record<string, unknown>) => ["findings", filters] as const,
   finding: (id: string) => ["findings", id] as const,
+
+  // Notifications
+  notifications: (filters?: Record<string, unknown>) => ["notifications", filters] as const,
+  notificationsUnread: () => ["notifications", "unread-count"] as const,
 };

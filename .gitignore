@@ -23,6 +23,8 @@ docs/**
 !docs/superpowers/plans/**
 !docs/runbooks/
 !docs/runbooks/**
+!docs/design/
+!docs/design/**
 !docs/TEST_CREDENTIALS.md
 context/*.pdf
 

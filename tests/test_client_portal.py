@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.models.catalog import Service, ServiceCatalog, VehicleModel
+from app.models.evidence import MobileEvidence, MobileEvidenceKind
 from app.models.users import Role, User
 from app.models.vehicles import Vehicle
 from app.models.work_orders import WorkOrder, WorkOrderStatus
@@ -224,3 +225,86 @@ class TestClientPortalProgress:
         )
         r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
         assert r.json()["progress_pct"] == 100
+
+
+class TestClientPortalLines:
+    def test_lines_returns_label_and_status(self, client, db, seeded_work_order):
+        _add_lines(
+            db,
+            seeded_work_order,
+            [
+                WorkOrderLineStatus.completed.value,
+                WorkOrderLineStatus.in_progress.value,
+            ],
+        )
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        data = r.json()
+        assert "lines" in data
+        assert len(data["lines"]) == 2
+        line = data["lines"][0]
+        assert "label" in line
+        assert "status" in line
+        assert line["label"] == "SERVICIO DE FRENOS"
+
+    def test_lines_empty_when_no_workorder_lines(self, client, seeded_work_order):
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        assert r.json()["lines"] == []
+
+
+class TestClientPortalStages:
+    def test_stages_six_etapas_with_keys(self, client, seeded_work_order):
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        stages = r.json()["stages"]
+        assert len(stages) == 6
+        keys = [s["key"] for s in stages]
+        assert keys == [
+            "recepcion",
+            "diagnostico",
+            "refacciones",
+            "trabajo",
+            "qa",
+            "entrega",
+        ]
+        for st in stages:
+            assert "label" in st
+            assert "pct" in st
+            assert 0 <= st["pct"] <= 100
+
+    def test_stages_recepcion_complete_when_received(self, client, seeded_work_order):
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        stages = {s["key"]: s for s in r.json()["stages"]}
+        assert stages["recepcion"]["pct"] == 100
+        # OS está in_progress por seed → diagnostico debe estar al 100%
+        assert stages["diagnostico"]["pct"] == 100
+        # entrega y qa aún no
+        assert stages["entrega"]["pct"] == 0
+
+
+class TestClientPortalPhotos:
+    def test_photos_empty_when_none(self, client, seeded_work_order):
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        assert r.json()["photos"] == []
+
+    def test_photos_returns_urls(self, client, db, seeded_work_order):
+        ev = MobileEvidence(
+            kind=MobileEvidenceKind.damage_photo.value,
+            storage_key=f"branches/x/mobile-evidence/damage_photo/foo.jpg",
+            public_url="https://cdn.example.com/foo.jpg",
+            work_order_id=seeded_work_order.id,
+            mime_type="image/jpeg",
+            size_bytes=12345,
+        )
+        db.add(ev)
+        db.commit()
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        photos = r.json()["photos"]
+        assert "https://cdn.example.com/foo.jpg" in photos
+
+
+class TestClientPortalEta:
+    def test_eta_text_present_with_promised_at(self, client, seeded_work_order):
+        r = client.get(f"/api/v1/client/units/{seeded_work_order.order_number}")
+        eta = r.json()["eta_text"]
+        assert eta is not None
+        assert isinstance(eta, str)
+        assert len(eta) > 0

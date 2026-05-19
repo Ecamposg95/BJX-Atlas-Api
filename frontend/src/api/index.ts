@@ -5,8 +5,9 @@ import type {
   Supplier, SupplierPrice,
   EngineResponse, SimulateRequest, SimulateResponse,
   Quote, QuoteStatus, DashboardSummary, ModelProfitability,
-  Branch, BranchSwitchResponse,
-  Warehouse, Part, StockLevel, InventoryRequest, InventoryRequestStatus, InventoryMovement,
+  Branch, BranchSwitchResponse, BranchStat, BranchMetric,
+  Warehouse, Part, StockLevel, StockBoardResponse, StockStatus,
+  InventoryRequest, InventoryRequestStatus, InventoryMovement,
   ServiceBay, WorkOrderLine, Evidence,
   Paginated,
 } from './types'
@@ -211,6 +212,20 @@ export const listBranches = () =>
 export const switchBranch = (branch_id: string) =>
   api.post<BranchSwitchResponse>('/branches/switch', { branch_id }).then((r) => r.data)
 
+export const getBranchStats = (params?: {
+  metric?: BranchMetric
+  date_from?: string
+  date_to?: string
+}) =>
+  api
+    .get<BranchStat[]>('/v1/branches/stats', { params })
+    .then((r) => (Array.isArray(r.data) ? r.data : []))
+
+export const getManagerDashboard = (params?: { branch_id?: string; refresh?: boolean }) =>
+  api
+    .get<import('./types').ManagerDashboard>('/v1/branches/manager-dashboard', { params })
+    .then((r) => r.data)
+
 // ── Inventory: Warehouses ────────────────────────────────────────────────────
 export const listWarehouses = () =>
   api.get<Warehouse[]>('/inventory/warehouses').then((r) => r.data)
@@ -237,6 +252,12 @@ export const updatePart = (id: string, data: Partial<Part>) =>
 // ── Inventory: Stock + Movements ─────────────────────────────────────────────
 export const listStock = (params?: { warehouse_id?: string; part_id?: string }) =>
   api.get<StockLevel[]>('/inventory/stock', { params }).then((r) => r.data)
+
+export const getStockBoard = (params?: {
+  status?: StockStatus; search?: string; only_active?: boolean
+  skip?: number; limit?: number
+}) =>
+  api.get<StockBoardResponse>('/inventory/stock-board', { params }).then((r) => r.data)
 
 export const listMovements = (params?: {
   warehouse_id?: string; part_id?: string; movement_type?: string

@@ -3,7 +3,8 @@ import { clsx } from 'clsx'
 import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
-  Package, ClipboardList, Wrench, HardHat, Building2, Activity,
+  Package, Wrench, HardHat, Building2, Activity, ClipboardCheck, PackageOpen,
+  Briefcase, UsersRound, CalendarDays, BadgeCheck, PackageCheck,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
@@ -14,37 +15,51 @@ type NavItem = {
   to: string
   icon: typeof House
   label: string
-  roles: Role[]   // roles que pueden ver este item
+  roles: Role[]
 }
 
-// Convención: cada ruta declara explícitamente qué roles la pueden ver.
-// El backend valida con require_role() — esto es solo UI.
+// Convencion: cada ruta declara que roles la pueden ver.
+// El backend valida con require_role()/require_permission() — esto es solo UI.
 
-const PRIMARY_ITEMS: NavItem[] = [
-  { to: '/home',                 icon: House,           label: 'Home ejecutiva',   roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'mecanico', 'almacen', 'cliente_corp', 'operador', 'viewer'] },
-  { to: '/dashboard',            icon: LayoutDashboard, label: 'Dashboard',        roles: ['admin', 'director', 'gerente_sede', 'operador', 'viewer'] },
-  { to: '/dashboard/operational',icon: Activity,        label: 'Operativo',        roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'viewer'] },
-  { to: '/quotes',               icon: FileText,        label: 'Cotizaciones',     roles: ['admin', 'director', 'gerente_sede', 'recepcion', 'operador'] },
-  { to: '/calculator',           icon: Calculator,      label: 'Calculadora',      roles: ['admin', 'director', 'gerente_sede', 'operador'] },
-  { to: '/catalog',              icon: BookOpen,        label: 'Catálogo',         roles: ['admin', 'director', 'gerente_sede'] },
-  { to: '/suppliers',            icon: Truck,           label: 'Proveedores',      roles: ['admin', 'director', 'almacen'] },
+// ── MI TRABAJO — home del rol + tareas personales ───────────────────
+const WORK_ITEMS: NavItem[] = [
+  { to: '/admin',       icon: ShieldCheck,    label: 'Plataforma',     roles: ['admin'] },
+  { to: '/executive',   icon: Briefcase,      label: 'Vision ejecutiva', roles: ['admin', 'director'] },
+  { to: '/manager',     icon: Building2,      label: 'Mi sucursal',    roles: ['admin', 'director', 'gerente_sede'] },
+  { to: '/workshop',    icon: HardHat,        label: 'Mando taller',   roles: ['admin', 'jefe_taller'] },
+  { to: '/advisor',     icon: ClipboardCheck, label: 'Recepcion',      roles: ['admin', 'recepcion', 'operador'] },
+  { to: '/mechanic',    icon: Wrench,         label: 'Mis tareas',     roles: ['admin', 'mecanico'] },
+  { to: '/warehouse',   icon: PackageOpen,    label: 'Almacen',        roles: ['admin', 'almacen'] },
+  { to: '/client-corp', icon: UsersRound,     label: 'Mi flota',       roles: ['admin', 'cliente_corp'] },
 ]
 
-const WORKSHOP_ITEMS: NavItem[] = [
-  { to: '/workshop/board', icon: Wrench,  label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
-  { to: '/mechanic',       icon: HardHat, label: 'Mis tareas',     roles: ['mecanico', 'jefe_taller'] },
-  { to: '/me/work',        icon: HardHat, label: 'Mis OS (legacy)', roles: ['mecanico', 'jefe_taller'] },
+// ── OPERACION — piso y stock ─────────────────────────────────────────
+const OPERATIONS_ITEMS: NavItem[] = [
+  { to: '/citas',          icon: CalendarDays, label: 'Citas',          roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'operador'] },
+  { to: '/workshop/board', icon: Wrench,       label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
+  { to: '/workshop/qa',    icon: BadgeCheck,   label: 'QA',             roles: ['admin', 'director', 'gerente_sede', 'jefe_taller'] },
+  { to: '/inventory',      icon: Package,      label: 'Inventario',     roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
+  { to: '/warehouse/stock-board', icon: PackageCheck, label: 'Stock-board', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'viewer'] },
 ]
 
-const INVENTORY_ITEMS: NavItem[] = [
-  { to: '/inventory',          icon: Package,       label: 'Inventario',  roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
-  { to: '/inventory/requests', icon: ClipboardList, label: 'Solicitudes', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'mecanico'] },
+// ── NEGOCIO — cotizaciones, catalogo, proveedores, sucursales ────────
+const BUSINESS_ITEMS: NavItem[] = [
+  { to: '/quotes',     icon: FileText,   label: 'Cotizaciones', roles: ['admin', 'director', 'gerente_sede', 'recepcion', 'operador'] },
+  { to: '/calculator', icon: Calculator, label: 'Calculadora',  roles: ['admin', 'director', 'gerente_sede', 'operador'] },
+  { to: '/catalog',    icon: BookOpen,   label: 'Catalogo',     roles: ['admin', 'director', 'gerente_sede'] },
+  { to: '/suppliers',  icon: Truck,      label: 'Proveedores',  roles: ['admin', 'director', 'almacen'] },
+  { to: '/branches',   icon: Building2,  label: 'Sucursales',   roles: ['admin', 'director', 'gerente_sede'] },
 ]
 
+// ── ANALISIS — dashboards ────────────────────────────────────────────
+const ANALYTICS_ITEMS: NavItem[] = [
+  { to: '/dashboard',             icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'director', 'gerente_sede', 'cliente_corp', 'operador', 'viewer'] },
+  { to: '/dashboard/operational', icon: Activity,        label: 'Operativo', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'viewer'] },
+]
+
+// ── ADMIN — configuracion de plataforma ──────────────────────────────
 const ADMIN_ITEMS: NavItem[] = [
-  { to: '/branches', icon: Building2,   label: 'Sucursales',     roles: ['admin', 'director'] },
-  { to: '/config',   icon: Settings,    label: 'Configuración',  roles: ['admin', 'director'] },
-  { to: '/admin',    icon: ShieldCheck, label: 'Administración', roles: ['admin'] },
+  { to: '/config', icon: Settings,    label: 'Configuracion',  roles: ['admin', 'director'] },
 ]
 
 const ROLE_COLORS: Record<string, string> = {
@@ -65,9 +80,9 @@ const ROLE_LABELS: Record<Role, string> = {
   director: 'Director',
   gerente_sede: 'Gerente sede',
   jefe_taller: 'Jefe taller',
-  recepcion: 'Recepción',
-  mecanico: 'Mecánico',
-  almacen: 'Almacén',
+  recepcion: 'Recepcion',
+  mecanico: 'Mecanico',
+  almacen: 'Almacen',
   cliente_corp: 'Cliente',
   operador: 'Operador',
   viewer: 'Viewer',
@@ -89,10 +104,11 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
   const navigate = useNavigate()
 
   const role = user?.role
-  const primary = filterByRole(PRIMARY_ITEMS, role)
-  const workshop = filterByRole(WORKSHOP_ITEMS, role)
-  const inventory = filterByRole(INVENTORY_ITEMS, role)
-  const admin = filterByRole(ADMIN_ITEMS, role)
+  const work = filterByRole(WORK_ITEMS, role)
+  const operations = filterByRole(OPERATIONS_ITEMS, role)
+  const business = filterByRole(BUSINESS_ITEMS, role)
+  const analytics = filterByRole(ANALYTICS_ITEMS, role)
+  const adminSection = filterByRole(ADMIN_ITEMS, role)
 
   const handleLogout = () => {
     logout()
@@ -153,31 +169,38 @@ export function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 py-2 space-y-0 px-1 overflow-y-auto">
-        {primary.length > 0 && (
+        {work.length > 0 && (
           <>
-            {!collapsed && <p className="sidebar-section-label">Visión general</p>}
-            {renderItems(primary)}
+            {!collapsed && <p className="sidebar-section-label">Mi trabajo</p>}
+            {renderItems(work)}
           </>
         )}
 
-        {workshop.length > 0 && (
+        {operations.length > 0 && (
           <>
-            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Taller</p>}
-            {renderItems(workshop)}
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Operacion</p>}
+            {renderItems(operations)}
           </>
         )}
 
-        {inventory.length > 0 && (
+        {business.length > 0 && (
           <>
-            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Inventario</p>}
-            {renderItems(inventory)}
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Negocio</p>}
+            {renderItems(business)}
           </>
         )}
 
-        {admin.length > 0 && (
+        {analytics.length > 0 && (
           <>
-            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Gestión</p>}
-            {renderItems(admin)}
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Analisis</p>}
+            {renderItems(analytics)}
+          </>
+        )}
+
+        {adminSection.length > 0 && (
+          <>
+            {!collapsed && <p className="sidebar-section-label sidebar-section-label--secondary">Admin</p>}
+            {renderItems(adminSection)}
           </>
         )}
       </nav>

@@ -45,5 +45,11 @@ class User(Base, UUIDMixin, AuditMixin):
         nullable=True,
         index=True,
     )
+    # customer_id liga al usuario con una flota corporativa. Solo aplica al
+    # rol `cliente_corp`: las consultas de OS/flota se filtran por este campo.
+    # No es FK formal porque la plataforma no tiene tabla `customers` todavía;
+    # WorkOrder.customer_id es un String libre que la recepción captura al
+    # crear la OS.
+    customer_id = Column(String(36), nullable=True, index=True)
     active = Column(Boolean, default=True, nullable=False)
     refresh_token = Column(Text, nullable=True)
