@@ -18,6 +18,7 @@ import { MechanicWorkPage } from './pages/MechanicWork'
 import { MechanicHomeV1 } from './pages/MechanicHomeV1'
 import { OperationalDashboardPage } from './pages/OperationalDashboard'
 import { BranchesPage } from './pages/Branches'
+import { ClientPortalPage } from './pages/ClientPortal'
 import { ToastProvider } from './components/ui/ToastProvider'
 import { applyTheme, useThemeStore } from './store/theme'
 
@@ -40,6 +41,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/client/:folio" element={<ClientPortalPage />} />
             <Route element={<Layout />}>
               <Route index element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />

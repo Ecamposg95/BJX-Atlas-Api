@@ -17,6 +17,7 @@ from app.routers import assignments as assignments_router
 from app.routers import me as me_router
 from app.routers import mechanics as mechanics_router
 from app.routers import findings as findings_router
+from app.routers import client_portal as client_portal_router
 from app.middleware import AuditContextMiddleware
 from app.services.audit import install_audit_listeners
 from app.events.subscribers import setup_event_subscribers
@@ -73,6 +74,7 @@ app.include_router(audit_router.router, prefix="/api", tags=["Auditoría"])
 app.include_router(inventory_router.router, prefix="/api", tags=["Inventario"])
 app.include_router(workshop_router.router, prefix="/api", tags=["Taller"])
 app.include_router(admin_seed_router.router, prefix="/api", tags=["Admin"])
+app.include_router(client_portal_router.router, prefix="/api", tags=["Portal Cliente"])
 
 
 @app.get("/api/health", tags=["Sistema"])
