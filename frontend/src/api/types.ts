@@ -55,6 +55,34 @@ export interface BranchSwitchResponse {
   branch_name: string
 }
 
+// ── Branch Stats (Mexico map) ────────────────────────────────────────────────
+export type BranchMetric = 'operation' | 'revenue' | 'alerts'
+export type BranchSemaphore = 'green' | 'amber' | 'red'
+
+export interface BranchKPIs {
+  open_orders: number
+  in_progress: number
+  finished_today: number
+  active_mechanics: number
+  revenue_today: number
+  avg_completion_hrs: number
+  stalled_parts: number
+  alerts_count: number
+}
+
+export interface BranchStat {
+  branch_id: string
+  code: string
+  name: string
+  city: string | null
+  state: string | null
+  lat: number
+  lng: number
+  kpis: BranchKPIs
+  semaphore: BranchSemaphore
+  pulse: boolean
+}
+
 // ── Inventory ────────────────────────────────────────────────────────────────
 export interface Warehouse {
   id: string

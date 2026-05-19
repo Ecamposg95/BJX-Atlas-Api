@@ -5,7 +5,7 @@ import type {
   Supplier, SupplierPrice,
   EngineResponse, SimulateRequest, SimulateResponse,
   Quote, QuoteStatus, DashboardSummary, ModelProfitability,
-  Branch, BranchSwitchResponse,
+  Branch, BranchSwitchResponse, BranchStat, BranchMetric,
   Warehouse, Part, StockLevel, InventoryRequest, InventoryRequestStatus, InventoryMovement,
   ServiceBay, WorkOrderLine, Evidence,
   Paginated,
@@ -210,6 +210,15 @@ export const listBranches = () =>
 
 export const switchBranch = (branch_id: string) =>
   api.post<BranchSwitchResponse>('/branches/switch', { branch_id }).then((r) => r.data)
+
+export const getBranchStats = (params?: {
+  metric?: BranchMetric
+  date_from?: string
+  date_to?: string
+}) =>
+  api
+    .get<BranchStat[]>('/v1/branches/stats', { params })
+    .then((r) => (Array.isArray(r.data) ? r.data : []))
 
 // ── Inventory: Warehouses ────────────────────────────────────────────────────
 export const listWarehouses = () =>

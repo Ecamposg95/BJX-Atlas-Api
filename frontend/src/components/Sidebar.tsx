@@ -45,7 +45,7 @@ const BUSINESS_ITEMS: NavItem[] = [
   { to: '/calculator', icon: Calculator, label: 'Calculadora',  roles: ['admin', 'director', 'gerente_sede', 'operador'] },
   { to: '/catalog',    icon: BookOpen,   label: 'Catalogo',     roles: ['admin', 'director', 'gerente_sede'] },
   { to: '/suppliers',  icon: Truck,      label: 'Proveedores',  roles: ['admin', 'director', 'almacen'] },
-  { to: '/branches',   icon: Building2,  label: 'Sucursales',   roles: ['admin', 'director'] },
+  { to: '/branches',   icon: Building2,  label: 'Sucursales',   roles: ['admin', 'director', 'gerente_sede'] },
 ]
 
 // ── ANALISIS — dashboards ────────────────────────────────────────────
