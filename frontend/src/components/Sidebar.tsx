@@ -32,7 +32,8 @@ const PRIMARY_ITEMS: NavItem[] = [
 
 const WORKSHOP_ITEMS: NavItem[] = [
   { to: '/workshop/board', icon: Wrench,  label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
-  { to: '/me/work',        icon: HardHat, label: 'Mis OS',         roles: ['mecanico', 'jefe_taller'] },
+  { to: '/mechanic',       icon: HardHat, label: 'Mis tareas',     roles: ['mecanico', 'jefe_taller'] },
+  { to: '/me/work',        icon: HardHat, label: 'Mis OS (legacy)', roles: ['mecanico', 'jefe_taller'] },
 ]
 
 const INVENTORY_ITEMS: NavItem[] = [

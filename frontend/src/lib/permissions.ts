@@ -14,29 +14,30 @@ export type Role =
   | "operador"
   | "viewer";
 
-export enum Permission {
-  WORK_ORDER_CREATE = "work_order:create",
-  WORK_ORDER_UPDATE = "work_order:update",
-  WORK_ORDER_TRANSITION = "work_order:transition",
-  WORK_ORDER_CANCEL = "work_order:cancel",
-  WORK_ORDER_DELETE = "work_order:delete",
-  WORK_ORDER_QA_PASS = "work_order:qa_pass",
-  WORK_ORDER_QA_FAIL = "work_order:qa_fail",
-  WORK_ORDER_DELIVER = "work_order:deliver",
-  ASSIGNMENT_CREATE = "assignment:create",
-  ASSIGNMENT_OVERRIDE = "assignment:override_level",
-  ASSIGNMENT_RELEASE = "assignment:release",
-  ASSIGNMENT_READ = "assignment:read",
-  MECHANIC_PROFILE_READ = "mechanic:profile:read",
-  MECHANIC_PROFILE_WRITE = "mechanic:profile:write",
-  MECHANIC_LEVEL_WRITE = "mechanic:level:write",
-  MECHANIC_SKILLS_WRITE = "mechanic:skills:write",
-  FINDING_REPORT = "finding:report",
-  FINDING_APPROVE = "finding:approve",
-  FINDING_REJECT = "finding:reject",
-  FINDING_LIST = "finding:list",
-  ME_TASKS_READ = "me:tasks:read",
-}
+export const Permission = {
+  WORK_ORDER_CREATE: "work_order:create",
+  WORK_ORDER_UPDATE: "work_order:update",
+  WORK_ORDER_TRANSITION: "work_order:transition",
+  WORK_ORDER_CANCEL: "work_order:cancel",
+  WORK_ORDER_DELETE: "work_order:delete",
+  WORK_ORDER_QA_PASS: "work_order:qa_pass",
+  WORK_ORDER_QA_FAIL: "work_order:qa_fail",
+  WORK_ORDER_DELIVER: "work_order:deliver",
+  ASSIGNMENT_CREATE: "assignment:create",
+  ASSIGNMENT_OVERRIDE: "assignment:override_level",
+  ASSIGNMENT_RELEASE: "assignment:release",
+  ASSIGNMENT_READ: "assignment:read",
+  MECHANIC_PROFILE_READ: "mechanic:profile:read",
+  MECHANIC_PROFILE_WRITE: "mechanic:profile:write",
+  MECHANIC_LEVEL_WRITE: "mechanic:level:write",
+  MECHANIC_SKILLS_WRITE: "mechanic:skills:write",
+  FINDING_REPORT: "finding:report",
+  FINDING_APPROVE: "finding:approve",
+  FINDING_REJECT: "finding:reject",
+  FINDING_LIST: "finding:list",
+  ME_TASKS_READ: "me:tasks:read",
+} as const;
+export type Permission = (typeof Permission)[keyof typeof Permission];
 
 export const PERMISSION_MATRIX: Record<Permission, Role[]> = {
   [Permission.WORK_ORDER_CREATE]: ["admin", "director", "gerente_sede", "jefe_taller", "recepcion", "operador"],

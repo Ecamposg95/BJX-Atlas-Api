@@ -23,7 +23,7 @@ export function MechanicHomeV1() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useMyTasks();
-  const { push: toast } = useToast();
+  const toast = useToast();
   const [filter, setFilter] = useState<Filter>("all");
 
   async function handleAction(action: string, task: { line: { id: string } }) {
@@ -31,16 +31,16 @@ export function MechanicHomeV1() {
     try {
       if (action === "start") {
         await api.post(`/workshop/lines/${lineId}/start`);
-        toast({ kind: "success", title: "Tarea iniciada" });
+        toast.success("Tarea iniciada");
       } else if (action === "pause") {
         await api.post(`/workshop/lines/${lineId}/pause`);
-        toast({ kind: "success", title: "Tarea pausada" });
+        toast.success("Tarea pausada");
       } else if (action === "resume") {
         await api.post(`/workshop/lines/${lineId}/resume`);
-        toast({ kind: "success", title: "Tarea reanudada" });
+        toast.success("Tarea reanudada");
       } else if (action === "finish") {
         await api.post(`/workshop/lines/${lineId}/finish`);
-        toast({ kind: "success", title: "Tarea finalizada" });
+        toast.success("Tarea finalizada");
       } else if (action === "view_detail" || action === "report_finding" || action === "request_part") {
         window.location.href = `/mechanic/tasks/${lineId}`;
         return;
@@ -48,7 +48,7 @@ export function MechanicHomeV1() {
       queryClient.invalidateQueries({ queryKey: queryKeys.myTasks() });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Error en la operación";
-      toast({ kind: "error", title: message });
+      toast.error(message);
     }
   }
 
