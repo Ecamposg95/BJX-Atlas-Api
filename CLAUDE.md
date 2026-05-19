@@ -29,14 +29,16 @@ Antes de escribir cualquier código, leer:
 
 | Archivo | Propósito |
 |---|---|
-| `context/atlas_erp_pos_stack.md` | Stack completo, patrones de código y arquitectura base (FastAPI + SQLAlchemy + JWT) |
-| `context/BJX_Platform_TaskPack_v1.md` | Reglas de negocio, módulos, esquema de BD, lógica de cálculo y plan de sprints del proyecto |
+| `context/PRODUCT.md` | Maestro de producto: visión, 10 roles, módulos por ola, reglas de negocio inmutables, workflows |
+| `context/STACK.md` | Stack completo y patrones de código (FastAPI + SQLAlchemy + JWT + React + Tailwind v4) |
+
+PDFs de diseño y brief original en `docs/design/`.
 
 ## Stack
 
 Python 3.12 · FastAPI 0.127.0 · SQLAlchemy 2.0 · PostgreSQL (prod) / SQLite (local) · Pydantic v2 · JWT HS256
 
-Ver `context/atlas_erp_pos_stack.md` para snippets de código listos para usar.
+Ver `context/STACK.md` para snippets de código listos para usar.
 
 ## Commands
 
@@ -97,4 +99,4 @@ scripts/
 
 ## Roles
 
-`admin` · `operador` · `viewer` (definidos en `BJX_Platform_TaskPack_v1.md` §Módulo 6)
+10 roles: `admin` · `director` · `gerente_sede` · `jefe_taller` · `recepcion` · `mecanico` · `almacen` · `cliente_corp` · `operador` · `viewer` (definidos en `context/PRODUCT.md` §2 — Catálogo de roles)
