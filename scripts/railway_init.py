@@ -201,9 +201,10 @@ def seed_defaults():
         else:
             print(f"[BOOT]   Admin OK: {admin_email}", flush=True)
 
-        # --- Demo users (1 por rol) — opt-in via SEED_DEMO_USERS=1 ---
-        if os.getenv("SEED_DEMO_USERS", "0") == "1":
-            print("[BOOT]   Seeding demo users (SEED_DEMO_USERS=1)...", flush=True)
+        # --- Demo users (1 por rol) ---
+        # Default ON durante MVP beta. Setear SEED_DEMO_USERS=0 para desactivar.
+        if os.getenv("SEED_DEMO_USERS", "1") == "1":
+            print("[BOOT]   Seeding demo users...", flush=True)
             try:
                 from scripts.seed_users import seed_users as _seed_demo_users
                 created, skipped = _seed_demo_users()
@@ -212,8 +213,9 @@ def seed_defaults():
                 print(f"[BOOT]   Demo users seed failed (non-fatal): {e}", flush=True)
 
         # --- Operational data (parts/warehouses/vehicles/OS por sede) ---
-        if os.getenv("SEED_OPERATIONAL_DATA", "0") == "1":
-            print("[BOOT]   Seeding operational data (SEED_OPERATIONAL_DATA=1)...", flush=True)
+        # Default ON durante MVP beta. Setear SEED_OPERATIONAL_DATA=0 para desactivar.
+        if os.getenv("SEED_OPERATIONAL_DATA", "1") == "1":
+            print("[BOOT]   Seeding operational data...", flush=True)
             try:
                 from scripts.seed_operational import main as _seed_ops
                 _seed_ops()
