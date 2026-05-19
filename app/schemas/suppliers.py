@@ -58,13 +58,16 @@ class SupplierUpdate(BaseModel):
 class SupplierPriceRead(BaseModel):
     id: str
     supplier_id: str
-    service_id: str
-    model_id: str
+    service_id: Optional[str] = None
+    model_id: Optional[str] = None
+    part_id: Optional[str] = None
     ref_cost: float
     labor_cost: float
     total_price: float
     price_date: Optional[date] = None
     is_current: bool
+    valid_from: Optional[date] = None
+    source: Optional[str] = None
     created_at: datetime
 
     # Enriched / computed fields

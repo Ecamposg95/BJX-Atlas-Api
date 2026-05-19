@@ -64,12 +64,12 @@ class TestRegister:
         assert data["role"] == "viewer"
         assert "hashed_password" not in data
 
-    def test_register_as_operador_forbidden(self, client, operador_token):
+    def test_register_as_recepcion_forbidden(self, client, recepcion_token):
         payload = {"email": "another@test.com", "password": "Another1234", "role": "viewer"}
         r = client.post(
             "/api/auth/register",
             json=payload,
-            headers={"Authorization": f"Bearer {operador_token}"},
+            headers={"Authorization": f"Bearer {recepcion_token}"},
         )
         assert r.status_code == 403
 

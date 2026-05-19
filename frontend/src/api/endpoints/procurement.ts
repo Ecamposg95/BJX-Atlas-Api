@@ -1,6 +1,7 @@
 /** Procurement endpoints (Ola 6). */
 import api from '@/api/client'
 import type {
+  PendingInventoryRequestPage,
   PurchaseOrder,
   PurchaseOrderCreate,
   PurchaseOrderStatus,
@@ -63,5 +64,13 @@ export const procurementApi = {
   receive: (id: string, payload: ReceivePayload) =>
     api
       .post<PurchaseOrder>(`/v1/procurement/purchase-orders/${id}/receive`, payload)
+      .then((r) => r.data),
+
+  pendingInventoryRequests: (limit = 200) =>
+    api
+      .get<PendingInventoryRequestPage>(
+        '/v1/procurement/inventory-requests/pending',
+        { params: { limit } },
+      )
       .then((r) => r.data),
 }

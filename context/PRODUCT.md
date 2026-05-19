@@ -1,7 +1,7 @@
 # BJX Atlas — Producto (Master)
 
 > **Documento maestro**. Antes de tocar código, leer este archivo + `STACK.md`.
-> Actualizado: 2026-05-19 (Wave 6 — Compras)
+> Actualizado: 2026-05-19 (Wave 6 cierre — todas las olas completas)
 
 ---
 
@@ -123,7 +123,7 @@ Load status del mecanico:
 - ✅ Notificaciones WhatsApp (citas, entrega)
 - ✅ Notificaciones email — SMTP via stdlib, modo dry-run sin SMTP_HOST, BackgroundTasks (FastAPI)
 - ✅ Cableado de eventos reales: appointment_confirmed, wo_status_changed, qa_pending, delivery_ready, parts_request
-- ⚠ `margin_pct_avg` en `/manager` queda como `None` hasta modelar precio/costo final en OS (en `/executive` se calcula con `total_amount`/`cost_total` cuando existen)
+- ✅ Margen real en `WorkOrderLine` + `WorkOrder` (columnas unit_price/unit_cost/total_*/margin_pct con `recompute_line_pricing` y `recompute_work_order_totals` invocados al create/update/finish/qa-pass)
 
 ### Ola 5 — Cliente corporativo + portal publico ✅
 
@@ -131,13 +131,16 @@ Load status del mecanico:
 - ✅ Portal publico `/client/:folio` — etapas, lineas, galeria fotos check-in, ETA humanizado
 - ✅ Service proposals: tabla independiente `service_proposals`, flujo jefe_taller propone → gerente_sede aprueba → materializa nueva `WorkOrderLine`
 
-### Ola 6 — Compras (en curso)
+### Ola 6 — Compras ✅
 
-- ✅ Procurement: `PurchaseOrder` + `PurchaseOrderItem`, state machine draft → submitted → approved → received → cancelled, 8 endpoints `/v1/procurement/*`, UI `/procurement`
+- ✅ Procurement: `PurchaseOrder` + `PurchaseOrderItem`, state machine draft → submitted → approved → partially_received → received | cancelled, 9 endpoints `/v1/procurement/*`, UI `/procurement`
 - ✅ `receive_po()` invoca `inventory_engine.apply_inbound()` por item → actualiza `Part.last_unit_cost` + crea `InventoryMovement` inbound
-- ❌ Recepciones parciales (solo total en MVP)
-- ❌ Rotacion automatica de `SupplierPrice` cuando `unit_cost` final difiere del precio vigente (TODO en `procurement_engine.receive_po`)
-- ❌ Deprecacion definitiva de `operador` (9 endpoints en quotes/workshop + UI + enum SQL — alto blast radius)
+- ✅ Recepciones parciales con `quantity_received` acumulable por item
+- ✅ Rotacion automatica de `SupplierPrice` cuando `unit_cost` recibido difiere >0.5% del vigente (`rotate_supplier_price` con tolerancia + idempotencia)
+- ✅ Folio race-safe: tabla `folio_counters` + `next_folio()` con `SELECT FOR UPDATE` en Postgres / lock implicito en SQLite
+- ✅ Link `PurchaseOrderItem.inventory_request_id` + endpoint `/procurement/inventory-requests/pending` + IR queda `purchased` al recibir
+- ✅ Deprecacion `operador`: permission matrix limpia, routers migrados (quotes 3, workshop 7, vehicles 2), seed eliminado, migracion `c0d3p_0p` reasigna users existentes a `recepcion`
+- ⚠ `Role.operador` se conserva como value del enum por compat de sesiones activas; no se asigna a nuevos usuarios
 
 ---
 

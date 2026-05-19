@@ -4,7 +4,7 @@ from __future__ import annotations
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -63,6 +63,11 @@ class WorkOrder(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
     portal_token = Column(String(64), nullable=True, unique=True)
     delay_reason = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
+
+    # Totales calculados desde WorkOrderLine al cerrar / actualizar líneas.
+    total_amount = Column(Numeric(14, 2), nullable=True)
+    cost_total = Column(Numeric(14, 2), nullable=True)
+    margin_pct = Column(Numeric(6, 4), nullable=True)
 
     # Relaciones
     vehicle = relationship("Vehicle")

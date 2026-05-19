@@ -41,6 +41,10 @@ from app.security.tenant import (
     resolve_branch_for_write,
 )
 from app.services.storage import get_storage
+from app.services.work_order_pricing import (
+    recompute_line_pricing,
+    recompute_work_order_totals,
+)
 
 
 router = APIRouter(prefix="/workshop", tags=["workshop"])
@@ -160,7 +164,7 @@ def create_line(
     payload: LineCreate,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "gerente_sede", "jefe_taller", "operador"])),
+    _: User = Depends(require_role(["admin", "director", "gerente_sede", "jefe_taller", "recepcion"])),
 ):
     wo = _get_wo_or_404(db, work_order_id, ctx)
     if not db.query(Service).filter(Service.id == payload.service_id).first():
@@ -177,6 +181,9 @@ def create_line(
         status=WorkOrderLineStatus.pending.value,
     )
     db.add(line)
+    db.flush()
+    recompute_line_pricing(db, line)
+    recompute_work_order_totals(db, wo)
     db.commit()
     db.refresh(line)
     return _enrich_line(db, line)
@@ -188,11 +195,16 @@ def update_line(
     payload: LineUpdate,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "gerente_sede", "jefe_taller", "operador"])),
+    _: User = Depends(require_role(["admin", "director", "gerente_sede", "jefe_taller", "recepcion"])),
 ):
     line = _get_line_or_404(db, line_id, ctx)
     for f, v in payload.model_dump(exclude_unset=True).items():
         setattr(line, f, v)
+    db.flush()
+    recompute_line_pricing(db, line)
+    wo = db.query(WorkOrder).filter(WorkOrder.id == line.work_order_id).first()
+    if wo is not None:
+        recompute_work_order_totals(db, wo)
     db.commit()
     db.refresh(line)
     return _enrich_line(db, line)
@@ -223,7 +235,7 @@ def start_line(
     line_id: str,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico", "operador"])),
+    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico"])),
 ):
     line = _get_line_or_404(db, line_id, ctx)
     _transition(line, WorkOrderLineStatus.in_progress)
@@ -240,7 +252,7 @@ def pause_line(
     line_id: str,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico", "operador"])),
+    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico"])),
 ):
     line = _get_line_or_404(db, line_id, ctx)
     _transition(line, WorkOrderLineStatus.paused)
@@ -255,7 +267,7 @@ def resume_line(
     line_id: str,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico", "operador"])),
+    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico"])),
 ):
     line = _get_line_or_404(db, line_id, ctx)
     _transition(line, WorkOrderLineStatus.in_progress)
@@ -270,7 +282,7 @@ def finish_line(
     line_id: str,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico", "operador"])),
+    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico"])),
 ):
     line = _get_line_or_404(db, line_id, ctx)
     _transition(line, WorkOrderLineStatus.completed)
@@ -278,6 +290,10 @@ def finish_line(
     if line.started_at is not None:
         delta = (line.finished_at - line.started_at).total_seconds() / 60.0
         line.actual_duration_minutes = max(0, int(delta))
+    recompute_line_pricing(db, line)
+    wo = db.query(WorkOrder).filter(WorkOrder.id == line.work_order_id).first()
+    if wo is not None:
+        recompute_work_order_totals(db, wo)
     db.commit()
     db.refresh(line)
     return _enrich_line(db, line)
@@ -322,7 +338,7 @@ async def upload_evidence(
     note: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
-    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico", "operador", "recepcion"])),
+    _: User = Depends(require_role(["admin", "director", "jefe_taller", "mecanico", "recepcion"])),
 ):
     wo = _get_wo_or_404(db, work_order_id, ctx)
 
@@ -444,6 +460,9 @@ def qa_pass(
     # Notificar delivery_ready a recepción al pasar a completed
     from app.services.notification_wiring import notify_delivery_ready
     notify_delivery_ready(db, wo=wo, background_tasks=background_tasks)
+
+    # Cerrar totales reales (precio cliente, costo BJX, margen).
+    recompute_work_order_totals(db, wo)
 
     db.commit()
     db.refresh(wo)

@@ -329,10 +329,12 @@ class TestProcurementGuards:
         )
         assert r.status_code == 409
 
-    def test_partial_receipt_rejected(
+    def test_partial_receipt_now_allowed_and_marks_partially_received(
         self, client, almacen_token, director_token,
         supplier_a, part_a, part_b, warehouse_main,
     ):
+        """Ola 6 gap closing: recepciones parciales son válidas; el PO queda
+        `partially_received` hasta completar."""
         r = client.post(
             "/api/v1/procurement/purchase-orders",
             json=_create_po_payload(supplier_a, part_a, part_b),
@@ -348,7 +350,6 @@ class TestProcurementGuards:
             f"/api/v1/procurement/purchase-orders/{po_id}/approve",
             headers={"Authorization": f"Bearer {director_token}"},
         )
-        # quantity_received < ordenado
         receipts_payload = {
             "warehouse_id": warehouse_main.id,
             "receipts": [
@@ -361,7 +362,8 @@ class TestProcurementGuards:
             json=receipts_payload,
             headers={"Authorization": f"Bearer {almacen_token}"},
         )
-        assert r.status_code == 409
+        assert r.status_code == 200, r.text
+        assert r.json()["status"] == "partially_received"
 
 
 # ---------------------------------------------------------------------------

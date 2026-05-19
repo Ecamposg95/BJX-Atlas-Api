@@ -19,19 +19,31 @@ class Supplier(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
 
 
 class SupplierPrice(Base, UUIDMixin, AuditMixin):
-    """Precios de proveedor — INMUTABLES. Nunca editar, siempre crear nueva versión."""
+    """Precios de proveedor — INMUTABLES. Nunca editar, siempre crear nueva versión.
+
+    Dos modos coexistentes:
+      1) Cotización servicio×modelo: service_id + model_id (legacy, Ola 1-3).
+      2) Refacción individual: part_id (Ola 6, rotación automática al recibir PO).
+
+    Sólo uno de los dos pares debe estar poblado por registro. `valid_from` y
+    `source` permiten auditar de dónde vino el precio (manual, procurement_receive).
+    """
     __tablename__ = "supplier_prices"
 
     supplier_id = Column(String(36), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=False, index=True)
-    service_id = Column(String(36), ForeignKey("services.id", ondelete="RESTRICT"), nullable=False, index=True)
-    model_id = Column(String(36), ForeignKey("models.id", ondelete="RESTRICT"), nullable=False, index=True)
+    service_id = Column(String(36), ForeignKey("services.id", ondelete="RESTRICT"), nullable=True, index=True)
+    model_id = Column(String(36), ForeignKey("models.id", ondelete="RESTRICT"), nullable=True, index=True)
+    part_id = Column(String(36), ForeignKey("parts.id", ondelete="RESTRICT"), nullable=True, index=True)
 
     ref_cost = Column(Float, nullable=False)
     labor_cost = Column(Float, nullable=False, default=0.0)
     total_price = Column(Float, nullable=False)
     price_date = Column(Date, nullable=True)
     is_current = Column(Boolean, default=True, nullable=False, index=True)
+    valid_from = Column(Date, nullable=True)
+    source = Column(String(64), nullable=True)
 
     supplier = relationship("Supplier", back_populates="prices")
     service = relationship("Service")
     model = relationship("VehicleModel")
+    part = relationship("Part")

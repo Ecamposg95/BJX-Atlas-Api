@@ -56,13 +56,13 @@ class Permission(str, enum.Enum):
 
 PERMISSION_MATRIX: dict[Permission, set[Role]] = {
     Permission.WORK_ORDER_CREATE: {
-        Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller, Role.recepcion, Role.operador,
+        Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller, Role.recepcion,
     },
     Permission.WORK_ORDER_UPDATE: {
-        Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller, Role.recepcion, Role.operador,
+        Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller, Role.recepcion,
     },
     Permission.WORK_ORDER_TRANSITION: {
-        Role.admin, Role.gerente_sede, Role.jefe_taller, Role.recepcion, Role.mecanico, Role.almacen, Role.operador,
+        Role.admin, Role.gerente_sede, Role.jefe_taller, Role.recepcion, Role.mecanico, Role.almacen,
     },
     Permission.WORK_ORDER_CANCEL: {
         Role.admin, Role.gerente_sede, Role.jefe_taller,

@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  ShoppingCart, Plus, Trash2, Search, X,
+  ShoppingCart, Plus, Trash2, Search, X, ClipboardList,
 } from 'lucide-react'
 import {
   getSuppliers, listParts, listWarehouses,
 } from '../api'
 import { procurementApi } from '../api/endpoints/procurement'
 import type {
-  Part, PurchaseOrder, PurchaseOrderStatus,
+  Part, PendingInventoryRequest, PurchaseOrder, PurchaseOrderStatus,
   PurchaseOrderItemCreate, ReceiveItemPayload, Supplier, Warehouse,
 } from '../api/types'
 import { Badge } from '../components/ui/Badge'
@@ -31,11 +31,12 @@ const fmtDateTime = (s: string | null) => {
 }
 
 const STATUS_BADGE: Record<PurchaseOrderStatus, { label: string; variant: 'draft' | 'confirmed' | 'low' | 'ok' | 'cancelled' }> = {
-  draft:     { label: 'Borrador',    variant: 'draft' },
-  submitted: { label: 'Enviada',     variant: 'confirmed' },
-  approved:  { label: 'Aprobada',    variant: 'low' },
-  received:  { label: 'Recibida',    variant: 'ok' },
-  cancelled: { label: 'Cancelada',   variant: 'cancelled' },
+  draft:              { label: 'Borrador',         variant: 'draft' },
+  submitted:          { label: 'Enviada',          variant: 'confirmed' },
+  approved:           { label: 'Aprobada',         variant: 'low' },
+  partially_received: { label: 'Recibida parcial', variant: 'confirmed' },
+  received:           { label: 'Recibida',         variant: 'ok' },
+  cancelled:          { label: 'Cancelada',        variant: 'cancelled' },
 }
 
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
@@ -48,17 +49,41 @@ interface NewPOModalProps {
   open: boolean
   onClose: () => void
   onSaved: () => void
+  seedFromIrs?: PendingInventoryRequest[]
 }
 
-function NewPOModal({ open, onClose, onSaved }: NewPOModalProps) {
+function NewPOModal({ open, onClose, onSaved, seedFromIrs }: NewPOModalProps) {
   const toast = useToast()
   const [supplierId, setSupplierId] = useState('')
   const [notes, setNotes] = useState('')
   const [expectedAt, setExpectedAt] = useState('')
-  const [items, setItems] = useState<Array<PurchaseOrderItemCreate & { _key: string }>>([])
+  const [items, setItems] = useState<Array<PurchaseOrderItemCreate & { _key: string; _label?: string; _sku?: string }>>([])
   const [partSearch, setPartSearch] = useState('')
   const [showPartPicker, setShowPartPicker] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  // Pre-cargar items desde IRs pendientes (cuando se abre el modal con seed)
+  useEffect(() => {
+    if (!open || !seedFromIrs || seedFromIrs.length === 0) return
+    setItems(
+      seedFromIrs.map((r) => ({
+        _key: `ir-${r.id}`,
+        _label: r.part_name ?? r.part_id,
+        _sku: r.part_sku ?? undefined,
+        part_id: r.part_id,
+        quantity: r.quantity,
+        unit_cost: r.last_unit_cost ?? 0,
+        inventory_request_id: r.id,
+      })),
+    )
+    const supplierIds = new Set(
+      seedFromIrs.map((r) => r.default_supplier_id).filter(Boolean) as string[],
+    )
+    if (supplierIds.size === 1) {
+      const only = [...supplierIds][0]
+      if (only) setSupplierId(only)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, seedFromIrs?.map((r) => r.id).join('|')])
 
   const suppliersQ = useQuery<Supplier[]>({
     queryKey: ['suppliers'],
@@ -139,7 +164,7 @@ function NewPOModal({ open, onClose, onSaved }: NewPOModalProps) {
         supplier_id: supplierId,
         notes: notes || null,
         expected_at: expectedAt || null,
-        items: items.map(({ _key, ...rest }) => rest),
+        items: items.map(({ _key, _label, _sku, ...rest }) => rest),
       })
       toast.success('Orden creada')
       onSaved()
@@ -246,10 +271,17 @@ function NewPOModal({ open, onClose, onSaved }: NewPOModalProps) {
                   >
                     <div className="col-span-12 sm:col-span-5 min-w-0">
                       <p className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>
-                        {part?.name ?? it.part_id}
+                        {part?.name ?? it._label ?? it.part_id}
                       </p>
-                      {part?.sku && (
-                        <p className="text-[10px] font-mono" style={{ color: 'var(--text-faint)' }}>{part.sku}</p>
+                      {(part?.sku || it._sku) && (
+                        <p className="text-[10px] font-mono" style={{ color: 'var(--text-faint)' }}>
+                          {part?.sku ?? it._sku}
+                        </p>
+                      )}
+                      {it.inventory_request_id && (
+                        <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
+                          ← solicitud {it.inventory_request_id.slice(0, 8)}…
+                        </p>
                       )}
                     </div>
                     <input
@@ -366,10 +398,13 @@ function ReceiveModal({ po, onClose, onSaved }: ReceiveModalProps) {
   const [submitting, setSubmitting] = useState(false)
   const [receipts, setReceipts] = useState<Record<string, ReceiveItemPayload>>(() =>
     Object.fromEntries(
-      po.items.map((it) => [
-        it.id,
-        { item_id: it.id, quantity_received: Number(it.quantity), unit_cost: Number(it.unit_cost) },
-      ]),
+      po.items.map((it) => {
+        const pending = Math.max(0, Number(it.quantity) - Number(it.quantity_received ?? 0))
+        return [
+          it.id,
+          { item_id: it.id, quantity_received: pending, unit_cost: Number(it.unit_cost) },
+        ]
+      }),
     ),
   )
 
@@ -380,11 +415,13 @@ function ReceiveModal({ po, onClose, onSaved }: ReceiveModalProps) {
 
   const submit = async () => {
     if (!warehouseId) return toast.warning('Selecciona el almacén destino')
+    const payload = Object.values(receipts).filter((r) => Number(r.quantity_received) > 0)
+    if (payload.length === 0) return toast.warning('Captura al menos una cantidad recibida')
     setSubmitting(true)
     try {
       await procurementApi.receive(po.id, {
         warehouse_id: warehouseId,
-        receipts: Object.values(receipts),
+        receipts: payload,
       })
       toast.success('Recepción registrada')
       onSaved()
@@ -401,7 +438,7 @@ function ReceiveModal({ po, onClose, onSaved }: ReceiveModalProps) {
       open
       onClose={onClose}
       title={`Recibir ${po.folio}`}
-      description="MVP: la recepción debe ser total. Ajusta costo final si difiere."
+      description="Captura cantidades parciales si la mercancía llega en varias entregas. Ajusta el costo final si difiere."
       size="lg"
       footer={
         <>
@@ -433,6 +470,9 @@ function ReceiveModal({ po, onClose, onSaved }: ReceiveModalProps) {
         <div className="space-y-2">
           {po.items.map((it) => {
             const r = receipts[it.id]
+            const received = Number(it.quantity_received ?? 0)
+            const ordered = Number(it.quantity)
+            const pending = Math.max(0, ordered - received)
             return (
               <div
                 key={it.id}
@@ -444,12 +484,13 @@ function ReceiveModal({ po, onClose, onSaved }: ReceiveModalProps) {
                     {it.part_name ?? it.part_id}
                   </p>
                   <p className="text-[10px] font-mono" style={{ color: 'var(--text-faint)' }}>
-                    {it.part_sku} · ordenado {it.quantity}
+                    {it.part_sku} · recibido {received}/{ordered} · pendiente {pending}
                   </p>
                 </div>
                 <input
                   type="number"
                   min={0}
+                  max={pending}
                   step="0.001"
                   value={r.quantity_received}
                   onChange={(e) =>
@@ -461,6 +502,7 @@ function ReceiveModal({ po, onClose, onSaved }: ReceiveModalProps) {
                   className="col-span-6 sm:col-span-3 px-2 py-1.5 rounded-lg text-sm text-right focus:outline-none"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
                   placeholder="Cant recibida"
+                  disabled={pending === 0}
                 />
                 <input
                   type="number"
@@ -584,6 +626,11 @@ function DetailDrawer({ poId, onClose }: DetailDrawerProps) {
                   </Button>
                 </>
               )}
+              {po.status === 'partially_received' && (
+                <Button variant="primary" size="sm" onClick={() => setShowReceive(true)}>
+                  Continuar recepción
+                </Button>
+              )}
             </div>
           )
         }
@@ -657,22 +704,39 @@ function DetailDrawer({ poId, onClose }: DetailDrawerProps) {
                     <tr>
                       <th className="px-3 py-2 text-left">Refacción</th>
                       <th className="px-3 py-2 text-right">Cant</th>
+                      <th className="px-3 py-2 text-right">Recibido</th>
                       <th className="px-3 py-2 text-right">Costo</th>
                       <th className="px-3 py-2 text-right">Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {po.items.map((it) => (
-                      <tr key={it.id} style={{ borderTop: '1px solid var(--border)' }}>
-                        <td className="px-3 py-2">
-                          <p className="font-bold" style={{ color: 'var(--text)' }}>{it.part_name ?? '—'}</p>
-                          <p className="font-mono text-[10px]" style={{ color: 'var(--text-faint)' }}>{it.part_sku}</p>
-                        </td>
-                        <td className="px-3 py-2 text-right" style={{ color: 'var(--text-muted)' }}>{it.quantity}</td>
-                        <td className="px-3 py-2 text-right" style={{ color: 'var(--text-muted)' }}>{fmtCurrency(it.unit_cost)}</td>
-                        <td className="px-3 py-2 text-right font-bold" style={{ color: 'var(--text)' }}>{fmtCurrency(it.line_total)}</td>
-                      </tr>
-                    ))}
+                    {po.items.map((it) => {
+                      const ordered = Number(it.quantity)
+                      const received = Number(it.quantity_received ?? 0)
+                      const complete = received >= ordered && ordered > 0
+                      return (
+                        <tr key={it.id} style={{ borderTop: '1px solid var(--border)' }}>
+                          <td className="px-3 py-2">
+                            <p className="font-bold" style={{ color: 'var(--text)' }}>{it.part_name ?? '—'}</p>
+                            <p className="font-mono text-[10px]" style={{ color: 'var(--text-faint)' }}>{it.part_sku}</p>
+                            {it.inventory_request_id && (
+                              <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
+                                ← solicitud {it.inventory_request_id.slice(0, 8)}…
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right" style={{ color: 'var(--text-muted)' }}>{ordered}</td>
+                          <td
+                            className="px-3 py-2 text-right font-bold"
+                            style={{ color: complete ? 'var(--text)' : '#fbbf24' }}
+                          >
+                            {received}/{ordered}
+                          </td>
+                          <td className="px-3 py-2 text-right" style={{ color: 'var(--text-muted)' }}>{fmtCurrency(it.unit_cost)}</td>
+                          <td className="px-3 py-2 text-right font-bold" style={{ color: 'var(--text)' }}>{fmtCurrency(it.line_total)}</td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -724,7 +788,10 @@ function DetailDrawer({ poId, onClose }: DetailDrawerProps) {
 }
 
 // ── Main Page ────────────────────────────────────────────────────────────────
+type Tab = 'orders' | 'pending'
+
 export function ProcurementPage() {
+  const [tab, setTab] = useState<Tab>('orders')
   const [statusFilter, setStatusFilter] = useState<PurchaseOrderStatus | ''>('')
   const [supplierFilter, setSupplierFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -732,6 +799,7 @@ export function ProcurementPage() {
   const [page, setPage] = useState(1)
   const [openNew, setOpenNew] = useState(false)
   const [detailId, setDetailId] = useState<string | null>(null)
+  const [preselectedIrIds, setPreselectedIrIds] = useState<string[]>([])
   const qc = useQueryClient()
 
   const suppliersQ = useQuery<Supplier[]>({
@@ -750,23 +818,77 @@ export function ProcurementPage() {
         page,
         page_size: 25,
       }),
+    enabled: tab === 'orders',
+  })
+
+  const pendingQ = useQuery({
+    queryKey: ['procurement', 'pending'],
+    queryFn: () => procurementApi.pendingInventoryRequests(),
+    enabled: tab === 'pending',
   })
 
   const items = listQ.data?.items ?? []
+  const pendingItems = pendingQ.data?.items ?? []
+
+  const seedFromIrs: PendingInventoryRequest[] = useMemo(() => {
+    if (preselectedIrIds.length === 0) return []
+    return pendingItems.filter((r) => preselectedIrIds.includes(r.id))
+  }, [pendingItems, preselectedIrIds])
 
   return (
     <PageShell>
       <PageHeader
         eyebrow="Ola 6"
         title="Procurement"
-        description="Órdenes de compra a proveedores. Borrador → enviada → aprobada → recibida."
+        description="Órdenes de compra a proveedores. Borrador → enviada → aprobada → recibida (total o parcial)."
         actions={
-          <Button variant="primary" size="sm" onClick={() => setOpenNew(true)}>
+          <Button variant="primary" size="sm" onClick={() => { setPreselectedIrIds([]); setOpenNew(true) }}>
             <Plus size={14} /> Nueva orden
           </Button>
         }
       />
 
+      {/* Tabs */}
+      <div className="flex gap-2 border-b" style={{ borderColor: 'var(--border)' }}>
+        <button
+          onClick={() => setTab('orders')}
+          className="px-4 py-2 text-sm font-bold transition-colors"
+          style={{
+            color: tab === 'orders' ? 'var(--text)' : 'var(--text-muted)',
+            borderBottom: tab === 'orders' ? '2px solid var(--accent, #f97316)' : '2px solid transparent',
+          }}
+        >
+          <ShoppingCart size={14} className="inline mr-1" /> Órdenes
+        </button>
+        <button
+          onClick={() => setTab('pending')}
+          className="px-4 py-2 text-sm font-bold transition-colors"
+          style={{
+            color: tab === 'pending' ? 'var(--text)' : 'var(--text-muted)',
+            borderBottom: tab === 'pending' ? '2px solid var(--accent, #f97316)' : '2px solid transparent',
+          }}
+        >
+          <ClipboardList size={14} className="inline mr-1" /> Solicitudes pendientes
+          {pendingQ.data?.total ? (
+            <span
+              className="ml-2 inline-flex items-center justify-center text-[10px] font-bold rounded-full px-1.5 py-0.5"
+              style={{ background: 'var(--surface-2)', color: 'var(--text)' }}
+            >
+              {pendingQ.data.total}
+            </span>
+          ) : null}
+        </button>
+      </div>
+
+      {tab === 'pending' ? (
+        <PendingRequestsSection
+          loading={pendingQ.isLoading}
+          isError={pendingQ.isError}
+          items={pendingItems}
+          onCreatePO={(ids) => { setPreselectedIrIds(ids); setOpenNew(true) }}
+        />
+      ) : (
+      <>
       {/* Filters */}
       <div
         className="rounded-xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-3"
@@ -786,6 +908,7 @@ export function ProcurementPage() {
             <option value="draft">Borrador</option>
             <option value="submitted">Enviada</option>
             <option value="approved">Aprobada</option>
+            <option value="partially_received">Recibida parcial</option>
             <option value="received">Recibida</option>
             <option value="cancelled">Cancelada</option>
           </select>
@@ -916,6 +1039,8 @@ export function ProcurementPage() {
           )}
         </div>
       )}
+      </>
+      )}
 
       {/* Modals */}
       <NewPOModal
@@ -923,11 +1048,137 @@ export function ProcurementPage() {
         onClose={() => setOpenNew(false)}
         onSaved={() => {
           setOpenNew(false)
+          setPreselectedIrIds([])
           qc.invalidateQueries({ queryKey: ['procurement'] })
         }}
+        seedFromIrs={seedFromIrs.length > 0 ? seedFromIrs : undefined}
       />
 
       <DetailDrawer poId={detailId} onClose={() => setDetailId(null)} />
     </PageShell>
+  )
+}
+
+// ── Pending Requests Section ─────────────────────────────────────────────────
+interface PendingRequestsSectionProps {
+  loading: boolean
+  isError: boolean
+  items: PendingInventoryRequest[]
+  onCreatePO: (ids: string[]) => void
+}
+
+function PendingRequestsSection({ loading, isError, items, onCreatePO }: PendingRequestsSectionProps) {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const grouped = useMemo(() => {
+    // Agrupar por default_supplier_id para sugerir crear un PO por proveedor
+    const map = new Map<string, PendingInventoryRequest[]>()
+    for (const r of items) {
+      const key = r.default_supplier_id ?? '__none__'
+      const list = map.get(key) ?? []
+      list.push(r)
+      map.set(key, list)
+    }
+    return map
+  }, [items])
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+      </div>
+    )
+  }
+  if (isError) {
+    return (
+      <div className="rounded-xl p-4 text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#fca5a5' }}>
+        Error cargando solicitudes pendientes
+      </div>
+    )
+  }
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <EmptyState
+          icon={<ClipboardList size={28} />}
+          title="Sin solicitudes pendientes"
+          description="Todas las solicitudes de inventario aprobadas ya están canalizadas a una orden de compra."
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          {selected.size} seleccionada{selected.size === 1 ? '' : 's'} de {items.length}
+        </p>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => onCreatePO([...selected])}
+          disabled={selected.size === 0}
+        >
+          <Plus size={14} /> Crear PO con seleccionadas
+        </Button>
+      </div>
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <table className="w-full text-sm">
+          <thead style={{ background: 'var(--surface-2)' }}>
+            <tr>
+              <th className="px-4 py-3 w-8"></th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>Refacción</th>
+              <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>Cantidad</th>
+              <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>Prioridad</th>
+              <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>Último costo</th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...grouped.entries()].flatMap(([supplierKey, group]) => [
+              <tr key={`group-${supplierKey}`} style={{ background: 'var(--surface-2)' }}>
+                <td colSpan={6} className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>
+                  Proveedor default:{' '}
+                  {supplierKey === '__none__' ? 'sin asignar' : supplierKey.slice(0, 8) + '…'}
+                  {' · '}
+                  {group.length} item{group.length === 1 ? '' : 's'}
+                </td>
+              </tr>,
+              ...group.map((r) => (
+                <tr key={r.id} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(r.id)}
+                      onChange={() => toggle(r.id)}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold" style={{ color: 'var(--text)' }}>{r.part_name ?? '—'}</p>
+                    <p className="font-mono text-[10px]" style={{ color: 'var(--text-faint)' }}>{r.part_sku ?? r.part_id}</p>
+                  </td>
+                  <td className="px-4 py-3 text-right" style={{ color: 'var(--text)' }}>{r.quantity}</td>
+                  <td className="px-4 py-3 text-center text-xs" style={{ color: 'var(--text-muted)' }}>{r.priority}</td>
+                  <td className="px-4 py-3 text-right" style={{ color: 'var(--text-muted)' }}>
+                    {r.last_unit_cost != null ? fmtCurrency(r.last_unit_cost) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-muted)' }}>{r.status}</td>
+                </tr>
+              )),
+            ])}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }

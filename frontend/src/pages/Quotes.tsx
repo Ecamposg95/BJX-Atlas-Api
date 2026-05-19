@@ -200,10 +200,10 @@ function ActionButtons({
 }) {
   const { hasRole } = useAuthStore()
 
-  const canConfirm = hasRole(['admin', 'operador'])
+  const canConfirm = hasRole(['admin', 'director', 'gerente_sede', 'recepcion'])
   const canInvoice = hasRole(['admin'])
-  const canCancel = hasRole(['admin', 'operador'])
-  const canExport = hasRole(['admin', 'operador', 'viewer'])
+  const canCancel = hasRole(['admin', 'director', 'gerente_sede', 'recepcion'])
+  const canExport = hasRole(['admin', 'director', 'gerente_sede', 'recepcion', 'viewer'])
 
   const showExport = quote.status === 'confirmed' || quote.status === 'invoiced'
 

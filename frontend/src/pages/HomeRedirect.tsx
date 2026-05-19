@@ -15,7 +15,7 @@ const ROLE_HOME: Record<Role, string> = {
   mecanico: '/mechanic',
   almacen: '/warehouse',
   cliente_corp: '/client-corp',
-  operador: '/quotes',
+  operador: '/advisor',
   viewer: '/dashboard',
 }
 

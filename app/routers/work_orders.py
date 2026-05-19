@@ -232,6 +232,8 @@ def finish_work_order(
     if work_order.work_finished_at is None:
         work_order.work_finished_at = utcnow()
     work_order.status = WorkOrderStatus.completed
+    from app.services.work_order_pricing import recompute_work_order_totals
+    recompute_work_order_totals(db, work_order)
     db.commit()
     db.refresh(work_order)
     work_order = _get_work_order_or_404(db, work_order.id)
@@ -314,6 +316,11 @@ def patch_work_order_status(
     notify_wo_status_changed(
         db, wo=wo, previous_status=previous_status, background_tasks=background_tasks,
     )
+
+    # Recalcular totales al cerrar la OS.
+    if wo.status in (WorkOrderStatus.completed.value, WorkOrderStatus.delivered.value):
+        from app.services.work_order_pricing import recompute_work_order_totals
+        recompute_work_order_totals(db, wo)
 
     db.commit()
     db.refresh(wo)

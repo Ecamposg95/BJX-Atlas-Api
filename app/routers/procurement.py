@@ -11,12 +11,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.inventory import Part
+from app.models.inventory import (
+    InventoryRequest,
+    InventoryRequestStatus,
+    Part,
+)
 from app.models.procurement import PurchaseOrder, PurchaseOrderItem
 from app.models.suppliers import Supplier
 from app.models.users import User
 from app.schemas.procurement import (
     CancelPayload,
+    PendingInventoryRequestItem,
+    PendingInventoryRequestPage,
     POStatusFilter,
     PurchaseOrderCreate,
     PurchaseOrderItemRead,
@@ -64,6 +70,75 @@ def _enrich_po(db: Session, po: PurchaseOrder) -> PurchaseOrderRead:
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+@router.get(
+    "/inventory-requests/pending",
+    response_model=PendingInventoryRequestPage,
+)
+def list_pending_inventory_requests(
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+    _: User = Depends(require_permission(Permission.PROCUREMENT_READ)),
+    limit: int = Query(200, ge=1, le=500),
+):
+    """Solicitudes de inventario aprobadas/pendientes que NO han sido aún
+    canalizadas a una orden de compra.
+
+    Se considera "no canalizada" si no existe ningún `PurchaseOrderItem` con
+    `inventory_request_id == ir.id`. El frontend del rol almacén/compras lo
+    consume para crear PO seleccionando varias IRs a la vez.
+    """
+    linked_subq = (
+        db.query(PurchaseOrderItem.inventory_request_id)
+        .filter(PurchaseOrderItem.inventory_request_id.isnot(None))
+        .subquery()
+    )
+
+    q = (
+        branch_scoped_query(InventoryRequest, db, ctx)
+        .filter(InventoryRequest.deleted_at.is_(None))
+        .filter(
+            InventoryRequest.status.in_(
+                [
+                    InventoryRequestStatus.pending.value,
+                    InventoryRequestStatus.approved.value,
+                ]
+            )
+        )
+        .filter(~InventoryRequest.id.in_(db.query(linked_subq.c.inventory_request_id)))
+        .order_by(InventoryRequest.created_at.desc())
+        .limit(limit)
+    )
+    rows = q.all()
+
+    parts_by_id: dict[str, Part] = {}
+    if rows:
+        part_ids = {r.part_id for r in rows}
+        for p in db.query(Part).filter(Part.id.in_(part_ids)).all():
+            parts_by_id[p.id] = p
+
+    out: list[PendingInventoryRequestItem] = []
+    for r in rows:
+        part = parts_by_id.get(r.part_id)
+        out.append(
+            PendingInventoryRequestItem(
+                id=r.id,
+                branch_id=r.branch_id,
+                work_order_id=r.work_order_id,
+                part_id=r.part_id,
+                quantity=float(r.quantity),
+                priority=r.priority,
+                status=r.status,
+                notes=r.notes,
+                created_at=r.created_at,
+                part_sku=part.sku if part else None,
+                part_name=part.name if part else None,
+                last_unit_cost=part.last_unit_cost if part else None,
+                default_supplier_id=part.default_supplier_id if part else None,
+            )
+        )
+    return PendingInventoryRequestPage(total=len(out), items=out)
+
 
 @router.get("/purchase-orders", response_model=PurchaseOrderPage)
 def list_purchase_orders(

@@ -37,16 +37,16 @@ def admin_headers(client, admin_user):
 
 
 @pytest.fixture
-def operador_headers(client, db):
+def recepcion_headers(client, db):
     user = User(
-        email="op@test.com",
-        hashed_password=hash_password("Operador1234"),
-        role=Role.operador,
+        email="recep@test.com",
+        hashed_password=hash_password("Recepcion1234"),
+        role=Role.recepcion,
         active=True,
     )
     db.add(user)
     db.commit()
-    r = client.post("/api/auth/login", json={"email": "op@test.com", "password": "Operador1234"})
+    r = client.post("/api/auth/login", json={"email": "recep@test.com", "password": "Recepcion1234"})
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -246,17 +246,17 @@ class TestQuoteLifecycle:
         )
         assert r_upd.status_code == 403
 
-    def test_operador_can_cancel_confirmed(self, client, operador_headers, admin_headers, full_setup):
+    def test_recepcion_can_cancel_confirmed(self, client, recepcion_headers, admin_headers, full_setup):
         # Create and confirm as admin
         r = _create_quote(client, admin_headers, full_setup)
         quote_id = r.json()["id"]
         _confirm_quote(client, admin_headers, quote_id)
 
-        # Cancel as operador
+        # Cancel as recepcion
         r_cancel = client.put(
             f"/api/quotes/{quote_id}",
             json={"status": "cancelled"},
-            headers=operador_headers,
+            headers=recepcion_headers,
         )
         assert r_cancel.status_code == 200, r_cancel.text
         assert r_cancel.json()["status"] == "cancelled"

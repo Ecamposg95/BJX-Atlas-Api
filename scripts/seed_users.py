@@ -48,8 +48,8 @@ SEED_USERS = [
     ("mecanico.leon@bjx.com",  Role.mecanico,     BRANCH["LEON"], "Mecanico1234",   "Mecánico León"),
     ("almacen.leon@bjx.com",   Role.almacen,      BRANCH["LEON"], "Almacen1234",    "Almacén León"),
 
-    # ── Operador legacy (calculadora/cotizaciones) ────────────────────────
-    ("operador@bjx.com",       Role.operador,     BRANCH["MAIN"], "Operador1234",   "Operador legacy (cotizador)"),
+    # NOTA: el seed legacy `operador@bjx.com` fue retirado tras la deprecación
+    # del rol `operador`. Sus capacidades fueron absorbidas por `recepcion`.
 ]
 
 

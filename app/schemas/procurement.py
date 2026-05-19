@@ -15,6 +15,7 @@ class PurchaseOrderItemCreate(BaseModel):
     quantity: Decimal = Field(..., gt=0)
     unit_cost: Decimal = Field(..., ge=0)
     notes: Optional[str] = None
+    inventory_request_id: Optional[str] = None
 
 
 class PurchaseOrderItemRead(BaseModel):
@@ -22,9 +23,12 @@ class PurchaseOrderItemRead(BaseModel):
     purchase_order_id: str
     part_id: str
     quantity: Decimal
+    quantity_received: Decimal = Decimal("0")
+    received_at: Optional[datetime] = None
     unit_cost: Decimal
     line_total: Decimal
     notes: Optional[str] = None
+    inventory_request_id: Optional[str] = None
     # Enrichment
     part_sku: Optional[str] = None
     part_name: Optional[str] = None
@@ -104,4 +108,31 @@ class PurchaseOrderPage(BaseModel):
 
 # ---- Filters ----
 
-POStatusFilter = Literal["draft", "submitted", "approved", "received", "cancelled"]
+POStatusFilter = Literal[
+    "draft", "submitted", "approved", "partially_received", "received", "cancelled"
+]
+
+
+# ---- Pending inventory requests (compras pendientes) ----
+
+class PendingInventoryRequestItem(BaseModel):
+    id: str
+    branch_id: str
+    work_order_id: str
+    part_id: str
+    quantity: float
+    priority: str
+    status: str
+    notes: Optional[str] = None
+    created_at: datetime
+    # Enrichment
+    part_sku: Optional[str] = None
+    part_name: Optional[str] = None
+    last_unit_cost: Optional[float] = None
+    default_supplier_id: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PendingInventoryRequestPage(BaseModel):
+    total: int
+    items: list[PendingInventoryRequestItem]
