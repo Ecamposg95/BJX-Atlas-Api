@@ -4,7 +4,7 @@ from __future__ import annotations
 import io
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -44,6 +44,7 @@ def _get_wo_or_404(db: Session, wo_id: str, ctx: TenantContext) -> WorkOrder:
 def deliver_with_signature(
     work_order_id: str,
     payload: DeliverWithSignatureRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
 ):
@@ -124,6 +125,13 @@ def deliver_with_signature(
         raise HTTPException(409, detail={"error": {"code": e.code, "detail": e.detail}})
     except SMForbidden as e:
         raise HTTPException(403, detail={"error": {"code": e.code, "detail": e.detail}})
+
+    # Notificar a recepción que la OS quedó delivered (delivery_ready cierre)
+    try:
+        from app.services.notification_wiring import notify_delivery_ready
+        notify_delivery_ready(db, wo=wo, background_tasks=background_tasks)
+    except Exception:  # noqa: BLE001
+        pass
 
     db.commit()
     db.refresh(delivery)

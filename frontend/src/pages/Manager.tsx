@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   Activity,
   AlertTriangle,
   Building2,
   CheckCircle2,
+  ClipboardList,
   Clock,
   Gauge,
   PackageX,
@@ -14,10 +15,15 @@ import {
   TrendingUp,
   Users,
   Wrench,
+  XCircle,
 } from 'lucide-react'
 import { getManagerDashboard } from '../api'
+import { serviceProposalsApi } from '../api/endpoints/serviceProposals'
 import { Button } from '../components/ui/Button'
+import { Badge } from '../components/ui/Badge'
+import { Drawer } from '../components/ui/Drawer'
 import { EmptyState } from '../components/ui/EmptyState'
+import { FormField } from '../components/ui/FormField'
 import { PageHeader } from '../components/ui/PageHeader'
 import { PageShell } from '../components/ui/PageShell'
 import { Skeleton, TableSkeleton } from '../components/ui/Skeleton'
@@ -25,7 +31,9 @@ import { BranchSwitcher } from '../components/BranchSwitcher'
 import { SEMAPHORE_HEX, SEMAPHORE_LABEL } from '../components/branches/colors'
 import { useAuthStore } from '../store/auth'
 import { useBranch } from '../hooks/useBranch'
-import type { BranchKPIs, ManagerDashboard, StalledOrder } from '../api/types'
+import { useToast } from '../components/ui/ToastProvider'
+import { fmtDate } from '../utils/format'
+import type { BranchKPIs, ManagerDashboard, ServiceProposal, StalledOrder } from '../api/types'
 
 const ALLOWED_ROLES = ['admin', 'director', 'gerente_sede']
 const AUTO_REFRESH_MS = 60_000
@@ -315,7 +323,198 @@ export function ManagerPage() {
           <StalledTable rows={data.top_stalled_orders} />
         )}
       </section>
+
+      <ProposalsToApprove />
     </PageShell>
+  )
+}
+
+function ProposalsToApprove() {
+  const qc = useQueryClient()
+  const [selected, setSelected] = useState<ServiceProposal | null>(null)
+
+  const proposalsQuery = useQuery({
+    queryKey: ['manager-proposals', 'pending'],
+    queryFn: () => serviceProposalsApi.list({ status: 'pending' }),
+    refetchInterval: 60_000,
+  })
+
+  const items = proposalsQuery.data?.items ?? []
+
+  return (
+    <section className="executive-panel" style={{ padding: '1.2rem 1.35rem' }}>
+      <header className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <ClipboardList size={16} style={{ color: '#A855F7' }} />
+          <h2
+            className="text-sm font-extrabold uppercase"
+            style={{ color: 'var(--text)', letterSpacing: '0.1em' }}
+          >
+            Propuestas por aprobar
+          </h2>
+          {items.length > 0 && (
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+              style={{ background: '#A855F71f', color: '#A855F7' }}
+            >
+              {items.length}
+            </span>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => qc.invalidateQueries({ queryKey: ['manager-proposals'] })}
+        >
+          <RefreshCw size={12} /> Refrescar
+        </Button>
+      </header>
+
+      {proposalsQuery.isLoading ? (
+        <TableSkeleton rows={3} cols={3} />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={<CheckCircle2 size={24} />}
+          title="Sin propuestas pendientes"
+          description="No hay propuestas de servicio esperando tu revisión."
+        />
+      ) : (
+        <div className="space-y-2">
+          {items.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setSelected(p)}
+              className="executive-panel w-full text-left transition-all hover:-translate-y-0.5"
+              style={{ padding: '0.85rem' }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-sm" style={{ color: 'var(--text)' }}>
+                    {p.service_name}
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                    OS {p.work_order_id.slice(0, 8)} · Qty {p.quantity}
+                    {p.estimated_total ? ` · $${p.estimated_total}` : ''}
+                  </p>
+                  <p className="mt-1 text-xs italic line-clamp-1" style={{ color: 'var(--text-faint)' }}>
+                    "{p.reason}"
+                  </p>
+                </div>
+                <span className="text-[10px] shrink-0" style={{ color: 'var(--text-faint)' }}>
+                  <Clock size={10} className="inline mr-1" />
+                  {fmtDate(p.created_at, { relative: true })}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selected && (
+        <ProposalReviewDrawer
+          proposal={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
+    </section>
+  )
+}
+
+function ProposalReviewDrawer({
+  proposal,
+  onClose,
+}: {
+  proposal: ServiceProposal
+  onClose: () => void
+}) {
+  const qc = useQueryClient()
+  const toast = useToast()
+  const [notes, setNotes] = useState('')
+
+  const approve = useMutation({
+    mutationFn: () => serviceProposalsApi.approve(proposal.id, notes || undefined),
+    onSuccess: () => {
+      toast.success('Propuesta aprobada')
+      qc.invalidateQueries({ queryKey: ['manager-proposals'] })
+      onClose()
+    },
+    onError: () => toast.error('No se pudo aprobar'),
+  })
+
+  const reject = useMutation({
+    mutationFn: () => serviceProposalsApi.reject(proposal.id, notes || undefined),
+    onSuccess: () => {
+      toast.success('Propuesta rechazada')
+      qc.invalidateQueries({ queryKey: ['manager-proposals'] })
+      onClose()
+    },
+    onError: () => toast.error('No se pudo rechazar'),
+  })
+
+  return (
+    <Drawer open onClose={onClose} title="Revisar propuesta" size="md">
+      <div className="space-y-4">
+        <section className="executive-panel" style={{ padding: '1rem' }}>
+          <div className="flex items-center gap-2">
+            <h3 className="font-extrabold" style={{ color: 'var(--text)' }}>
+              {proposal.service_name}
+            </h3>
+            <Badge variant="draft">Pendiente</Badge>
+          </div>
+          <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <Field label="Cantidad" value={String(proposal.quantity)} />
+            <Field label="OS" value={proposal.work_order_id.slice(0, 12)} />
+            <Field label="Horas estimadas" value={proposal.estimated_hours ? String(proposal.estimated_hours) : '—'} />
+            <Field label="Costo refacciones" value={proposal.estimated_parts_cost ? `$${proposal.estimated_parts_cost}` : '—'} />
+            <Field label="Total estimado" value={proposal.estimated_total ? `$${proposal.estimated_total}` : '—'} />
+            <Field label="Creada" value={fmtDate(proposal.created_at, { relative: true })} />
+          </dl>
+        </section>
+
+        <section>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--text-faint)' }}>
+            Justificación del jefe
+          </p>
+          <p className="text-sm rounded-lg p-3" style={{ background: 'var(--surface-2)', color: 'var(--text)' }}>
+            {proposal.reason}
+          </p>
+        </section>
+
+        <FormField
+          name="review_notes"
+          label="Notas de revisión (opcional)"
+          type="textarea"
+          rows={3}
+          placeholder="Observaciones para el jefe de taller..."
+          value={notes}
+          onChange={setNotes}
+        />
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="secondary"
+            onClick={() => reject.mutate()}
+            loading={reject.isPending}
+          >
+            <XCircle size={14} /> Rechazar
+          </Button>
+          <Button onClick={() => approve.mutate()} loading={approve.isPending}>
+            <CheckCircle2 size={14} /> Aprobar y crear línea
+          </Button>
+        </div>
+      </div>
+    </Drawer>
+  )
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-faint)', letterSpacing: '0.08em' }}>
+        {label}
+      </dt>
+      <dd className="font-semibold mt-0.5" style={{ color: 'var(--text)' }}>{value}</dd>
+    </div>
   )
 }
 

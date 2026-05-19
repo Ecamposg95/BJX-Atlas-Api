@@ -1,16 +1,22 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models.catalog import ServiceCatalog, VehicleModel, Service
 from app.models.config import ConfigParam
+from app.models.organizations import Branch
 from app.models.suppliers import SupplierPrice
+from app.models.users import User
+from app.models.work_orders import WorkOrder, WorkOrderStatus
 from app.schemas.dashboard import (
+    BranchComparisonResponse,
+    BranchComparisonRow,
     ConfigUsed,
     DashboardSummary,
     MarginDistribution,
@@ -22,7 +28,7 @@ from app.schemas.dashboard import (
     SimulateResponse,
 )
 from app.schemas.engine import CalculationInput
-from app.security import get_current_user
+from app.security import _role_value, get_current_user
 from app.services.pricing_engine import PricingEngine
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -491,3 +497,139 @@ def simulate(
         summary=scenario_summary,
         delta_vs_current=delta,
     )
+
+
+# ---------------------------------------------------------------------------
+# Multi-branch comparison (Ola 4 — Executive)
+# ---------------------------------------------------------------------------
+
+_BRANCH_COMPARISON_ALLOWED_ROLES = {"admin", "director"}
+_BRANCH_COMPARISON_CACHE_TTL = 60
+_branch_comparison_cache: dict[int, tuple[datetime, BranchComparisonResponse]] = {}
+
+
+def invalidate_branch_comparison_cache() -> None:
+    _branch_comparison_cache.clear()
+
+
+def _compute_branch_comparison(db: Session, days: int) -> BranchComparisonResponse:
+    from app.routers.branch_stats import _compute_kpis  # avoid circular import
+
+    now = datetime.now(timezone.utc)
+    date_from = now - timedelta(days=days)
+    date_to = now
+
+    branches = (
+        db.query(Branch)
+        .filter(Branch.deleted_at.is_(None), Branch.active.is_(True))
+        .order_by(Branch.code)
+        .all()
+    )
+
+    open_statuses = [
+        WorkOrderStatus.received.value,
+        WorkOrderStatus.assigned.value,
+        WorkOrderStatus.in_progress.value,
+        WorkOrderStatus.waiting_parts.value,
+        WorkOrderStatus.quality_check.value,
+    ]
+
+    rows: list[BranchComparisonRow] = []
+    for b in branches:
+        kpis = _compute_kpis(db, b.id, date_from, date_to)
+
+        completed_count = (
+            db.query(func.count(WorkOrder.id))
+            .filter(
+                WorkOrder.branch_id == b.id,
+                WorkOrder.work_finished_at.is_not(None),
+                WorkOrder.work_finished_at >= date_from,
+                WorkOrder.work_finished_at <= date_to,
+            )
+            .scalar()
+            or 0
+        )
+
+        open_count = (
+            db.query(func.count(WorkOrder.id))
+            .filter(
+                WorkOrder.branch_id == b.id,
+                WorkOrder.status.in_(open_statuses),
+            )
+            .scalar()
+            or 0
+        )
+
+        revenue_rows = (
+            db.query(ServiceCatalog.bjx_labor_cost, ServiceCatalog.bjx_parts_cost)
+            .join(
+                WorkOrder,
+                (WorkOrder.model_id == ServiceCatalog.model_id)
+                & (WorkOrder.service_id == ServiceCatalog.service_id),
+            )
+            .filter(
+                ServiceCatalog.is_current.is_(True),
+                WorkOrder.branch_id == b.id,
+                WorkOrder.work_finished_at.is_not(None),
+                WorkOrder.work_finished_at >= date_from,
+                WorkOrder.work_finished_at <= date_to,
+            )
+            .all()
+        )
+        revenue_period = round(
+            sum((float(lc or 0.0) + float(pc or 0.0)) for lc, pc in revenue_rows),
+            2,
+        )
+
+        rows.append(
+            BranchComparisonRow(
+                branch_id=b.id,
+                branch_name=b.name,
+                branch_code=b.code,
+                city=b.city,
+                cycle_time_avg_hrs=kpis.cycle_time_avg_hrs,
+                cycle_time_p95_hrs=kpis.cycle_time_p95_hrs,
+                on_time_pct=kpis.on_time_pct,
+                margin_pct_avg=kpis.margin_pct_avg,
+                revenue_period=revenue_period,
+                completed_count=int(completed_count),
+                open_count=int(open_count),
+            )
+        )
+
+    return BranchComparisonResponse(
+        period_days=days,
+        calculated_at=now,
+        rows=rows,
+    )
+
+
+@router.get("/branches-comparison", response_model=BranchComparisonResponse)
+def get_branches_comparison(
+    days: int = Query(30, ge=1, le=365),
+    refresh: bool = Query(False),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """KPIs directivos comparados por sucursal (ventana configurable en días).
+
+    Cache in-memory por `days` (TTL=60s). Solo admin + director.
+    """
+    role = _role_value(user.role)
+    if role not in _BRANCH_COMPARISON_ALLOWED_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para ver la comparación multi-sucursal",
+        )
+
+    now = datetime.now(timezone.utc)
+    if not refresh:
+        cached = _branch_comparison_cache.get(days)
+        if cached is not None:
+            ts, payload = cached
+            if (now - ts).total_seconds() < _BRANCH_COMPARISON_CACHE_TTL:
+                return payload
+
+    payload = _compute_branch_comparison(db, days)
+    _branch_comparison_cache[days] = (now, payload)
+    return payload

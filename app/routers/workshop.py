@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -412,6 +412,7 @@ def _ensure_quality_check_status(wo: WorkOrder) -> None:
 @router.post("/work-orders/{work_order_id}/qa-pass")
 def qa_pass(
     work_order_id: str,
+    background_tasks: BackgroundTasks,
     payload: _QAPassRequest | None = None,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
@@ -420,7 +421,13 @@ def qa_pass(
     if not has_permission(ctx.user, Permission.WORK_ORDER_QA_PASS):
         raise HTTPException(403, "No tienes permiso para aprobar QA")
 
+    previous_status = wo.status
     _ensure_quality_check_status(wo)
+    # Si _ensure subió a quality_check desde in_progress → emit qa_pending antes
+    if previous_status == WorkOrderStatus.in_progress.value:
+        from app.services.notification_wiring import notify_qa_pending
+        notify_qa_pending(db, wo=wo, background_tasks=background_tasks)
+
     try:
         wo_transition(
             db,
@@ -434,6 +441,10 @@ def qa_pass(
     except SMForbidden as e:
         raise HTTPException(403, detail={"error": {"code": e.code, "detail": e.detail}})
 
+    # Notificar delivery_ready a recepción al pasar a completed
+    from app.services.notification_wiring import notify_delivery_ready
+    notify_delivery_ready(db, wo=wo, background_tasks=background_tasks)
+
     db.commit()
     db.refresh(wo)
     return {"id": wo.id, "status": wo.status, "qa": "passed"}
@@ -443,6 +454,7 @@ def qa_pass(
 def qa_fail(
     work_order_id: str,
     payload: _QAFailRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
 ):
@@ -450,7 +462,12 @@ def qa_fail(
     if not has_permission(ctx.user, Permission.WORK_ORDER_QA_FAIL):
         raise HTTPException(403, "No tienes permiso para rechazar QA")
 
+    previous_status = wo.status
     _ensure_quality_check_status(wo)
+    if previous_status == WorkOrderStatus.in_progress.value:
+        from app.services.notification_wiring import notify_qa_pending
+        notify_qa_pending(db, wo=wo, background_tasks=background_tasks)
+
     try:
         wo_transition(
             db,

@@ -46,6 +46,12 @@ class Permission(str, enum.Enum):
     SERVICE_PROPOSE = "service:propose"
     SERVICE_APPROVE = "service:approve"
     SERVICE_REJECT  = "service:reject"
+    # Procurement (Ola 6)
+    PROCUREMENT_CREATE  = "procurement:create"
+    PROCUREMENT_APPROVE = "procurement:approve"
+    PROCUREMENT_RECEIVE = "procurement:receive"
+    PROCUREMENT_CANCEL  = "procurement:cancel"
+    PROCUREMENT_READ    = "procurement:read"
 
 
 PERMISSION_MATRIX: dict[Permission, set[Role]] = {
@@ -114,6 +120,23 @@ PERMISSION_MATRIX: dict[Permission, set[Role]] = {
     },
     Permission.SERVICE_REJECT: {
         Role.admin, Role.director, Role.gerente_sede,
+    },
+    # Procurement (Ola 6)
+    Permission.PROCUREMENT_CREATE: {
+        Role.admin, Role.director, Role.gerente_sede, Role.almacen,
+    },
+    Permission.PROCUREMENT_APPROVE: {
+        Role.admin, Role.director, Role.gerente_sede,
+    },
+    Permission.PROCUREMENT_RECEIVE: {
+        Role.admin, Role.gerente_sede, Role.almacen,
+    },
+    Permission.PROCUREMENT_CANCEL: {
+        Role.admin, Role.director, Role.gerente_sede,
+    },
+    Permission.PROCUREMENT_READ: {
+        Role.admin, Role.director, Role.gerente_sede, Role.jefe_taller,
+        Role.almacen, Role.recepcion, Role.viewer,
     },
 }
 

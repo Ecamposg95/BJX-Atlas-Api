@@ -4,7 +4,7 @@ import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
   Package, Wrench, HardHat, Building2, Activity, ClipboardCheck, PackageOpen,
-  Briefcase, UsersRound, CalendarDays, BadgeCheck, PackageCheck,
+  Briefcase, UsersRound, CalendarDays, BadgeCheck, PackageCheck, ShoppingCart,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
@@ -48,6 +48,7 @@ const BUSINESS_ITEMS: NavItem[] = [
   { to: '/calculator', icon: Calculator, label: 'Calculadora',  roles: ['admin', 'director', 'gerente_sede', 'operador'] },
   { to: '/catalog',    icon: BookOpen,   label: 'Catalogo',     roles: ['admin', 'director', 'gerente_sede'] },
   { to: '/suppliers',  icon: Truck,      label: 'Proveedores',  roles: ['admin', 'director', 'almacen'] },
+  { to: '/procurement', icon: ShoppingCart, label: 'Compras',     roles: ['admin', 'director', 'gerente_sede', 'almacen'] },
   { to: '/branches',   icon: Building2,  label: 'Sucursales',   roles: ['admin', 'director', 'gerente_sede'] },
 ]
 

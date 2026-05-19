@@ -1,4 +1,5 @@
 """Tests para migración add_workshop_workflow_core."""
+import os
 from pathlib import Path
 
 import pytest
@@ -11,10 +12,33 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
-def alembic_engine(tmp_path):
+def alembic_engine(tmp_path, monkeypatch):
+    """Crea un engine sqlite temporal y configura DATABASE_URL.
+
+    Importante: alembic/env.py importa el engine desde app.database,
+    el cual lee DATABASE_URL en tiempo de import. Reseteamos el módulo
+    para que alembic vea la URL temporal.
+    """
     db_path = tmp_path / "test_migration.db"
-    engine = create_engine(f"sqlite:///{db_path}")
-    return engine
+    url = f"sqlite:///{db_path}"
+    monkeypatch.setenv("DATABASE_URL", url)
+
+    # Recargar app.database y dependencias para que el engine apunte al tmp DB.
+    import importlib
+    import app.database
+    import app.models
+    importlib.reload(app.database)
+    importlib.reload(app.models)
+
+    # Re-importar env.py modules vía alembic command (los módulos se cargan dinámicamente
+    # por alembic; el ProjectRoot está en sys.path).
+    engine = create_engine(url)
+    yield engine
+    engine.dispose()
+
+    # Restaurar engine original
+    importlib.reload(app.database)
+    importlib.reload(app.models)
 
 
 @pytest.fixture
@@ -26,8 +50,8 @@ def alembic_config(alembic_engine):
 
 
 def test_upgrade_to_workshop_workflow_core(alembic_config, alembic_engine):
-    """Upgrade head aplica add_workshop_workflow_core sin error."""
-    command.upgrade(alembic_config, "head")
+    """Upgrade hasta add_workshop_workflow_core aplica sin error."""
+    command.upgrade(alembic_config, "add_workshop_workflow_core")
     inspector = inspect(alembic_engine)
     cols = [c["name"] for c in inspector.get_columns("work_orders")]
     assert "type" in cols
@@ -38,9 +62,9 @@ def test_upgrade_to_workshop_workflow_core(alembic_config, alembic_engine):
 
 
 def test_downgrade_reverts_cleanly(alembic_config, alembic_engine):
-    """Downgrade -1 desde head deja la BD en estado consistente."""
-    command.upgrade(alembic_config, "head")
-    command.downgrade(alembic_config, "-1")
+    """Downgrade desde add_workshop_workflow_core a c4f1a8b3d502 deja BD consistente."""
+    command.upgrade(alembic_config, "add_workshop_workflow_core")
+    command.downgrade(alembic_config, "c4f1a8b3d502")
     inspector = inspect(alembic_engine)
     cols = [c["name"] for c in inspector.get_columns("work_orders")]
     assert "type" not in cols

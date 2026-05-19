@@ -93,3 +93,28 @@ class SimulateResponse(BaseModel):
     scenario: dict
     summary: DashboardSummary
     delta_vs_current: SimulateDelta
+
+
+# ---------------------------------------------------------------------------
+# Multi-branch comparison (Ola 4 — Executive home)
+# ---------------------------------------------------------------------------
+
+
+class BranchComparisonRow(BaseModel):
+    branch_id: str
+    branch_name: str
+    branch_code: str
+    city: Optional[str] = None
+    cycle_time_avg_hrs: float
+    cycle_time_p95_hrs: float
+    on_time_pct: float
+    margin_pct_avg: Optional[float] = None
+    revenue_period: float
+    completed_count: int
+    open_count: int
+
+
+class BranchComparisonResponse(BaseModel):
+    period_days: int
+    calculated_at: datetime
+    rows: list[BranchComparisonRow]

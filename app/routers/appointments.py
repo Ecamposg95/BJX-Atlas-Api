@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -32,6 +32,7 @@ from app.security.tenant import (
 from app.services.notifications import (
     build_appointment_confirmation_message,
     build_whatsapp_link,
+    create_notification,
 )
 from app.services.work_order_engine import generate_order_number, utcnow
 
@@ -102,6 +103,7 @@ def list_appointments(
 @router.post("", response_model=AppointmentRead, status_code=status.HTTP_201_CREATED)
 def create_appointment(
     payload: AppointmentCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
     user: User = Depends(
@@ -129,9 +131,64 @@ def create_appointment(
         created_by_id=user.id,
     )
     db.add(appt)
+    db.flush()
+
+    # Notificar a recepción de la sucursal (Ola 4 — appointment_confirmed)
+    _notify_appointment_confirmed(db, appt, background_tasks=background_tasks)
+
     db.commit()
     db.refresh(appt)
     return _to_read(appt)
+
+
+def _notify_appointment_confirmed(
+    db: Session, appt: Appointment, *, background_tasks=None
+) -> None:
+    """Crea notificaciones in-app a recepción y cliente_corp tras crear cita."""
+    title = "Nueva cita confirmada"
+    body = (
+        f"{appt.customer_name} — {appt.service_type or 'servicio'} "
+        f"({appt.vehicle_plates or 's/placas'})"
+    )
+    link_url = "/citas"
+
+    # Recepción de la sucursal
+    recipients = (
+        db.query(User)
+        .filter(
+            User.default_branch_id == appt.branch_id,
+            User.role.in_(["recepcion", "jefe_taller", "gerente_sede"]),
+            User.active.is_(True),
+        )
+        .all()
+    )
+    # Cliente corporativo (cross-branch) — solo si la cita tiene flota asociada
+    # En el modelo actual Appointment no liga customer_id; notificamos a todos
+    # los cliente_corp activos como fallback de ola.
+    corp = (
+        db.query(User)
+        .filter(User.role == "cliente_corp", User.active.is_(True))
+        .all()
+    )
+
+    seen: set[str] = set()
+    for u in [*recipients, *corp]:
+        if u.id in seen:
+            continue
+        seen.add(u.id)
+        create_notification(
+            db,
+            user_id=u.id,
+            kind="appointment_confirmed",
+            title=title,
+            body=body,
+            link_url=link_url,
+            branch_id=appt.branch_id,
+            entity_type="appointment",
+            entity_id=appt.id,
+            send_email=bool(u.email),
+            background_tasks=background_tasks,
+        )
 
 
 @router.patch("/{appointment_id}", response_model=AppointmentRead)

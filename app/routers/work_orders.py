@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -280,6 +280,7 @@ router_v1 = APIRouter(prefix="/v1/work-orders", tags=["work-orders-v1"])
 def patch_work_order_status(
     work_order_id: str,
     payload: WorkOrderStatusTransitionRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
 ):
@@ -307,6 +308,12 @@ def patch_work_order_status(
             status_code=http_status.HTTP_403_FORBIDDEN,
             detail={"error": {"code": e.code, "detail": e.detail}},
         )
+
+    # Notificaciones de cambio de estado (Ola 4)
+    from app.services.notification_wiring import notify_wo_status_changed
+    notify_wo_status_changed(
+        db, wo=wo, previous_status=previous_status, background_tasks=background_tasks,
+    )
 
     db.commit()
     db.refresh(wo)

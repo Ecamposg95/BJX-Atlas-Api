@@ -1,6 +1,6 @@
 """Inventario: warehouses, parts, stock, movimientos, solicitudes."""
 from typing import Optional, Literal
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -487,6 +487,7 @@ def _get_request_or_404(db: Session, request_id: str, ctx: TenantContext) -> Inv
 def approve_request(
     request_id: str,
     _payload: InventoryRequestApprove,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     ctx: TenantContext = Depends(get_tenant_context),
     _: User = Depends(require_role(["admin", "director", "gerente_sede", "jefe_taller", "almacen"])),
@@ -495,6 +496,12 @@ def approve_request(
     inventory_engine.transition_request(
         db, request=req, new_status=InventoryRequestStatus.approved.value, ctx=ctx,
     )
+    # Notificar al mecánico solicitante (kind=parts_request)
+    try:
+        from app.services.notification_wiring import notify_parts_request_approved
+        notify_parts_request_approved(db, request=req, background_tasks=background_tasks)
+    except Exception:  # noqa: BLE001
+        pass
     db.commit()
     db.refresh(req)
     return _enrich_request(db, req)
