@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
-  Package, ClipboardList, Wrench, HardHat, Building2, Activity, ClipboardCheck,
+  Package, ClipboardList, Wrench, HardHat, Building2, Activity, ClipboardCheck, PackageOpen,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
@@ -40,6 +40,7 @@ const WORKSHOP_ITEMS: NavItem[] = [
 const INVENTORY_ITEMS: NavItem[] = [
   { to: '/inventory',          icon: Package,       label: 'Inventario',  roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
   { to: '/inventory/requests', icon: ClipboardList, label: 'Solicitudes', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'mecanico'] },
+  { to: '/warehouse',          icon: PackageOpen,   label: 'Almacén (móvil)', roles: ['admin', 'gerente_sede', 'jefe_taller', 'almacen'] },
 ]
 
 const ADMIN_ITEMS: NavItem[] = [

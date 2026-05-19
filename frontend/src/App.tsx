@@ -13,6 +13,9 @@ import { AdminPage } from './pages/Admin'
 import { HomePage } from './pages/Home'
 import { InventoryPage } from './pages/Inventory'
 import { InventoryRequestsPage } from './pages/InventoryRequests'
+import { WarehouseHomePage } from './pages/WarehouseHome'
+import { WarehouseRequestDetailPage } from './pages/WarehouseRequestDetail'
+import { WarehouseReceivePage } from './pages/WarehouseReceive'
 import { WorkshopBoardPage } from './pages/WorkshopBoard'
 import { MechanicWorkPage } from './pages/MechanicWork'
 import { MechanicHomeV1 } from './pages/MechanicHomeV1'
@@ -54,6 +57,9 @@ export default function App() {
               <Route path="/suppliers" element={<SuppliersPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/inventory/requests" element={<InventoryRequestsPage />} />
+              <Route path="/warehouse" element={<WarehouseHomePage />} />
+              <Route path="/warehouse/requests/:id" element={<WarehouseRequestDetailPage />} />
+              <Route path="/warehouse/receive/:requestId" element={<WarehouseReceivePage />} />
               <Route path="/workshop/board" element={<WorkshopBoardPage />} />
               <Route path="/me/work" element={<MechanicWorkPage />} />
               <Route path="/mechanic" element={<MechanicHomeV1 />} />
