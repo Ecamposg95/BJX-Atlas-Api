@@ -38,6 +38,7 @@ from app.models.mechanic_profiles import (
 from app.models.assignments import Assignment, AssignmentStatus
 from app.models.findings import WorkOrderFinding, FindingStatus
 from app.models.idempotency import IdempotencyKey
+from app.models.evidence import MobileEvidence, MobileEvidenceKind
 
 __all__ = [
     "Organization", "Branch",
@@ -61,4 +62,5 @@ __all__ = [
     "Assignment", "AssignmentStatus",
     "WorkOrderFinding", "FindingStatus",
     "IdempotencyKey",
+    "MobileEvidence", "MobileEvidenceKind",
 ]

@@ -19,6 +19,8 @@ import { MechanicHomeV1 } from './pages/MechanicHomeV1'
 import { OperationalDashboardPage } from './pages/OperationalDashboard'
 import { BranchesPage } from './pages/Branches'
 import { ClientPortalPage } from './pages/ClientPortal'
+import { AdvisorHomePage } from './pages/AdvisorHome'
+import { AdvisorCheckInPage } from './pages/AdvisorCheckIn'
 import { ToastProvider } from './components/ui/ToastProvider'
 import { applyTheme, useThemeStore } from './store/theme'
 
@@ -55,6 +57,8 @@ export default function App() {
               <Route path="/workshop/board" element={<WorkshopBoardPage />} />
               <Route path="/me/work" element={<MechanicWorkPage />} />
               <Route path="/mechanic" element={<MechanicHomeV1 />} />
+              <Route path="/advisor" element={<AdvisorHomePage />} />
+              <Route path="/advisor/check-in" element={<AdvisorCheckInPage />} />
               <Route path="/dashboard/operational" element={<OperationalDashboardPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/config" element={<ConfigPage />} />

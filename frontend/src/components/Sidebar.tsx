@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
-  Package, ClipboardList, Wrench, HardHat, Building2, Activity,
+  Package, ClipboardList, Wrench, HardHat, Building2, Activity, ClipboardCheck,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
@@ -31,6 +31,7 @@ const PRIMARY_ITEMS: NavItem[] = [
 ]
 
 const WORKSHOP_ITEMS: NavItem[] = [
+  { to: '/advisor',        icon: ClipboardCheck, label: 'Recepción',       roles: ['admin', 'gerente_sede', 'jefe_taller', 'recepcion', 'operador'] },
   { to: '/workshop/board', icon: Wrench,  label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
   { to: '/mechanic',       icon: HardHat, label: 'Mis tareas',     roles: ['mecanico', 'jefe_taller'] },
   { to: '/me/work',        icon: HardHat, label: 'Mis OS (legacy)', roles: ['mecanico', 'jefe_taller'] },
