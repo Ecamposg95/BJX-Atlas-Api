@@ -32,7 +32,7 @@ export function WorkOrderCard({ task, onAction }: Props) {
             <SemaphoreBadge status={timer.semaphore} size="sm" />
             <span className="font-semibold text-sm">{wo.order_number}</span>
             {wo.priority !== "normal" && (
-              <Badge variant={wo.priority === "urgent" ? "destructive" : "default"}>
+              <Badge variant={wo.priority === "urgent" ? "critical" : "low"}>
                 {PRIORITY_LABEL[wo.priority] ?? wo.priority}
               </Badge>
             )}
