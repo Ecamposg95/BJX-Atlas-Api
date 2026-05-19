@@ -15,6 +15,7 @@ import { InventoryPage } from './pages/Inventory'
 import { InventoryRequestsPage } from './pages/InventoryRequests'
 import { WorkshopBoardPage } from './pages/WorkshopBoard'
 import { MechanicWorkPage } from './pages/MechanicWork'
+import { MechanicHomeV1 } from './pages/MechanicHomeV1'
 import { OperationalDashboardPage } from './pages/OperationalDashboard'
 import { BranchesPage } from './pages/Branches'
 import { ToastProvider } from './components/ui/ToastProvider'
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="/inventory/requests" element={<InventoryRequestsPage />} />
               <Route path="/workshop/board" element={<WorkshopBoardPage />} />
               <Route path="/me/work" element={<MechanicWorkPage />} />
+              <Route path="/mechanic" element={<MechanicHomeV1 />} />
               <Route path="/dashboard/operational" element={<OperationalDashboardPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/config" element={<ConfigPage />} />
