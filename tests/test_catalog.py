@@ -198,6 +198,198 @@ class TestServices:
 
 
 # ---------------------------------------------------------------------------
+# TestServiceApprovalWorkflow (US-07)
+# ---------------------------------------------------------------------------
+
+
+class TestServiceApprovalWorkflow:
+    """Workflow proposed → approved/rejected del catálogo de servicios."""
+
+    def _headers_for(self, client, db, role: Role, email: str):
+        user = User(
+            email=email,
+            hashed_password=hash_password("Test1234"),
+            role=role.value,
+            active=True,
+        )
+        db.add(user)
+        db.commit()
+        r = client.post("/api/auth/login", json={"email": email, "password": "Test1234"})
+        return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    def test_jefe_taller_create_proposed(self, client, db):
+        headers = self._headers_for(client, db, Role.jefe_taller, "jefe@test.com")
+        r = client.post(
+            "/api/catalog/services",
+            json={"name": "BALATAS DELANTERAS PREMIUM", "category": "frenos"},
+            headers=headers,
+        )
+        assert r.status_code == 201, r.text
+        data = r.json()
+        assert data["status"] == "proposed"
+        assert data["proposed_by_id"] is not None
+        assert data["approved_by_id"] is None
+        assert data["approved_at"] is None
+
+    def test_gerente_create_directly_approved(self, client, db):
+        headers = self._headers_for(client, db, Role.gerente_sede, "gerente@test.com")
+        r = client.post(
+            "/api/catalog/services",
+            json={"name": "AFINACION INTEGRAL", "category": "motor"},
+            headers=headers,
+        )
+        assert r.status_code == 201, r.text
+        data = r.json()
+        assert data["status"] == "approved"
+        assert data["approved_by_id"] is not None
+        assert data["approved_at"] is not None
+        assert data["proposed_by_id"] is None
+
+    def test_admin_create_directly_approved(self, client, admin_headers):
+        r = client.post(
+            "/api/catalog/services",
+            json={"name": "DIAGNOSTICO ELECTRONICO", "category": "electrico"},
+            headers=admin_headers,
+        )
+        assert r.status_code == 201, r.text
+        assert r.json()["status"] == "approved"
+
+    def test_jefe_taller_cannot_approve(self, client, db):
+        # gerente crea servicio jefe_taller proposes
+        jefe_headers = self._headers_for(client, db, Role.jefe_taller, "jefe2@test.com")
+        r_create = client.post(
+            "/api/catalog/services",
+            json={"name": "LAVADO MOTOR", "category": "otros"},
+            headers=jefe_headers,
+        )
+        assert r_create.status_code == 201
+        svc_id = r_create.json()["id"]
+
+        r_approve = client.post(
+            f"/api/catalog/services/{svc_id}/approve", headers=jefe_headers
+        )
+        assert r_approve.status_code == 403
+
+    def test_gerente_approves_proposed(self, client, db):
+        jefe_headers = self._headers_for(client, db, Role.jefe_taller, "jefe3@test.com")
+        gerente_headers = self._headers_for(
+            client, db, Role.gerente_sede, "gerente2@test.com"
+        )
+        r_create = client.post(
+            "/api/catalog/services",
+            json={"name": "CAMBIO DE FRENOS COMPLETO", "category": "frenos"},
+            headers=jefe_headers,
+        )
+        svc_id = r_create.json()["id"]
+        assert r_create.json()["status"] == "proposed"
+
+        r = client.post(
+            f"/api/catalog/services/{svc_id}/approve",
+            json={"reason": "OK"},
+            headers=gerente_headers,
+        )
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["status"] == "approved"
+        assert data["approved_by_id"] is not None
+        assert data["approved_at"] is not None
+
+    def test_gerente_rejects_with_reason(self, client, db):
+        jefe_headers = self._headers_for(client, db, Role.jefe_taller, "jefe4@test.com")
+        gerente_headers = self._headers_for(
+            client, db, Role.gerente_sede, "gerente3@test.com"
+        )
+        r_create = client.post(
+            "/api/catalog/services",
+            json={"name": "SERVICIO INVALIDO", "category": "otros"},
+            headers=jefe_headers,
+        )
+        svc_id = r_create.json()["id"]
+
+        r = client.post(
+            f"/api/catalog/services/{svc_id}/reject",
+            json={"reason": "No procede por catálogo duplicado"},
+            headers=gerente_headers,
+        )
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["status"] == "rejected"
+        assert data["rejection_reason"] == "No procede por catálogo duplicado"
+
+    def test_reject_requires_min_reason(self, client, db):
+        jefe_headers = self._headers_for(client, db, Role.jefe_taller, "jefe5@test.com")
+        gerente_headers = self._headers_for(
+            client, db, Role.gerente_sede, "gerente4@test.com"
+        )
+        r_create = client.post(
+            "/api/catalog/services",
+            json={"name": "OTRO SERVICIO X", "category": "otros"},
+            headers=jefe_headers,
+        )
+        svc_id = r_create.json()["id"]
+
+        r = client.post(
+            f"/api/catalog/services/{svc_id}/reject",
+            json={"reason": "no"},
+            headers=gerente_headers,
+        )
+        assert r.status_code == 422
+
+    def test_filter_by_status_proposed(self, client, db, admin_headers):
+        jefe_headers = self._headers_for(client, db, Role.jefe_taller, "jefe6@test.com")
+        # admin crea approved
+        client.post(
+            "/api/catalog/services",
+            json={"name": "SVC APPROVED", "category": "otros"},
+            headers=admin_headers,
+        )
+        # jefe propone
+        client.post(
+            "/api/catalog/services",
+            json={"name": "SVC PROPOSED", "category": "otros"},
+            headers=jefe_headers,
+        )
+
+        r = client.get("/api/catalog/services?status=proposed", headers=admin_headers)
+        assert r.status_code == 200
+        items = r.json()["items"]
+        assert len(items) >= 1
+        assert all(it["status"] == "proposed" for it in items)
+        names = [it["name"] for it in items]
+        assert "SVC PROPOSED" in names
+        assert "SVC APPROVED" not in names
+
+    def test_approve_already_approved_returns_409(self, client, db, admin_headers):
+        # admin crea (queda approved)
+        r_create = client.post(
+            "/api/catalog/services",
+            json={"name": "SVC YA APROBADO", "category": "otros"},
+            headers=admin_headers,
+        )
+        svc_id = r_create.json()["id"]
+        assert r_create.json()["status"] == "approved"
+
+        r = client.post(
+            f"/api/catalog/services/{svc_id}/approve", headers=admin_headers
+        )
+        assert r.status_code == 409
+
+    def test_public_list_hides_proposed_for_viewer(self, client, db, viewer_headers):
+        jefe_headers = self._headers_for(client, db, Role.jefe_taller, "jefe7@test.com")
+        # jefe propone
+        client.post(
+            "/api/catalog/services",
+            json={"name": "SECRET PROPOSED", "category": "otros"},
+            headers=jefe_headers,
+        )
+
+        r = client.get("/api/catalog/services", headers=viewer_headers)
+        assert r.status_code == 200
+        names = [it["name"] for it in r.json()["items"]]
+        assert "SECRET PROPOSED" not in names
+
+
+# ---------------------------------------------------------------------------
 # TestCosts
 # ---------------------------------------------------------------------------
 

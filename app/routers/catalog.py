@@ -18,11 +18,14 @@ from app.schemas.catalog import (
     CatalogImportResult,
     MissingCostItem,
     PaginatedResponse,
+    ServiceApproveRequest,
     ServiceCatalogRead,
     ServiceCatalogReadEnriched,
     ServiceCatalogUpdate,
     ServiceCreate,
     ServiceRead,
+    ServiceRejectRequest,
+    ServiceStatus,
     ServiceUpdate,
     TimeStandardReadEnriched,
     TimeStandardUpdate,
@@ -30,7 +33,12 @@ from app.schemas.catalog import (
     VehicleModelRead,
     VehicleModelUpdate,
 )
+from app.models.users import Role
 from app.security import get_current_user, require_role
+from app.security.permissions import (
+    Permission,
+    require_permission,
+)
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -246,6 +254,10 @@ _SORT_COLUMNS = {
 }
 
 
+_REVIEWER_ROLES = {Role.admin.value, Role.director.value, Role.gerente_sede.value}
+_PROPOSER_ROLES = _REVIEWER_ROLES | {Role.jefe_taller.value}
+
+
 @router.get("/services", response_model=PaginatedResponse[ServiceRead])
 def list_services(
     page: int = Query(1, ge=1),
@@ -253,9 +265,10 @@ def list_services(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     active: Optional[bool] = Query(None),
+    status_filter: Optional[ServiceStatus] = Query(None, alias="status"),
     sort: Literal["name", "coverage_pct", "category"] = Query("name"),
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     query = db.query(Service).filter(Service.deleted_at.is_(None))
 
@@ -265,6 +278,13 @@ def list_services(
         query = query.filter(Service.category == category)
     if active is not None:
         query = query.filter(Service.active.is_(active))
+
+    user_role = getattr(current_user.role, "value", current_user.role)
+    if status_filter is not None:
+        query = query.filter(Service.status == status_filter.value)
+    elif user_role not in _PROPOSER_ROLES:
+        # Catálogo público: solo servicios approved si el usuario no es reviewer/proposer
+        query = query.filter(Service.status == ServiceStatus.approved.value)
 
     # coverage_pct sort requires post-processing; for DB-level sort we handle "name" / "category"
     if sort in _SORT_COLUMNS:
@@ -308,8 +328,13 @@ def get_service(
 def create_service(
     payload: ServiceCreate,
     db: Session = Depends(get_db),
-    current_user: object = Depends(require_role(["admin"])),
+    current_user=Depends(require_permission(Permission.SERVICE_PROPOSE)),
 ):
+    """Crear un servicio del catálogo (US-07).
+
+    - `gerente_sede`/`admin`/`director` → queda directo en `approved`.
+    - `jefe_taller` → queda en `proposed` esperando revisión.
+    """
     existing = (
         db.query(Service)
         .filter(
@@ -324,13 +349,95 @@ def create_service(
             detail=f"Ya existe un servicio con el nombre '{payload.name}'",
         )
 
-    svc = Service(name=payload.name, category=payload.category)
+    user_role = getattr(current_user.role, "value", current_user.role)
+    is_reviewer = user_role in _REVIEWER_ROLES
+    now = datetime.now(timezone.utc)
+
+    svc = Service(
+        name=payload.name,
+        category=payload.category,
+        status=ServiceStatus.approved.value if is_reviewer else ServiceStatus.proposed.value,
+        approved=is_reviewer,
+        approved_by_id=current_user.id if is_reviewer else None,
+        approved_at=now if is_reviewer else None,
+        proposed_by_id=None if is_reviewer else current_user.id,
+    )
     db.add(svc)
     db.commit()
     db.refresh(svc)
 
     data = ServiceRead.model_validate(svc)
     data.coverage_pct = 0.0
+    return data
+
+
+@router.post("/services/{service_id}/approve", response_model=ServiceRead)
+def approve_service(
+    service_id: str,
+    payload: Optional[ServiceApproveRequest] = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.SERVICE_APPROVE)),
+):
+    """Transición proposed → approved (US-07)."""
+    svc = (
+        db.query(Service)
+        .filter(Service.id == service_id, Service.deleted_at.is_(None))
+        .first()
+    )
+    if not svc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Servicio no encontrado")
+
+    if svc.status != ServiceStatus.proposed.value:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Solo se pueden aprobar servicios en estado 'proposed' (actual: '{svc.status}')",
+        )
+
+    svc.status = ServiceStatus.approved.value
+    svc.approved = True
+    svc.approved_by_id = current_user.id
+    svc.approved_at = datetime.now(timezone.utc)
+    svc.rejection_reason = None
+    db.commit()
+    db.refresh(svc)
+
+    data = ServiceRead.model_validate(svc)
+    data.coverage_pct = _coverage_pct_for_service(db, svc.id)
+    return data
+
+
+@router.post("/services/{service_id}/reject", response_model=ServiceRead)
+def reject_service(
+    service_id: str,
+    payload: ServiceRejectRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.SERVICE_REJECT)),
+):
+    """Transición proposed → rejected (US-07). Requiere motivo."""
+    svc = (
+        db.query(Service)
+        .filter(Service.id == service_id, Service.deleted_at.is_(None))
+        .first()
+    )
+    if not svc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Servicio no encontrado")
+
+    if svc.status != ServiceStatus.proposed.value:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Solo se pueden rechazar servicios en estado 'proposed' (actual: '{svc.status}')",
+        )
+
+    svc.status = ServiceStatus.rejected.value
+    svc.approved = False
+    svc.approved_by_id = current_user.id
+    svc.approved_at = datetime.now(timezone.utc)
+    svc.rejection_reason = payload.reason
+    db.commit()
+    db.refresh(svc)
+
+    data = ServiceRead.model_validate(svc)
+    data.coverage_pct = _coverage_pct_for_service(db, svc.id)
     return data
 
 

@@ -70,8 +70,14 @@ export const getModels = (params?: { brand?: string; active?: boolean }) =>
     )
   })
 
-export const getServices = (params?: { search?: string; category?: string }) =>
+export const getServices = (params?: { search?: string; category?: string; status?: 'proposed' | 'approved' | 'rejected' }) =>
   api.get<{ items: Service[] }>('/catalog/services', { params }).then((r) => r.data.items)
+
+export const approveService = (id: string, reason?: string) =>
+  api.post<Service>(`/catalog/services/${id}/approve`, reason ? { reason } : {}).then((r) => r.data)
+
+export const rejectService = (id: string, reason: string) =>
+  api.post<Service>(`/catalog/services/${id}/reject`, { reason }).then((r) => r.data)
 
 export const getCosts = (params?: { model_id?: string; service_id?: string }) =>
   api.get<{ items: CatalogCost[] }>('/catalog/costs', { params }).then((r) => r.data.items)

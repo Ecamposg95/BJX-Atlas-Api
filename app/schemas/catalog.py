@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
@@ -64,6 +65,13 @@ class VehicleModelUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class ServiceStatus(str, enum.Enum):
+    """Mirror del enum `app.models.catalog.ServiceStatus` para Pydantic (US-07)."""
+    proposed = "proposed"
+    approved = "approved"
+    rejected = "rejected"
+
+
 class ServiceRead(BaseModel):
     id: str
     name: str
@@ -71,6 +79,11 @@ class ServiceRead(BaseModel):
     active: bool
     created_at: datetime
     coverage_pct: float = 0.0
+    status: ServiceStatus = ServiceStatus.approved
+    proposed_by_id: Optional[str] = None
+    approved_by_id: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -84,6 +97,16 @@ class ServiceUpdate(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     active: Optional[bool] = None
+
+
+class ServiceApproveRequest(BaseModel):
+    """Body opcional al aprobar un servicio propuesto."""
+    reason: Optional[str] = Field(default=None, max_length=500)
+
+
+class ServiceRejectRequest(BaseModel):
+    """Motivo requerido al rechazar un servicio propuesto."""
+    reason: str = Field(..., min_length=5, max_length=500)
 
 
 # ---------------------------------------------------------------------------

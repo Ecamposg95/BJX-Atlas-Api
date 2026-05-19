@@ -36,6 +36,9 @@ export const Permission = {
   FINDING_REJECT: "finding:reject",
   FINDING_LIST: "finding:list",
   ME_TASKS_READ: "me:tasks:read",
+  SERVICE_PROPOSE: "service:propose",
+  SERVICE_APPROVE: "service:approve",
+  SERVICE_REJECT: "service:reject",
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -61,6 +64,9 @@ export const PERMISSION_MATRIX: Record<Permission, Role[]> = {
   [Permission.FINDING_REJECT]: ["admin", "gerente_sede", "jefe_taller"],
   [Permission.FINDING_LIST]: ["admin", "director", "gerente_sede", "jefe_taller", "viewer"],
   [Permission.ME_TASKS_READ]: ["admin", "mecanico"],
+  [Permission.SERVICE_PROPOSE]: ["admin", "director", "gerente_sede", "jefe_taller"],
+  [Permission.SERVICE_APPROVE]: ["admin", "director", "gerente_sede"],
+  [Permission.SERVICE_REJECT]: ["admin", "director", "gerente_sede"],
 };
 
 export function hasPermission(role: Role | undefined | null, permission: Permission): boolean {
