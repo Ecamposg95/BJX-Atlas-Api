@@ -20,6 +20,8 @@ from app.routers import mechanics as mechanics_router
 from app.routers import findings as findings_router
 from app.routers import client_portal as client_portal_router
 from app.routers import evidence as evidence_router
+from app.routers import appointments as appointments_router
+from app.routers import deliveries as deliveries_router
 from app.middleware import AuditContextMiddleware
 from app.services.audit import install_audit_listeners
 from app.events.subscribers import setup_event_subscribers
@@ -79,6 +81,8 @@ app.include_router(workshop_router.router, prefix="/api", tags=["Taller"])
 app.include_router(admin_seed_router.router, prefix="/api", tags=["Admin"])
 app.include_router(client_portal_router.router, prefix="/api", tags=["Portal Cliente"])
 app.include_router(evidence_router.router, prefix="/api", tags=["Evidencia Mobile v1"])
+app.include_router(appointments_router.router, prefix="/api", tags=["Citas v1"])
+app.include_router(deliveries_router.router, prefix="/api", tags=["Entregas v1"])
 
 
 @app.get("/api/health", tags=["Sistema"])

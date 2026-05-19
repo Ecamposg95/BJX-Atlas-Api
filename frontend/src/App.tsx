@@ -27,6 +27,9 @@ import { BranchesPage } from './pages/Branches'
 import { ClientPortalPage } from './pages/ClientPortal'
 import { AdvisorHomePage } from './pages/AdvisorHome'
 import { AdvisorCheckInPage } from './pages/AdvisorCheckIn'
+import { AdvisorDeliveryPage } from './pages/AdvisorDelivery'
+import { CitasPage } from './pages/Citas'
+import { WorkshopQAPage } from './pages/WorkshopQA'
 import { ToastProvider } from './components/ui/ToastProvider'
 import { applyTheme, useThemeStore } from './store/theme'
 
@@ -71,6 +74,9 @@ export default function App() {
               <Route path="/mechanic/tasks/:lineId" element={<MechanicTaskDetailPage />} />
               <Route path="/advisor" element={<AdvisorHomePage />} />
               <Route path="/advisor/check-in" element={<AdvisorCheckInPage />} />
+              <Route path="/advisor/delivery/:workOrderId" element={<AdvisorDeliveryPage />} />
+              <Route path="/citas" element={<CitasPage />} />
+              <Route path="/workshop/qa" element={<WorkshopQAPage />} />
               <Route path="/dashboard/operational" element={<OperationalDashboardPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/config" element={<ConfigPage />} />

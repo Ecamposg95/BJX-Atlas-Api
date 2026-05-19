@@ -52,3 +52,14 @@ class LocalStorageBackend(StorageBackend):
 
     def public_url(self, key: str) -> Optional[str]:
         return self.signed_url(key)
+
+    def _abs_path(self, key: str) -> Path:
+        """Helper interno para tests / generación de PDFs."""
+        return self._path(key)
+
+    def download(self, key: str) -> bytes:
+        """Lee bytes del objeto. KeyError si no existe."""
+        target = self._path(key)
+        if not target.exists():
+            raise KeyError(key)
+        return target.read_bytes()

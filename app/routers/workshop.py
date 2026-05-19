@@ -376,3 +376,94 @@ async def upload_evidence(
     out = EvidenceRead.model_validate(ev)
     out.download_url = storage.signed_url(key, ttl_seconds=3600)
     return out
+
+
+# ---------------------------------------------------------------------------
+# QA Workflow (Módulo 2 — Wave 4)
+# ---------------------------------------------------------------------------
+
+from pydantic import BaseModel, Field
+
+from app.models.work_orders import WorkOrderStatus
+from app.security.permissions import Permission, has_permission
+from app.services.state_machines import Forbidden as SMForbidden
+from app.services.state_machines import InvalidTransition
+from app.services.state_machines.work_order_sm import transition as wo_transition
+
+
+class _QAPassRequest(BaseModel):
+    note: str | None = Field(None, max_length=500)
+
+
+class _QAFailRequest(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
+
+
+def _ensure_quality_check_status(wo: WorkOrder) -> None:
+    """Si la OS está en in_progress, la avanza primero a quality_check.
+
+    QA-pass/fail aplican sobre `quality_check`. Para tolerar OS que finalizaron
+    sin pasar por QA explícito, hacemos el step intermedio aquí.
+    """
+    if wo.status == WorkOrderStatus.in_progress.value:
+        wo.status = WorkOrderStatus.quality_check.value
+
+
+@router.post("/work-orders/{work_order_id}/qa-pass")
+def qa_pass(
+    work_order_id: str,
+    payload: _QAPassRequest | None = None,
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+):
+    wo = _get_wo_or_404(db, work_order_id, ctx)
+    if not has_permission(ctx.user, Permission.WORK_ORDER_QA_PASS):
+        raise HTTPException(403, "No tienes permiso para aprobar QA")
+
+    _ensure_quality_check_status(wo)
+    try:
+        wo_transition(
+            db,
+            work_order=wo,
+            to_status=WorkOrderStatus.completed,
+            actor=ctx.user,
+            reason=(payload.note if payload else None),
+        )
+    except InvalidTransition as e:
+        raise HTTPException(409, detail={"error": {"code": e.code, "detail": e.detail}})
+    except SMForbidden as e:
+        raise HTTPException(403, detail={"error": {"code": e.code, "detail": e.detail}})
+
+    db.commit()
+    db.refresh(wo)
+    return {"id": wo.id, "status": wo.status, "qa": "passed"}
+
+
+@router.post("/work-orders/{work_order_id}/qa-fail")
+def qa_fail(
+    work_order_id: str,
+    payload: _QAFailRequest,
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+):
+    wo = _get_wo_or_404(db, work_order_id, ctx)
+    if not has_permission(ctx.user, Permission.WORK_ORDER_QA_FAIL):
+        raise HTTPException(403, "No tienes permiso para rechazar QA")
+
+    _ensure_quality_check_status(wo)
+    try:
+        wo_transition(
+            db,
+            work_order=wo,
+            to_status=WorkOrderStatus.in_progress,
+            actor=ctx.user,
+            reason=payload.reason,
+        )
+    except InvalidTransition as e:
+        raise HTTPException(409, detail={"error": {"code": e.code, "detail": e.detail}})
+    except SMForbidden as e:
+        raise HTTPException(403, detail={"error": {"code": e.code, "detail": e.detail}})
+
+    db.commit()
+    db.refresh(wo)
+    return {"id": wo.id, "status": wo.status, "qa": "failed", "reason": payload.reason}

@@ -84,3 +84,7 @@ class R2StorageBackend(StorageBackend):
         if self.public_domain:
             return f"https://{self.public_domain.rstrip('/')}/{key}"
         return None
+
+    def download(self, key: str) -> bytes:
+        obj = self._client.get_object(Bucket=self.bucket, Key=key)
+        return obj["Body"].read()

@@ -39,6 +39,8 @@ from app.models.assignments import Assignment, AssignmentStatus
 from app.models.findings import WorkOrderFinding, FindingStatus
 from app.models.idempotency import IdempotencyKey
 from app.models.evidence import MobileEvidence, MobileEvidenceKind
+from app.models.appointments import Appointment, AppointmentStatus
+from app.models.deliveries import Delivery
 
 __all__ = [
     "Organization", "Branch",
@@ -63,4 +65,6 @@ __all__ = [
     "WorkOrderFinding", "FindingStatus",
     "IdempotencyKey",
     "MobileEvidence", "MobileEvidenceKind",
+    "Appointment", "AppointmentStatus",
+    "Delivery",
 ]
