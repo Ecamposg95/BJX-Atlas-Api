@@ -1,7 +1,19 @@
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Index, String, Text
+"""Catálogo: VehicleModel, Service, ServiceCatalog."""
+from __future__ import annotations
+
+import enum
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import relationship
+
 from app.database import Base
-from app.models.mixins import UUIDMixin, AuditMixin
+from app.models.mixins import AuditMixin, UUIDMixin
+
+
+class ServiceRequiredLevel(str, enum.Enum):
+    junior = "junior"
+    intermedio = "intermedio"
+    master = "master"
 
 
 class VehicleModel(Base, UUIDMixin, AuditMixin):
@@ -30,6 +42,16 @@ class Service(Base, UUIDMixin, AuditMixin):
     name = Column(String(500), nullable=False, index=True)
     category = Column(String(50), nullable=True, default="otros", index=True)
     active = Column(Boolean, default=True, nullable=False)
+
+    # Nivel mínimo requerido del mecánico para ejecutar este servicio (Fase 1)
+    required_level = Column(String(16), nullable=False, default=ServiceRequiredLevel.junior.value, index=True)
+
+    # Workflow de aprobación de catálogo (Fase 3 lo usa, columnas ya disponibles en Fase 1)
+    approved = Column(Boolean, nullable=False, default=True, index=True)
+    approved_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at = Column(DateTime(timezone=True), nullable=True)
+    proposed_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    proposal_id = Column(String(36), nullable=True)
 
     catalog_entries = relationship("ServiceCatalog", back_populates="service", lazy="dynamic")
 
