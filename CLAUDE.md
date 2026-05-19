@@ -10,16 +10,18 @@ API backend en FastAPI que implementa un motor de cálculo de precios y márgene
 
 ## Branching Strategy
 
+Solo existen dos ramas: `main` y `develop`. No crear feature branches salvo petición explícita.
+
 | Rama | Propósito |
 |------|-----------|
-| `main` | **Producción** — Railway deploya automáticamente desde aquí. NO trabajar directamente en main. |
-| `develop` | **Desarrollo** — Todo el trabajo nuevo va aquí. Es la rama por defecto para desarrollo. |
+| `main` | **Producción** — Railway deploya automáticamente desde aquí. Intocable salvo orden explícita del usuario. |
+| `develop` | **Desarrollo** — Toda la actividad ocurre aquí. Rama por defecto. |
 
-**Flujo**: `develop` → merge a → `main` → Railway auto-deploy
-
-- Siempre trabajar en `develop` (o feature branches que mergeen a `develop`).
-- Solo mergear `develop` → `main` cuando esté listo para producción.
-- Nunca pushear directamente a `main`.
+**Reglas vinculantes para Claude:**
+- Siempre trabajar en `develop`. Commits y pushes van a `develop`.
+- **NUNCA** mergear ni pushear a `main` por iniciativa propia. Solo cuando el usuario lo pida explícitamente con palabras como "merge a main", "deploy", "release" o "subir a producción".
+- `main` está en producción (Railway auto-deploy): cualquier merge dispara despliegue.
+- No crear ramas nuevas salvo que el usuario lo pida.
 
 ## Context Files
 
