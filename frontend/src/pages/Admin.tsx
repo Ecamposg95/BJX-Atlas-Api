@@ -13,7 +13,41 @@ const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin', operador: 'Operador', viewer: 'Viewer',
+  admin: 'Admin',
+  director: 'Director',
+  gerente_sede: 'Gerente de sucursal',
+  jefe_taller: 'Jefe de taller',
+  recepcion: 'Recepción',
+  mecanico: 'Mecánico',
+  almacen: 'Almacén',
+  cliente_corp: 'Cliente corporativo',
+  viewer: 'Viewer',
+  operador: 'Operador (deprecado)',
+}
+
+const ROLE_OPTIONS: { value: string; description: string }[] = [
+  { value: 'admin', description: 'Acceso total a plataforma' },
+  { value: 'director', description: 'Vista ejecutiva multi-sucursal' },
+  { value: 'gerente_sede', description: 'Gestiona una sucursal' },
+  { value: 'jefe_taller', description: 'Mando del piso de taller' },
+  { value: 'recepcion', description: 'Check-in, citas, cotizaciones' },
+  { value: 'mecanico', description: 'Tareas asignadas' },
+  { value: 'almacen', description: 'Inventario y compras' },
+  { value: 'cliente_corp', description: 'Cliente corporativo (flota)' },
+  { value: 'viewer', description: 'Solo lectura' },
+]
+
+const ROLE_COLORS: Record<string, { bg: string; fg: string }> = {
+  admin:        { bg: 'color-mix(in srgb, var(--primary) 18%, transparent)', fg: 'var(--primary-dark)' },
+  director:     { bg: 'color-mix(in srgb, #8b5cf6 16%, transparent)',        fg: '#8b5cf6' },
+  gerente_sede: { bg: 'color-mix(in srgb, #4f8df7 16%, transparent)',        fg: '#4f8df7' },
+  jefe_taller:  { bg: 'color-mix(in srgb, #f59e0b 16%, transparent)',        fg: '#d97706' },
+  recepcion:    { bg: 'color-mix(in srgb, #06b6d4 16%, transparent)',        fg: '#0891b2' },
+  mecanico:     { bg: 'color-mix(in srgb, #10b981 16%, transparent)',        fg: '#059669' },
+  almacen:      { bg: 'color-mix(in srgb, #ec4899 16%, transparent)',        fg: '#db2777' },
+  cliente_corp: { bg: 'color-mix(in srgb, #84cc16 16%, transparent)',        fg: '#65a30d' },
+  viewer:       { bg: 'color-mix(in srgb, var(--text-faint) 16%, transparent)', fg: 'var(--text-muted)' },
+  operador:     { bg: 'color-mix(in srgb, var(--text-faint) 12%, transparent)', fg: 'var(--text-faint)' },
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -111,9 +145,14 @@ function UserModal({ mode, user, onClose, onSaved }: ModalProps) {
               className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none"
               style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
             >
-              <option value="viewer">Viewer — solo lectura</option>
-              <option value="operador">Operador — puede crear cotizaciones</option>
-              <option value="admin">Admin — acceso total</option>
+              {ROLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {ROLE_LABELS[opt.value]} — {opt.description}
+                </option>
+              ))}
+              {mode === 'edit' && user?.role === 'operador' && (
+                <option value="operador">{ROLE_LABELS.operador}</option>
+              )}
             </select>
           </div>
 
@@ -223,8 +262,8 @@ export function AdminPage() {
                       <span
                         className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold"
                         style={{
-                          background: u.role === 'admin' ? 'color-mix(in srgb, var(--primary) 18%, transparent)' : u.role === 'operador' ? 'color-mix(in srgb, #4f8df7 16%, transparent)' : 'color-mix(in srgb, var(--text-faint) 16%, transparent)',
-                          color: u.role === 'admin' ? 'var(--primary-dark)' : u.role === 'operador' ? '#4f8df7' : 'var(--text-muted)',
+                          background: (ROLE_COLORS[u.role] ?? ROLE_COLORS.viewer).bg,
+                          color: (ROLE_COLORS[u.role] ?? ROLE_COLORS.viewer).fg,
                         }}
                       >
                         {ROLE_LABELS[u.role]}
