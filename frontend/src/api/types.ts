@@ -8,7 +8,7 @@ export type Role =
   | 'mecanico'
   | 'almacen'
   | 'cliente_corp'
-  | 'operador'
+  | 'operador'  // deprecated — do not use; mantener union por compat con usuarios legacy
   | 'viewer'
 
 export const GLOBAL_ROLES: Role[] = ['admin', 'director', 'viewer', 'cliente_corp']
@@ -384,6 +384,7 @@ export type PurchaseOrderStatus =
   | 'draft'
   | 'submitted'
   | 'approved'
+  | 'partially_received'
   | 'received'
   | 'cancelled'
 
@@ -392,9 +393,12 @@ export interface PurchaseOrderItem {
   purchase_order_id: string
   part_id: string
   quantity: number | string
+  quantity_received: number | string
+  received_at: string | null
   unit_cost: number | string
   line_total: number | string
   notes: string | null
+  inventory_request_id: string | null
   part_sku?: string
   part_name?: string
 }
@@ -427,6 +431,28 @@ export interface PurchaseOrderItemCreate {
   quantity: number
   unit_cost: number
   notes?: string | null
+  inventory_request_id?: string | null
+}
+
+export interface PendingInventoryRequest {
+  id: string
+  branch_id: string
+  work_order_id: string
+  part_id: string
+  quantity: number
+  priority: string
+  status: string
+  notes: string | null
+  created_at: string
+  part_sku?: string | null
+  part_name?: string | null
+  last_unit_cost?: number | null
+  default_supplier_id?: string | null
+}
+
+export interface PendingInventoryRequestPage {
+  total: number
+  items: PendingInventoryRequest[]
 }
 
 export interface PurchaseOrderCreate {

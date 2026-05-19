@@ -151,3 +151,23 @@ def viewer_token(client, db):
     db.commit()
     r = client.post("/api/auth/login", json={"email": "viewer@test.com", "password": "Viewer1234"})
     return r.json()["access_token"]
+
+
+@pytest.fixture
+def recepcion_token(client, db):
+    from app.models.users import User, Role
+    from app.security import hash_password
+    user = User(
+        email="recepcion@test.com",
+        hashed_password=hash_password("Recepcion1234"),
+        role=Role.recepcion.value,
+        default_branch_id=DEFAULT_TEST_BRANCH_ID,
+        active=True,
+    )
+    db.add(user)
+    db.commit()
+    r = client.post(
+        "/api/auth/login",
+        json={"email": "recepcion@test.com", "password": "Recepcion1234"},
+    )
+    return r.json()["access_token"]

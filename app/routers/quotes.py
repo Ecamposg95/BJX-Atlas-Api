@@ -333,7 +333,7 @@ def _validate_transition(
 def create_quote(
     payload: QuoteCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role(["admin", "operador"])),
+    current_user=Depends(require_role(["admin", "director", "gerente_sede", "recepcion"])),
 ):
     # 1. Read config defaults from DB
     cfg = _get_engine_config(db)
@@ -635,7 +635,7 @@ def update_quote(
     quote_id: str,
     payload: QuoteUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role(["admin", "operador"])),
+    current_user=Depends(require_role(["admin", "director", "gerente_sede", "recepcion"])),
 ):
     quote = _get_quote_or_404(quote_id, db)
 
@@ -662,7 +662,7 @@ def update_quote(
 def delete_quote(
     quote_id: str,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role(["admin", "operador"])),
+    current_user=Depends(require_role(["admin", "director", "gerente_sede", "recepcion"])),
 ):
     quote = _get_quote_or_404(quote_id, db)
 

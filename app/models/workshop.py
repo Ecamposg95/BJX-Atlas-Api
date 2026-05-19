@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, String, Float, Integer, Boolean, ForeignKey, Index, Text, DateTime
+from sqlalchemy import Column, String, Float, Integer, Boolean, ForeignKey, Index, Numeric, Text, DateTime
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.models.mixins import UUIDMixin, AuditMixin, BranchScopedMixin
@@ -41,6 +41,13 @@ class WorkOrderLine(Base, UUIDMixin, AuditMixin, BranchScopedMixin):
     finished_at = Column(DateTime(timezone=True), nullable=True)
     actual_duration_minutes = Column(Integer, nullable=True)
     notes = Column(Text, nullable=True)
+
+    # Pricing (cierre de Ola 4). Todos NULL hasta que se cierre / recalcule la línea.
+    unit_price_mxn = Column(Numeric(12, 2), nullable=True)
+    unit_cost_mxn = Column(Numeric(12, 2), nullable=True)
+    total_price_mxn = Column(Numeric(12, 2), nullable=True)
+    total_cost_mxn = Column(Numeric(12, 2), nullable=True)
+    margin_pct = Column(Numeric(6, 4), nullable=True)
 
 
 class EvidenceKind(str, enum.Enum):

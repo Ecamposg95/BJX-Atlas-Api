@@ -25,23 +25,6 @@ def admin_headers(client, db):
 
 
 @pytest.fixture
-def operador_headers(client, db):
-    user = User(
-        email="operador-wo@test.com",
-        hashed_password=hash_password("Operador1234"),
-        role=Role.operador,
-        active=True,
-    )
-    db.add(user)
-    db.commit()
-    r = client.post(
-        "/api/auth/login",
-        json={"email": "operador-wo@test.com", "password": "Operador1234"},
-    )
-    return {"Authorization": f"Bearer {r.json()['access_token']}"}
-
-
-@pytest.fixture
 def viewer_headers(client, db):
     user = User(
         email="viewer-wo@test.com",
@@ -74,7 +57,7 @@ def work_order_setup(db):
     mechanic = User(
         email="mechanic@test.com",
         hashed_password=hash_password("Mechanic1234"),
-        role=Role.operador,
+        role=Role.mecanico,
         active=True,
     )
     db.add_all([model, service, vehicle, mechanic])

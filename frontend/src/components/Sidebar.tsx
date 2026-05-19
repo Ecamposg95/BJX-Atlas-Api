@@ -27,7 +27,7 @@ const WORK_ITEMS: NavItem[] = [
   { to: '/executive',   icon: Briefcase,      label: 'Vision ejecutiva', roles: ['admin', 'director'] },
   { to: '/manager',     icon: Building2,      label: 'Mi sucursal',    roles: ['admin', 'director', 'gerente_sede'] },
   { to: '/workshop',    icon: HardHat,        label: 'Mando taller',   roles: ['admin', 'jefe_taller'] },
-  { to: '/advisor',     icon: ClipboardCheck, label: 'Recepcion',      roles: ['admin', 'recepcion', 'operador'] },
+  { to: '/advisor',     icon: ClipboardCheck, label: 'Recepcion',      roles: ['admin', 'recepcion'] },
   { to: '/mechanic',    icon: Wrench,         label: 'Mis tareas',     roles: ['admin', 'mecanico'] },
   { to: '/warehouse',   icon: PackageOpen,    label: 'Almacen',        roles: ['admin', 'almacen'] },
   { to: '/client-corp', icon: UsersRound,     label: 'Mi flota',       roles: ['admin', 'cliente_corp'] },
@@ -35,7 +35,7 @@ const WORK_ITEMS: NavItem[] = [
 
 // ── OPERACION — piso y stock ─────────────────────────────────────────
 const OPERATIONS_ITEMS: NavItem[] = [
-  { to: '/citas',          icon: CalendarDays, label: 'Citas',          roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'operador'] },
+  { to: '/citas',          icon: CalendarDays, label: 'Citas',          roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion'] },
   { to: '/workshop/board', icon: Wrench,       label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
   { to: '/workshop/qa',    icon: BadgeCheck,   label: 'QA',             roles: ['admin', 'director', 'gerente_sede', 'jefe_taller'] },
   { to: '/inventory',      icon: Package,      label: 'Inventario',     roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
@@ -44,8 +44,8 @@ const OPERATIONS_ITEMS: NavItem[] = [
 
 // ── NEGOCIO — cotizaciones, catalogo, proveedores, sucursales ────────
 const BUSINESS_ITEMS: NavItem[] = [
-  { to: '/quotes',     icon: FileText,   label: 'Cotizaciones', roles: ['admin', 'director', 'gerente_sede', 'recepcion', 'operador'] },
-  { to: '/calculator', icon: Calculator, label: 'Calculadora',  roles: ['admin', 'director', 'gerente_sede', 'operador'] },
+  { to: '/quotes',     icon: FileText,   label: 'Cotizaciones', roles: ['admin', 'director', 'gerente_sede', 'recepcion'] },
+  { to: '/calculator', icon: Calculator, label: 'Calculadora',  roles: ['admin', 'director', 'gerente_sede', 'recepcion'] },
   { to: '/catalog',    icon: BookOpen,   label: 'Catalogo',     roles: ['admin', 'director', 'gerente_sede'] },
   { to: '/suppliers',  icon: Truck,      label: 'Proveedores',  roles: ['admin', 'director', 'almacen'] },
   { to: '/procurement', icon: ShoppingCart, label: 'Compras',     roles: ['admin', 'director', 'gerente_sede', 'almacen'] },
@@ -54,7 +54,7 @@ const BUSINESS_ITEMS: NavItem[] = [
 
 // ── ANALISIS — dashboards ────────────────────────────────────────────
 const ANALYTICS_ITEMS: NavItem[] = [
-  { to: '/dashboard',             icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'director', 'gerente_sede', 'cliente_corp', 'operador', 'viewer'] },
+  { to: '/dashboard',             icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'director', 'gerente_sede', 'cliente_corp', 'viewer'] },
   { to: '/dashboard/operational', icon: Activity,        label: 'Operativo', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'viewer'] },
 ]
 

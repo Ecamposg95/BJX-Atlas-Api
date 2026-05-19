@@ -232,10 +232,53 @@ def _compute_kpis(
     else:
         on_time_pct = 0.0
 
-    # ── Margin avg: TODO — WorkOrder/WorkOrderLine no almacena precio/costo
-    # final por OS hoy. Existe `quotes.brame_price` y `supplier_prices.total_price`
-    # pero no hay link directo OS↔quote. Devolvemos None hasta que se modele.
+    # ── Margin avg: promedio ponderado por total_price_mxn sobre líneas
+    # completadas en la ventana. Si no hay líneas con pricing, fallback a
+    # WorkOrder.margin_pct sobre OS cerradas. None si no hay datos reales.
+    line_rows = (
+        db.query(WorkOrderLine.total_price_mxn, WorkOrderLine.total_cost_mxn)
+        .filter(
+            WorkOrderLine.branch_id == branch_id,
+            WorkOrderLine.status == WorkOrderLineStatus.completed.value,
+            WorkOrderLine.finished_at.is_not(None),
+            WorkOrderLine.finished_at >= window_from,
+            WorkOrderLine.total_price_mxn.is_not(None),
+            WorkOrderLine.total_cost_mxn.is_not(None),
+        )
+        .all()
+    )
     margin_pct_avg: Optional[float] = None
+    sum_price = 0.0
+    sum_cost = 0.0
+    for tp, tc in line_rows:
+        if tp is None or tc is None:
+            continue
+        sum_price += float(tp)
+        sum_cost += float(tc)
+    if sum_price > 0:
+        margin_pct_avg = round((sum_price - sum_cost) / sum_price, 4)
+    else:
+        wo_margin_rows = (
+            db.query(WorkOrder.margin_pct, WorkOrder.total_amount)
+            .filter(
+                WorkOrder.branch_id == branch_id,
+                WorkOrder.work_finished_at.is_not(None),
+                WorkOrder.work_finished_at >= window_from,
+                WorkOrder.margin_pct.is_not(None),
+                WorkOrder.total_amount.is_not(None),
+            )
+            .all()
+        )
+        weight = 0.0
+        weighted = 0.0
+        for mp, ta in wo_margin_rows:
+            if mp is None or ta is None:
+                continue
+            ta_f = float(ta)
+            weighted += float(mp) * ta_f
+            weight += ta_f
+        if weight > 0:
+            margin_pct_avg = round(weighted / weight, 4)
 
     return BranchKPIs(
         open_orders=int(open_orders),

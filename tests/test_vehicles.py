@@ -12,8 +12,8 @@ def admin_headers(admin_token):
 
 
 @pytest.fixture
-def operador_headers(operador_token):
-    return {"Authorization": f"Bearer {operador_token}"}
+def recepcion_headers(recepcion_token):
+    return {"Authorization": f"Bearer {recepcion_token}"}
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ class TestVehicles:
         assert data["items"] == []
         assert data["total"] == 0
 
-    def test_create_vehicle_as_operador_allowed(self, client, operador_headers):
+    def test_create_vehicle_as_recepcion_allowed(self, client, recepcion_headers):
         payload = {
             "customer_name": "Maria Lopez",
             "contact": "555-0202",
@@ -58,7 +58,7 @@ class TestVehicles:
             "plates": "XYZ-789",
             "vin": "3N1AB7AP7EY123456",
         }
-        r = client.post("/api/vehicles", json=payload, headers=operador_headers)
+        r = client.post("/api/vehicles", json=payload, headers=recepcion_headers)
         assert r.status_code == 201
         data = r.json()
         assert data["customer_name"] == "Maria Lopez"

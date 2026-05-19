@@ -43,9 +43,9 @@ export const Permission = {
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
 export const PERMISSION_MATRIX: Record<Permission, Role[]> = {
-  [Permission.WORK_ORDER_CREATE]: ["admin", "director", "gerente_sede", "jefe_taller", "recepcion", "operador"],
-  [Permission.WORK_ORDER_UPDATE]: ["admin", "director", "gerente_sede", "jefe_taller", "recepcion", "operador"],
-  [Permission.WORK_ORDER_TRANSITION]: ["admin", "gerente_sede", "jefe_taller", "recepcion", "mecanico", "almacen", "operador"],
+  [Permission.WORK_ORDER_CREATE]: ["admin", "director", "gerente_sede", "jefe_taller", "recepcion"],
+  [Permission.WORK_ORDER_UPDATE]: ["admin", "director", "gerente_sede", "jefe_taller", "recepcion"],
+  [Permission.WORK_ORDER_TRANSITION]: ["admin", "gerente_sede", "jefe_taller", "recepcion", "mecanico", "almacen"],
   [Permission.WORK_ORDER_CANCEL]: ["admin", "gerente_sede", "jefe_taller"],
   [Permission.WORK_ORDER_DELETE]: ["admin"],
   [Permission.WORK_ORDER_QA_PASS]: ["admin", "gerente_sede", "jefe_taller"],

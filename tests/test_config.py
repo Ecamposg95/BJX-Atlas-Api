@@ -76,11 +76,11 @@ class TestUpdateConfig:
         )
         assert r.status_code == 422
 
-    def test_update_as_operador_forbidden(self, client, operador_token, seeded_config):
+    def test_update_as_recepcion_forbidden(self, client, recepcion_token, seeded_config):
         r = client.put(
             "/api/config/technician_cost_hr",
             json={"value": "100.00"},
-            headers={"Authorization": f"Bearer {operador_token}"},
+            headers={"Authorization": f"Bearer {recepcion_token}"},
         )
         assert r.status_code == 403
 

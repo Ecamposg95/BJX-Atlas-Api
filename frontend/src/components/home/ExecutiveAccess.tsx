@@ -11,9 +11,9 @@ interface AccessItem {
 }
 
 const ACCESS_ITEMS: AccessItem[] = [
-  { title: 'Cotizaciones',  to: '/quotes',               icon: FileText,        roles: ['admin', 'director', 'gerente_sede', 'recepcion', 'operador'] },
-  { title: 'Calculadora',   to: '/calculator',           icon: Calculator,      roles: ['admin', 'director', 'gerente_sede', 'operador'] },
-  { title: 'Dashboard',     to: '/dashboard',            icon: LayoutDashboard, roles: ['admin', 'director', 'gerente_sede', 'operador', 'viewer'] },
+  { title: 'Cotizaciones',  to: '/quotes',               icon: FileText,        roles: ['admin', 'director', 'gerente_sede', 'recepcion'] },
+  { title: 'Calculadora',   to: '/calculator',           icon: Calculator,      roles: ['admin', 'director', 'gerente_sede', 'recepcion'] },
+  { title: 'Dashboard',     to: '/dashboard',            icon: LayoutDashboard, roles: ['admin', 'director', 'gerente_sede', 'viewer'] },
   { title: 'Tablero',       to: '/workshop/board',       icon: Wrench,          roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
   { title: 'Inventario',    to: '/inventory',            icon: Package,         roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
   { title: 'Catálogo',      to: '/catalog',              icon: BookOpen,        roles: ['admin', 'director', 'gerente_sede'] },

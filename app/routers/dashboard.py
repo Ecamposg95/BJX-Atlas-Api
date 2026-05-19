@@ -560,26 +560,43 @@ def _compute_branch_comparison(db: Session, days: int) -> BranchComparisonRespon
             or 0
         )
 
-        revenue_rows = (
-            db.query(ServiceCatalog.bjx_labor_cost, ServiceCatalog.bjx_parts_cost)
-            .join(
-                WorkOrder,
-                (WorkOrder.model_id == ServiceCatalog.model_id)
-                & (WorkOrder.service_id == ServiceCatalog.service_id),
-            )
+        # Revenue real: suma de WorkOrder.total_amount cuando esté poblado.
+        # Fallback (OS sin pricing aún): suma de ServiceCatalog labor+parts.
+        real_revenue = (
+            db.query(func.coalesce(func.sum(WorkOrder.total_amount), 0.0))
             .filter(
-                ServiceCatalog.is_current.is_(True),
                 WorkOrder.branch_id == b.id,
+                WorkOrder.total_amount.is_not(None),
                 WorkOrder.work_finished_at.is_not(None),
                 WorkOrder.work_finished_at >= date_from,
                 WorkOrder.work_finished_at <= date_to,
             )
-            .all()
+            .scalar()
+            or 0.0
         )
-        revenue_period = round(
-            sum((float(lc or 0.0) + float(pc or 0.0)) for lc, pc in revenue_rows),
-            2,
-        )
+        if real_revenue and float(real_revenue) > 0:
+            revenue_period = round(float(real_revenue), 2)
+        else:
+            revenue_rows = (
+                db.query(ServiceCatalog.bjx_labor_cost, ServiceCatalog.bjx_parts_cost)
+                .join(
+                    WorkOrder,
+                    (WorkOrder.model_id == ServiceCatalog.model_id)
+                    & (WorkOrder.service_id == ServiceCatalog.service_id),
+                )
+                .filter(
+                    ServiceCatalog.is_current.is_(True),
+                    WorkOrder.branch_id == b.id,
+                    WorkOrder.work_finished_at.is_not(None),
+                    WorkOrder.work_finished_at >= date_from,
+                    WorkOrder.work_finished_at <= date_to,
+                )
+                .all()
+            )
+            revenue_period = round(
+                sum((float(lc or 0.0) + float(pc or 0.0)) for lc, pc in revenue_rows),
+                2,
+            )
 
         rows.append(
             BranchComparisonRow(

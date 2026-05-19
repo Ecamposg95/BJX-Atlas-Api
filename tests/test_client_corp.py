@@ -188,7 +188,7 @@ class TestSummaryEndpoint:
 
 
 class TestCorpWithoutCustomer:
-    def test_corp_without_customer_id_returns_400(self, client, db, fleet_seed):
+    def test_corp_without_customer_id_returns_empty(self, client, db, fleet_seed):
         token = _login(
             client, db,
             email="corp-empty@test.com",
@@ -200,4 +200,7 @@ class TestCorpWithoutCustomer:
             "/api/v1/client-corp/fleet",
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert r.status_code == 400
+        assert r.status_code == 200
+        data = r.json()
+        assert data["total"] == 0
+        assert data["items"] == []

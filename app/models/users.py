@@ -5,6 +5,14 @@ from app.models.mixins import UUIDMixin, AuditMixin
 
 
 class Role(str, enum.Enum):
+    """Roles de usuario.
+
+    `operador` está deprecado (legado Sprint 0 — multifunción). El valor se
+    conserva en el enum por compatibilidad con usuarios existentes en BD,
+    pero ya no se asignan permisos a este rol: sus capacidades fueron
+    migradas a `recepcion`, `jefe_taller` y `gerente_sede` según contexto.
+    No usar en nuevos seeds, fixtures ni asignaciones de permisos.
+    """
     admin = "admin"
     director = "director"
     gerente_sede = "gerente_sede"
@@ -13,7 +21,7 @@ class Role(str, enum.Enum):
     mecanico = "mecanico"
     almacen = "almacen"
     cliente_corp = "cliente_corp"
-    operador = "operador"
+    operador = "operador"  # deprecated — ver docstring del enum
     viewer = "viewer"
 
 
@@ -24,7 +32,6 @@ BRANCH_SCOPED_ROLES = {
     Role.recepcion,
     Role.mecanico,
     Role.almacen,
-    Role.operador,
 }
 
 # Roles cross-branch (ven todas las sedes).

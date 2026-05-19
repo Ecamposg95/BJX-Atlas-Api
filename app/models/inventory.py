@@ -90,6 +90,11 @@ class InventoryRequestStatus(str, enum.Enum):
     delivered = "delivered"
     used = "used"
     returned = "returned"
+    # Cuando la IR aprobada se canaliza a procurement: el almacén crea (o
+    # vincula) un PurchaseOrderItem con inventory_request_id; al recibirse
+    # el PO, la IR queda marcada como `purchased` y vuelve al flujo normal
+    # via pick/deliver del stock recién ingresado.
+    purchased = "purchased"
 
 
 class InventoryRequest(Base, UUIDMixin, AuditMixin, BranchScopedMixin):

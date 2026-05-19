@@ -66,22 +66,9 @@ def _ensure_role(user: User) -> str:
     return role
 
 
-def _resolve_customer_id(user: User, requested: Optional[str]) -> str:
-    role = _ensure_role(user)
-    if role == Role.cliente_corp.value:
-        if not user.customer_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Tu usuario no tiene un cliente corporativo asociado. Contacta al administrador.",
-            )
-        return user.customer_id
-    target = requested or user.customer_id
-    if not target:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Debes indicar `customer_id` para consultar el panel.",
-        )
-    return target
+def _resolve_customer_id(user: User, requested: Optional[str]) -> Optional[str]:
+    _ensure_role(user)
+    return requested or user.customer_id
 
 
 def _base_query(db: Session, customer_id: str):
@@ -125,6 +112,8 @@ def get_fleet(
     Se devuelve la OS más reciente por `received_at`.
     """
     target_customer = _resolve_customer_id(user, customer_id)
+    if not target_customer:
+        return FleetResponse(total=0, in_workshop=0, ready_for_delivery=0, items=[])
 
     rows = (
         _base_query(db, target_customer)
@@ -187,6 +176,8 @@ def list_work_orders(
 ):
     """Listado paginado de OS del cliente con filtros."""
     target_customer = _resolve_customer_id(user, customer_id)
+    if not target_customer:
+        return CorpWorkOrdersResponse(total=0, page=page, page_size=page_size, items=[])
 
     q = _base_query(db, target_customer)
     if status_filter:
@@ -290,6 +281,18 @@ def get_summary(
     """KPIs agregados de la flota corporativa."""
     target_customer = _resolve_customer_id(user, customer_id)
     now = datetime.now(timezone.utc)
+
+    if not target_customer:
+        return CorpKPIs(
+            units_total=0,
+            in_workshop=0,
+            ready_for_delivery=0,
+            delivered_last_30d=0,
+            spend_current_month=0.0,
+            spend_previous_month=0.0,
+            customer_id="",
+            customer_label="",
+        )
 
     base = _base_query(db, target_customer)
 

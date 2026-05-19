@@ -49,6 +49,7 @@ from app.models.procurement import (
     TERMINAL_PO_STATUSES,
 )
 from app.models.service_proposals import ServiceProposal, ServiceProposalStatus
+from app.models.folio_counters import FolioCounter
 
 __all__ = [
     "Organization", "Branch",
@@ -78,4 +79,5 @@ __all__ = [
     "Notification", "NotificationKind",
     "PurchaseOrder", "PurchaseOrderItem", "PurchaseOrderStatus", "TERMINAL_PO_STATUSES",
     "ServiceProposal", "ServiceProposalStatus",
+    "FolioCounter",
 ]

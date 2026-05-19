@@ -69,12 +69,16 @@ export function Modal({
               >
                 {title}
               </Dialog.Title>
-              {description && (
+              {description ? (
                 <Dialog.Description
                   className="mt-1 text-sm leading-relaxed"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   {description}
+                </Dialog.Description>
+              ) : (
+                <Dialog.Description className="sr-only">
+                  {title}
                 </Dialog.Description>
               )}
             </div>

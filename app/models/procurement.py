@@ -1,15 +1,20 @@
 """Procurement domain (Ola 6): Purchase Orders y line items.
 
 State machine:
-    draft → submitted → approved → received   (terminal)
-                     ↓        ↓
-                  cancelled  cancelled         (terminal)
+    draft → submitted → approved ─┬─ received                (terminal)
+                     ↓        ↓   └─ partially_received → received (terminal)
+                  cancelled  cancelled                       (terminal)
 
 Reglas:
-- Folio autogenerado tipo PO-YYYY-NNNN, único por sucursal.
-- Recepciones MVP: solo total (no parciales).
+- Folio autogenerado tipo PO-YYYY-NNNN, único por sucursal (via FolioCounter).
+- Recepciones parciales soportadas: PurchaseOrderItem.quantity_received se
+  acumula con cada recepción; cuando todos los items alcanzan su cantidad
+  ordenada, la PO pasa a `received`. Mientras tanto, `partially_received`.
 - Al recibir, se invoca inventory_engine.apply_inbound() por cada item,
   lo que actualiza last_unit_cost en parts + crea InventoryMovement(inbound).
+- Link a InventoryRequest via PurchaseOrderItem.inventory_request_id: cuando
+  almacén convierte una solicitud aprobada en línea de PO, se mantiene la
+  trazabilidad y al recibir la IR pasa a status `purchased`.
 """
 from __future__ import annotations
 
@@ -27,6 +32,7 @@ class PurchaseOrderStatus(str, enum.Enum):
     draft = "draft"
     submitted = "submitted"
     approved = "approved"
+    partially_received = "partially_received"
     received = "received"
     cancelled = "cancelled"
 
@@ -110,9 +116,17 @@ class PurchaseOrderItem(Base, UUIDMixin, AuditMixin):
         index=True,
     )
     quantity = Column(Numeric(14, 3), nullable=False)
+    quantity_received = Column(Numeric(14, 3), nullable=False, default=0)
+    received_at = Column(DateTime(timezone=True), nullable=True)
     unit_cost = Column(Numeric(14, 2), nullable=False)
     line_total = Column(Numeric(14, 2), nullable=False, default=0)
     notes = Column(Text, nullable=True)
+    inventory_request_id = Column(
+        String(36),
+        ForeignKey("inventory_requests.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     purchase_order = relationship("PurchaseOrder", back_populates="items")
     part = relationship("Part", lazy="joined")
