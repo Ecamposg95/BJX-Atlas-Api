@@ -5,6 +5,7 @@
  * Coexiste con la página legacy MechanicWork.tsx — se ofrece como /mechanic.
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import api from "@/api/client";
@@ -21,6 +22,7 @@ type Filter = "all" | "pending" | "in_progress";
 
 export function MechanicHomeV1() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useMyTasks();
   const toast = useToast();
@@ -42,7 +44,7 @@ export function MechanicHomeV1() {
         await api.post(`/workshop/lines/${lineId}/finish`);
         toast.success("Tarea finalizada");
       } else if (action === "view_detail" || action === "report_finding" || action === "request_part") {
-        window.location.href = `/mechanic/tasks/${lineId}`;
+        navigate(`/mechanic/tasks/${lineId}`);
         return;
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.myTasks() });

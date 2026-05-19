@@ -19,6 +19,7 @@ import { WarehouseReceivePage } from './pages/WarehouseReceive'
 import { WorkshopBoardPage } from './pages/WorkshopBoard'
 import { MechanicWorkPage } from './pages/MechanicWork'
 import { MechanicHomeV1 } from './pages/MechanicHomeV1'
+import { MechanicTaskDetailPage } from './pages/MechanicTaskDetail'
 import { OperationalDashboardPage } from './pages/OperationalDashboard'
 import { BranchesPage } from './pages/Branches'
 import { ClientPortalPage } from './pages/ClientPortal'
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/workshop/board" element={<WorkshopBoardPage />} />
               <Route path="/me/work" element={<MechanicWorkPage />} />
               <Route path="/mechanic" element={<MechanicHomeV1 />} />
+              <Route path="/mechanic/tasks/:lineId" element={<MechanicTaskDetailPage />} />
               <Route path="/advisor" element={<AdvisorHomePage />} />
               <Route path="/advisor/check-in" element={<AdvisorCheckInPage />} />
               <Route path="/dashboard/operational" element={<OperationalDashboardPage />} />
