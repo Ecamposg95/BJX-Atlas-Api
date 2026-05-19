@@ -1,7 +1,7 @@
 # BJX Atlas — Producto (Master)
 
 > **Documento maestro**. Antes de tocar código, leer este archivo + `STACK.md`.
-> Actualizado: 2026-05-19 (Wave 2 — Foundation)
+> Actualizado: 2026-05-19 (Wave 5 — Cliente corporativo + portal publico)
 
 ---
 
@@ -102,35 +102,38 @@ Load status del mecanico:
 - Inventario: requests con flujo approve → pick → deliver → use/return
 - Audit log append-only
 
-### Ola 2 (en curso) — Foundation
+### Ola 2 — Foundation ✅
 
 - **Context cleanup**: este documento + `STACK.md`
 - **Design system tokens** (`frontend/src/design-system/`)
 - **UI restructure**: redirects por rol (`/home` → role-home), reorganizacion de Sidebar
 - Seeder enriquecido para las 10 sucursales
 
-### Ola 3 (planeada) — Workshop UX polish
+### Ola 3 — Workshop UX polish ✅
 
-- Stock-board con semaforo verde/amarillo/rojo (almacen)
-- Mecanico: solicitar refacciones con check de disponibilidad inline
-- QA pass/fail UI
+- ✅ Stock-board con semaforo verde/amarillo/rojo (almacen) — `/warehouse/stock-board`
+- ✅ Mecanico: solicitar refacciones con check de disponibilidad inline — `PartSearchModal`
+- ✅ QA pass/fail UI — `/workshop/qa`
 
-### Ola 4 (planeada) — Manager + Director
+### Ola 4 — Manager + Director (parcial)
 
-- `/manager`: dashboard de sucursal con KPIs cacheados
-- `/executive`: KPIs comparativos multi-sucursal (cycle time, margen, on-time)
-- Notificaciones in-app drawer + email
+- ✅ `/manager`: dashboard de sucursal con KPIs cacheados (TTL 60s, cycle_time avg/p95, on_time_pct, top OS estancadas)
+- 🟡 `/executive`: KPIs operativos en mapa + ranking. Falta: cycle_time + on-time comparativos
+- ✅ Notificaciones in-app drawer (bell en topbar + endpoint `/v1/notifications`)
+- ✅ Notificaciones WhatsApp (citas, entrega)
+- ❌ Notificaciones email (sin SMTP/transactional aun)
+- ⚠ `margin_pct_avg` en `/manager` queda como `None` hasta modelar precio/costo final en OS
 
-### Ola 5 (planeada) — Cliente corporativo + portal publico
+### Ola 5 — Cliente corporativo + portal publico (en curso)
 
-- `/client-corp`: dashboard de flota (solo OS de su `customer_id`)
-- Portal publico `/client/:folio` (ya en repo, pulir UX)
-- Service proposals (jefe propone → gerente aprueba)
+- ✅ `/client-corp`: dashboard de flota con scoping por `customer_id`, KPIs (unidades, en taller, listas, gasto del mes)
+- ✅ Portal publico `/client/:folio` — etapas, lineas, galeria fotos check-in, ETA humanizado
+- ❌ Service proposals (jefe propone → gerente aprueba) — modelo parcial en `Service.status`, falta tabla `service_proposals` independiente
 
 ### Ola 6 (planeada) — Compras
 
 - Procurement: PurchaseOrder draft → submitted → approved → received
-- `inbound` movements actualizan `last_unit_cost`
+- `inbound` movements actualizan `last_unit_cost` (logica ya existe en `inventory_engine.apply_inbound`)
 - Deprecacion definitiva de `operador`
 
 ---

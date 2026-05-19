@@ -19,6 +19,7 @@ import { InventoryPage } from './pages/Inventory'
 import { WarehouseHomePage } from './pages/WarehouseHome'
 import { WarehouseRequestDetailPage } from './pages/WarehouseRequestDetail'
 import { WarehouseReceivePage } from './pages/WarehouseReceive'
+import { WarehouseStockBoardPage } from './pages/WarehouseStockBoard'
 import { WorkshopBoardPage } from './pages/WorkshopBoard'
 import { MechanicHomeV1 } from './pages/MechanicHomeV1'
 import { MechanicTaskDetailPage } from './pages/MechanicTaskDetail'
@@ -69,6 +70,7 @@ export default function App() {
               <Route path="/warehouse" element={<WarehouseHomePage />} />
               <Route path="/warehouse/requests/:id" element={<WarehouseRequestDetailPage />} />
               <Route path="/warehouse/receive/:requestId" element={<WarehouseReceivePage />} />
+              <Route path="/warehouse/stock-board" element={<WarehouseStockBoardPage />} />
               <Route path="/workshop/board" element={<WorkshopBoardPage />} />
               <Route path="/mechanic" element={<MechanicHomeV1 />} />
               <Route path="/mechanic/tasks/:lineId" element={<MechanicTaskDetailPage />} />

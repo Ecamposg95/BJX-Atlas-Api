@@ -30,6 +30,8 @@ from app.schemas.inventory import (
     PartRead,
     PartReadWithStock,
     PartUpdate,
+    StockBoardItem,
+    StockBoardResponse,
     StockLevelRead,
     WarehouseCreate,
     WarehouseRead,
@@ -219,6 +221,93 @@ def list_stock(
         )
         for sl in items
     ]
+
+
+# ---------------------------------------------------------------------------
+# Stock board (semáforo)
+# ---------------------------------------------------------------------------
+
+def _stock_status(available: float, min_stock: float) -> str:
+    if available <= 0:
+        return "critical"
+    if available < (min_stock or 0.0):
+        return "warn"
+    return "ok"
+
+
+@router.get("/stock-board", response_model=StockBoardResponse)
+def stock_board(
+    db: Session = Depends(get_db),
+    ctx: TenantContext = Depends(get_tenant_context),
+    status_filter: Optional[Literal["ok", "warn", "critical"]] = Query(None, alias="status"),
+    search: Optional[str] = Query(None, description="SKU o nombre"),
+    only_active: bool = True,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    _: User = Depends(require_role([
+        "admin", "director", "gerente_sede", "jefe_taller", "almacen", "viewer",
+    ])),
+):
+    """Tablero semáforo de stock por sucursal.
+
+    Agrega `quantity`/`reserved` sobre todos los warehouses del scope y clasifica
+    cada parte en `ok` (available >= min_stock), `warn` (0 < available < min_stock),
+    `critical` (available <= 0).
+    """
+    parts_q = db.query(Part).filter(Part.deleted_at.is_(None))
+    if only_active:
+        parts_q = parts_q.filter(Part.active.is_(True))
+    if search:
+        like = f"%{search}%"
+        parts_q = parts_q.filter((Part.sku.ilike(like)) | (Part.name.ilike(like)))
+
+    sl_agg = (
+        db.query(
+            StockLevel.part_id.label("part_id"),
+            func.coalesce(func.sum(StockLevel.quantity), 0.0).label("qty"),
+            func.coalesce(func.sum(StockLevel.reserved), 0.0).label("res"),
+        )
+        .filter(StockLevel.deleted_at.is_(None))
+    )
+    if not ctx.is_global:
+        sl_agg = sl_agg.filter(StockLevel.branch_id == ctx.branch_id)
+    elif ctx.branch_id:
+        sl_agg = sl_agg.filter(StockLevel.branch_id == ctx.branch_id)
+    sl_agg = sl_agg.group_by(StockLevel.part_id).all()
+    sl_map = {row.part_id: (row.qty or 0.0, row.res or 0.0) for row in sl_agg}
+
+    all_parts = parts_q.order_by(Part.name).all()
+    items: list[StockBoardItem] = []
+    counts = {"ok": 0, "warn": 0, "critical": 0}
+    for p in all_parts:
+        qty, res = sl_map.get(p.id, (0.0, 0.0))
+        available = qty - res
+        st = _stock_status(available, p.min_stock or 0.0)
+        counts[st] += 1
+        if status_filter and st != status_filter:
+            continue
+        items.append(StockBoardItem(
+            part_id=p.id,
+            sku=p.sku,
+            name=p.name,
+            category=p.category,
+            unit=p.unit,
+            min_stock=p.min_stock or 0.0,
+            quantity=qty,
+            reserved=res,
+            available=available,
+            status=st,
+        ))
+
+    total = len(items)
+    paged = items[skip: skip + limit]
+    return StockBoardResponse(
+        total=total,
+        page=(skip // limit) + 1 if limit else 1,
+        page_size=limit,
+        items=paged,
+        counts=counts,
+    )
 
 
 # ---------------------------------------------------------------------------

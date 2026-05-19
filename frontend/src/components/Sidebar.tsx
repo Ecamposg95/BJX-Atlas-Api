@@ -4,7 +4,7 @@ import {
   House, LayoutDashboard, Calculator, FileText, BookOpen,
   Truck, Settings, LogOut, ChevronLeft, Menu, ShieldCheck,
   Package, Wrench, HardHat, Building2, Activity, ClipboardCheck, PackageOpen,
-  Briefcase, UsersRound, CalendarDays, BadgeCheck,
+  Briefcase, UsersRound, CalendarDays, BadgeCheck, PackageCheck,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
@@ -25,7 +25,7 @@ type NavItem = {
 const WORK_ITEMS: NavItem[] = [
   { to: '/admin',       icon: ShieldCheck,    label: 'Plataforma',     roles: ['admin'] },
   { to: '/executive',   icon: Briefcase,      label: 'Vision ejecutiva', roles: ['admin', 'director'] },
-  { to: '/manager',     icon: Building2,      label: 'Mi sucursal',    roles: ['admin', 'gerente_sede'] },
+  { to: '/manager',     icon: Building2,      label: 'Mi sucursal',    roles: ['admin', 'director', 'gerente_sede'] },
   { to: '/workshop',    icon: HardHat,        label: 'Mando taller',   roles: ['admin', 'jefe_taller'] },
   { to: '/advisor',     icon: ClipboardCheck, label: 'Recepcion',      roles: ['admin', 'recepcion', 'operador'] },
   { to: '/mechanic',    icon: Wrench,         label: 'Mis tareas',     roles: ['admin', 'mecanico'] },
@@ -39,6 +39,7 @@ const OPERATIONS_ITEMS: NavItem[] = [
   { to: '/workshop/board', icon: Wrench,       label: 'Tablero taller', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'recepcion', 'almacen'] },
   { to: '/workshop/qa',    icon: BadgeCheck,   label: 'QA',             roles: ['admin', 'director', 'gerente_sede', 'jefe_taller'] },
   { to: '/inventory',      icon: Package,      label: 'Inventario',     roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen'] },
+  { to: '/warehouse/stock-board', icon: PackageCheck, label: 'Stock-board', roles: ['admin', 'director', 'gerente_sede', 'jefe_taller', 'almacen', 'viewer'] },
 ]
 
 // ── NEGOCIO — cotizaciones, catalogo, proveedores, sucursales ────────

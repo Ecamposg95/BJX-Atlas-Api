@@ -68,6 +68,10 @@ export interface BranchKPIs {
   avg_completion_hrs: number
   stalled_parts: number
   alerts_count: number
+  cycle_time_avg_hrs: number
+  cycle_time_p95_hrs: number
+  margin_pct_avg: number | null
+  on_time_pct: number
 }
 
 export interface BranchStat {
@@ -81,6 +85,25 @@ export interface BranchStat {
   kpis: BranchKPIs
   semaphore: BranchSemaphore
   pulse: boolean
+}
+
+export interface StalledOrder {
+  id: string
+  order_number: string
+  status: string
+  hours_in_status: number
+}
+
+export interface ManagerDashboard {
+  branch_id: string
+  code: string
+  name: string
+  city: string | null
+  state: string | null
+  kpis: BranchKPIs
+  semaphore: BranchSemaphore
+  top_stalled_orders: StalledOrder[]
+  calculated_at: string
 }
 
 // ── Inventory ────────────────────────────────────────────────────────────────
@@ -121,6 +144,29 @@ export interface StockLevel {
   quantity: number
   reserved: number
   available: number
+}
+
+export type StockStatus = 'ok' | 'warn' | 'critical'
+
+export interface StockBoardItem {
+  part_id: string
+  sku: string
+  name: string
+  category: string | null
+  unit: string
+  min_stock: number
+  quantity: number
+  reserved: number
+  available: number
+  status: StockStatus
+}
+
+export interface StockBoardResponse {
+  total: number
+  page: number
+  page_size: number
+  items: StockBoardItem[]
+  counts: { ok: number; warn: number; critical: number }
 }
 
 export type InventoryRequestStatus =

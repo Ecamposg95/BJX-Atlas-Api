@@ -183,6 +183,30 @@ class PartPage(Paginated):
     items: list[PartReadWithStock]
 
 
+# ---- Stock board (semáforo) ----
+
+StockStatus = Literal["ok", "warn", "critical"]
+
+
+class StockBoardItem(BaseModel):
+    part_id: str
+    sku: str
+    name: str
+    category: Optional[str] = None
+    unit: str
+    min_stock: float
+    quantity: float
+    reserved: float
+    available: float
+    status: StockStatus
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StockBoardResponse(Paginated):
+    items: list[StockBoardItem]
+    counts: dict[str, int]
+
+
 class InventoryRequestPage(Paginated):
     items: list[InventoryRequestRead]
 

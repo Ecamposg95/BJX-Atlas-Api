@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { useAuthStore } from '../store/auth'
 import { ThemeToggle } from './ThemeToggle'
+import { NotificationDrawer } from './NotificationDrawer'
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -54,6 +55,19 @@ export function Layout() {
             <span className="mobile-frame-brand__title">BJX Atlas</span>
             {user && <span className="mobile-frame-brand__meta">{user.email}</span>}
           </div>
+          <NotificationDrawer />
+          <ThemeToggle />
+        </header>
+
+        {/* Desktop topbar */}
+        <header
+          className="hidden items-center justify-end gap-3 px-6 py-3 md:flex"
+          style={{
+            borderBottom: '1px solid var(--border)',
+            background: 'color-mix(in srgb, var(--surface) 70%, transparent)',
+          }}
+        >
+          <NotificationDrawer />
           <ThemeToggle />
         </header>
 

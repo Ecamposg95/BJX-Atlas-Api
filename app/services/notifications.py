@@ -62,3 +62,43 @@ def build_delivery_message(
         "Adjuntamos acuse digital. Gracias por preferirnos.",
     ]
     return " ".join(p for p in parts if p)
+
+
+# ---------------------------------------------------------------------------
+# In-app notification center (Wave 4)
+# ---------------------------------------------------------------------------
+
+def create_notification(
+    db,
+    *,
+    user_id: str,
+    kind,
+    title: str,
+    body: str = "",
+    link_url: Optional[str] = None,
+    branch_id: Optional[str] = None,
+    entity_type: Optional[str] = None,
+    entity_id: Optional[str] = None,
+):
+    """Persist an in-app notification for `user_id`.
+
+    `kind` can be a NotificationKind enum or a string value.
+    Caller is responsible for db.commit() if not part of an outer transaction.
+    """
+    from app.models.notifications import Notification, NotificationKind
+
+    kind_value = kind.value if isinstance(kind, NotificationKind) else str(kind)
+
+    notif = Notification(
+        user_id=user_id,
+        kind=kind_value,
+        title=title,
+        body=body or "",
+        link_url=link_url,
+        branch_id=branch_id,
+        entity_type=entity_type,
+        entity_id=entity_id,
+    )
+    db.add(notif)
+    db.flush()
+    return notif

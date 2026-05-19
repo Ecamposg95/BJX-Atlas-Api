@@ -22,6 +22,8 @@ from app.routers import client_portal as client_portal_router
 from app.routers import evidence as evidence_router
 from app.routers import appointments as appointments_router
 from app.routers import deliveries as deliveries_router
+from app.routers import notifications as notifications_router
+from app.routers import client_corp as client_corp_router
 from app.middleware import AuditContextMiddleware
 from app.services.audit import install_audit_listeners
 from app.events.subscribers import setup_event_subscribers
@@ -83,6 +85,8 @@ app.include_router(client_portal_router.router, prefix="/api", tags=["Portal Cli
 app.include_router(evidence_router.router, prefix="/api", tags=["Evidencia Mobile v1"])
 app.include_router(appointments_router.router, prefix="/api", tags=["Citas v1"])
 app.include_router(deliveries_router.router, prefix="/api", tags=["Entregas v1"])
+app.include_router(notifications_router.router, prefix="/api", tags=["Notificaciones v1"])
+app.include_router(client_corp_router.router, prefix="/api", tags=["Cliente Corporativo v1"])
 
 
 @app.get("/api/health", tags=["Sistema"])

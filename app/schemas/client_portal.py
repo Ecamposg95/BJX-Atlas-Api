@@ -32,6 +32,30 @@ class ClientTimelineEntry(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ClientServiceLine(BaseModel):
+    """Servicio/línea de trabajo de la OS visible al cliente.
+
+    Solo expone label legible y status — nunca costos, mecánico ni notas.
+    """
+
+    label: str
+    status: str
+    completed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ClientStage(BaseModel):
+    """Etapa del flujo de servicio con porcentaje completado."""
+
+    key: str
+    label: str
+    pct: int
+    completed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ClientUnitView(BaseModel):
     """Vista pública del estatus de una unidad para el portal cliente.
 
@@ -48,5 +72,9 @@ class ClientUnitView(BaseModel):
     progress_pct: int
     branch_name: Optional[str] = None
     timeline: list[ClientTimelineEntry] = []
+    lines: list[ClientServiceLine] = []
+    photos: list[str] = []
+    stages: list[ClientStage] = []
+    eta_text: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

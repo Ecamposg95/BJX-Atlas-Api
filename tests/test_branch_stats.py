@@ -116,3 +116,147 @@ def test_viewer_can_read(client, viewer_token, ten_branches):
     )
     assert r.status_code == 200
     assert len(r.json()) == 10
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Manager dashboard (Ola 4) — cycle time, on-time, top stalled
+# ──────────────────────────────────────────────────────────────────────────
+
+from datetime import datetime, timedelta, timezone
+
+
+@pytest.fixture
+def manager_token(client, db, default_branch_id):
+    from app.models.users import User, Role
+    from app.security import hash_password
+    user = User(
+        email="gerente@test.com",
+        hashed_password=hash_password("Gerente1234"),
+        role=Role.gerente_sede.value,
+        default_branch_id=default_branch_id,
+        active=True,
+    )
+    db.add(user)
+    db.commit()
+    r = client.post("/api/auth/login", json={"email": "gerente@test.com", "password": "Gerente1234"})
+    return r.json()["access_token"]
+
+
+def _seed_wo(db, default_branch_id, *, created_offset_hrs, finished_offset_hrs=None, promised_offset_hrs=None, status_value="completed", order_number="WO-T-001"):
+    from app.models.work_orders import WorkOrder
+    from app.models.vehicles import Vehicle
+    from app.models.catalog import VehicleModel, Service
+
+    model = db.query(VehicleModel).first()
+    if model is None:
+        model = VehicleModel(name="TestModel", active=True)
+        db.add(model); db.commit()
+    service = db.query(Service).first()
+    if service is None:
+        service = Service(name="TestService", category="motor", active=True)
+        db.add(service); db.commit()
+    vehicle = db.query(Vehicle).first()
+    if vehicle is None:
+        vehicle = Vehicle(customer_name="Test Cliente", plates="ABC123", year=2020)
+        db.add(vehicle); db.commit()
+
+    now = datetime.now(timezone.utc)
+    wo = WorkOrder(
+        order_number=order_number,
+        vehicle_id=vehicle.id,
+        model_id=model.id,
+        service_id=service.id,
+        status=status_value,
+        type="walk_in",
+        priority="normal",
+        received_at=now - timedelta(hours=created_offset_hrs),
+        promised_at=(now - timedelta(hours=promised_offset_hrs)) if promised_offset_hrs is not None else None,
+        work_finished_at=(now - timedelta(hours=finished_offset_hrs)) if finished_offset_hrs is not None else None,
+        branch_id=default_branch_id,
+    )
+    # SQLAlchemy default sets created_at=now via AuditMixin — override for cycle calc
+    wo.created_at = now - timedelta(hours=created_offset_hrs)
+    db.add(wo)
+    db.commit()
+    return wo
+
+
+def test_manager_dashboard_requires_role(client, viewer_token):
+    r = client.get(
+        "/api/v1/branches/manager-dashboard",
+        headers={"Authorization": f"Bearer {viewer_token}"},
+    )
+    assert r.status_code == 403
+
+
+def test_manager_dashboard_returns_kpis(client, admin_token, db, default_branch_id):
+    # Una OS completada en 5h, on-time (terminó 1h antes del promised).
+    _seed_wo(
+        db, default_branch_id,
+        created_offset_hrs=10, finished_offset_hrs=5, promised_offset_hrs=4,
+        status_value="completed", order_number="WO-OT-1",
+    )
+    # Una OS completada en 9h, tarde (terminó después del promised).
+    _seed_wo(
+        db, default_branch_id,
+        created_offset_hrs=15, finished_offset_hrs=6, promised_offset_hrs=10,
+        status_value="completed", order_number="WO-LT-1",
+    )
+    # Una OS abierta hace mucho (stalled)
+    _seed_wo(
+        db, default_branch_id,
+        created_offset_hrs=48, finished_offset_hrs=None, promised_offset_hrs=None,
+        status_value="in_progress", order_number="WO-OPEN-1",
+    )
+    from app.routers.branch_stats import invalidate_manager_cache
+    invalidate_manager_cache()
+
+    r = client.get(
+        "/api/v1/branches/manager-dashboard",
+        headers={"Authorization": f"Bearer {admin_token}", "X-Branch-Id": default_branch_id},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["branch_id"] == default_branch_id
+    k = data["kpis"]
+    assert k["cycle_time_avg_hrs"] > 0
+    assert k["cycle_time_p95_hrs"] >= k["cycle_time_avg_hrs"]
+    # on_time_pct entre 0 y 1
+    assert 0.0 <= k["on_time_pct"] <= 1.0
+    # margin_pct_avg es None (TODO documentado)
+    assert k["margin_pct_avg"] is None
+    assert isinstance(data["top_stalled_orders"], list)
+    assert any(s["order_number"] == "WO-OPEN-1" for s in data["top_stalled_orders"])
+
+
+def test_manager_dashboard_cache_hit(client, admin_token, db, default_branch_id):
+    from app.routers.branch_stats import invalidate_manager_cache, _manager_cache
+    invalidate_manager_cache()
+    r1 = client.get(
+        "/api/v1/branches/manager-dashboard",
+        headers={"Authorization": f"Bearer {admin_token}", "X-Branch-Id": default_branch_id},
+    )
+    assert r1.status_code == 200
+    assert default_branch_id in _manager_cache
+    r2 = client.get(
+        "/api/v1/branches/manager-dashboard",
+        headers={"Authorization": f"Bearer {admin_token}", "X-Branch-Id": default_branch_id},
+    )
+    assert r2.status_code == 200
+    assert r1.json()["calculated_at"] == r2.json()["calculated_at"]
+
+
+def test_manager_dashboard_gerente_scoped_to_own_branch(client, manager_token, db, default_branch_id):
+    r = client.get(
+        "/api/v1/branches/manager-dashboard",
+        headers={"Authorization": f"Bearer {manager_token}"},
+    )
+    assert r.status_code == 200
+    assert r.json()["branch_id"] == default_branch_id
+
+    # Cualquier branch_id distinto debe ser 403
+    r2 = client.get(
+        "/api/v1/branches/manager-dashboard?branch_id=ffffffff-ffff-ffff-ffff-ffffffffffff",
+        headers={"Authorization": f"Bearer {manager_token}"},
+    )
+    assert r2.status_code == 403
