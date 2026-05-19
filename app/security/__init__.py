@@ -180,9 +180,11 @@ def require_role(roles: list[str]):
     return _check
 
 
-def require_permission(*role_groups: str):
-    """Sugar para require_role que acepta grupos legibles.
-
-    Ejemplo: require_permission("admin", "director", "gerente_sede")
-    """
-    return require_role(list(role_groups))
+# Re-export del nuevo sistema de permisos basado en matriz declarativa
+# (sustituye al antiguo require_permission(*role_groups: str) que era sugar de require_role)
+from app.security.permissions import (  # noqa: E402
+    Permission,
+    PERMISSION_MATRIX,
+    has_permission,
+    require_permission,
+)
